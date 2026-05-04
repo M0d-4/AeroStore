@@ -91,12 +91,10 @@
 		A8635D092F4CF17A00E66784 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A8635D052F4CF16D00E66784 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A8635D0B2F4CF1A100E66784 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8635D052F4CF16D00E66784 /* OpenSSL.xcframework */; };
 		A8635D0C2F4CF1A100E66784 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A8635D052F4CF16D00E66784 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A867C0AA2F5534EB006426FE /* AltSign-Static in Frameworks */ = {isa = PBXBuildFile; productRef = A8C6D50B2D1EE87600DF01F1 /* AltSign-Static */; };
 		A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A8945AA52D059B6100D86CBE /* Roxas.framework */; };
 		A8B646012D70C23E00125819 /* MarkdownKit in Frameworks */ = {isa = PBXBuildFile; productRef = A8B646002D70C23E00125819 /* MarkdownKit */; };
 		A8C2260E2EC9039A00047C0D /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = A8C2260D2EC9039A00047C0D /* Nuke */; };
 		A8EB89C22F5448B20094BC01 /* em_proxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BD2F652F543FD40045335F /* em_proxy.swift */; };
-		A8EB89CC2F5451AF0094BC01 /* Minimuxer in Frameworks */ = {isa = PBXBuildFile; productRef = A8EB89CB2F5451AF0094BC01 /* Minimuxer */; };
 		A8EB89CE2F5451B50094BC01 /* SemanticVersion in Frameworks */ = {isa = PBXBuildFile; productRef = A8EB89CD2F5451B50094BC01 /* SemanticVersion */; };
 		A8EB89D02F5451C20094BC01 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = A8EB89CF2F5451C20094BC01 /* KeychainAccess */; };
 		A8EB955C2F5455B30094BC01 /* debug.c in Sources */ = {isa = PBXBuildFile; fileRef = A8BD30312F5440300045335F /* debug.c */; };
@@ -720,7 +718,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A867C0AA2F5534EB006426FE /* AltSign-Static in Frameworks */,
 				A8635D082F4CF17A00E66784 /* OpenSSL.xcframework in Frameworks */,
 				A8945AA62D059B6100D86CBE /* Roxas.framework in Frameworks */,
 				A82067C42D03E0DE00645C0D /* SemanticVersion in Frameworks */,
@@ -743,7 +740,6 @@
 			files = (
 				68D569C02E1B415700A5BA36 /* LanguageSupport in Frameworks */,
 				68D569BE2E1B415700A5BA36 /* CodeEditorView in Frameworks */,
-				A8EB89CC2F5451AF0094BC01 /* Minimuxer in Frameworks */,
 				A8037A012F54661200097AF1 /* libimobiledevice.a in Frameworks */,
 				A8B646012D70C23E00125819 /* MarkdownKit in Frameworks */,
 				A8037A0E2F54664300097AF1 /* libem_proxy_swift.a in Frameworks */,
@@ -1397,7 +1393,6 @@
 			name = AltStoreCore;
 			packageProductDependencies = (
 				A82067C32D03E0DE00645C0D /* SemanticVersion */,
-				A8C6D50B2D1EE87600DF01F1 /* AltSign-Static */,
 				A83FE3762EC905E3005ACE9A /* KeychainAccess */,
 				A803924D2F552FDA00097AF1 /* AltSign-Static */,
 			);
@@ -2564,14 +2559,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A8C2260C2EC9039A00047C0D /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = Nuke;
-		};
-		A8C6D50B2D1EE87600DF01F1 /* AltSign-Static */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = "AltSign-Static";
-		};
-		A8EB89CB2F5451AF0094BC01 /* Minimuxer */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Minimuxer;
 		};
 		A8EB89CD2F5451B50094BC01 /* SemanticVersion */ = {
 			isa = XCSwiftPackageProductDependency;
