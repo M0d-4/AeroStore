@@ -4,7 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 EM="${ROOT}/Dependencies/em_proxy"
 CLONE_URL="${FLUXSTORE_EM_PROXY_CLONE_URL:-https://github.com/SideStore/em_proxy.git}"
-CLONE_BRANCH="${FLUXSTORE_EM_PROXY_BRANCH:-master}"
+# SideStore/em_proxy `master` tip no longer ships fetch-prebuilt.sh + em_proxy.xcodeproj; pin the tree FluxStore expects.
+# Bump when you update the Dependencies/em_proxy submodule in this repo (match `git ls-tree HEAD Dependencies/em_proxy`).
+DEFAULT_EM_PROXY_REV="816dc73350dd456a24232963db77a3064fd9af8a"
+REV="${FLUXSTORE_EM_PROXY_REV:-${DEFAULT_EM_PROXY_REV}}"
 
 ensure_em_proxy_tree() {
   if [[ -f "${EM}/fetch-prebuilt.sh" ]]; then
@@ -17,12 +20,14 @@ ensure_em_proxy_tree() {
   if [[ -f "${EM}/fetch-prebuilt.sh" ]]; then
     return 0
   fi
-  echo "Submodule did not populate em_proxy; cloning ${CLONE_URL} (${CLONE_BRANCH})…" >&2
+  echo "Submodule did not populate em_proxy; cloning ${CLONE_URL} at ${REV}…" >&2
   rm -rf "${EM}"
   mkdir -p "$(dirname "${EM}")"
-  git clone --depth 1 --branch "${CLONE_BRANCH}" --recursive "${CLONE_URL}" "${EM}"
+  git clone --recursive "${CLONE_URL}" "${EM}"
+  git -C "${EM}" checkout -q "${REV}"
+  git -C "${EM}" submodule update --init --recursive
   if [[ ! -f "${EM}/fetch-prebuilt.sh" ]]; then
-    echo "error: em_proxy checkout has no fetch-prebuilt.sh at ${EM}" >&2
+    echo "error: em_proxy checkout at ${REV} has no fetch-prebuilt.sh under ${EM}" >&2
     exit 1
   fi
 }
