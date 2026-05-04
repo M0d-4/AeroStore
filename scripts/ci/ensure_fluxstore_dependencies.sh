@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Populate Dependencies/* when git submodules are not recorded in the parent repo (CI shallow clone, missing gitlinks).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -20,14 +20,23 @@ git submodule update --init --recursive 2>/dev/null || true
 clone_at_rev() {
   local rel="$1" url="$2" rev="$3" marker="$4"
   local abs="${ROOT}/${rel}"
+  rev="$(printf '%s' "${rev}" | tr -d '\r')"
+  if [[ ! "${rev}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+    echo "error: invalid full commit SHA for ${rel} (got '${rev}')" >&2
+    exit 1
+  fi
   if [[ -f "${abs}/${marker}" || -d "${abs}/${marker}" ]]; then
     return 0
   fi
   echo "ensure_fluxstore_dependencies: cloning ${url} @ ${rev} -> ${rel}" >&2
   rm -rf "${abs}"
   mkdir -p "$(dirname "${abs}")"
-  git clone "${url}" "${abs}"
-  git -C "${abs}" checkout -q "${rev}"
+  # -n: do not checkout remote HEAD; some runners inherit partial-clone settings and fail reading HEAD's tree during clone.
+  git clone -n "${url}" "${abs}"
+  if ! git -C "${abs}" checkout -q "${rev}"; then
+    git -C "${abs}" fetch -q origin "${rev}"
+    git -C "${abs}" checkout -q "${rev}"
+  fi
   git -C "${abs}" submodule update --init --recursive 2>/dev/null || true
   if [[ ! -f "${abs}/${marker}" && ! -d "${abs}/${marker}" ]]; then
     echo "error: after clone @ ${rev}, missing ${rel}/${marker}" >&2
