@@ -189,13 +189,16 @@ ifneq ($(strip $(BUNDLE_ID_SUFFIX)),)
 COMMON_BUILD_SETTINGS += BUNDLE_ID_SUFFIX=$(BUNDLE_ID_SUFFIX)
 endif
 
-build:
+patch-altsign-spm:
+	@python3 scripts/ci/patch_altsign_package_swift.py
+
+build: patch-altsign-spm
 	@echo ">>>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<<"
 	@echo ""
 	@xcodebuild archive -archivePath ./SideStore \
 		$(COMMON_BUILD_SETTINGS)
 
-build-and-test:
+build-and-test: patch-altsign-spm
 	@rm -rf build/tests/test-results.xcresult
 	@echo ">>>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building for $(BUILD_CONFIG) mode! <<<<<<<<<<"
 	@echo ""
@@ -206,7 +209,7 @@ build-and-test:
     	-enableCodeCoverage YES \
 		$(COMMON_BUILD_SETTINGS)
 
-build-tests:
+build-tests: patch-altsign-spm
 	@rm -rf build/tests/test-results.xcresult
 	@echo ">>>>>>>>> BUILD_CONFIG is set to '$(BUILD_CONFIG)', Building Tests for $(BUILD_CONFIG) mode! <<<<<<<<<<"
 	@echo ""

@@ -58,6 +58,10 @@ This fork wires in **StikJIT** (from the StikDebug ecosystem) so JIT-capable wor
 
 [Roxas](https://github.com/rileytestut/roxas) is Riley Testut’s shared framework from AltStore. FluxStore still depends on it where upstream does; reducing that dependency is a longer-term upstream goal.
 
+## Troubleshooting SwiftPM (`/Package.swift`)
+
+If Xcode or CI reports that **`/Package.swift` cannot be accessed**, two different things are worth checking: (1) a dependency version that resolves **before** that repo had a root `Package.swift` (fix the version rule in Xcode’s Package Dependencies); (2) for **AltSign**, this fork uses the `Dependencies/AltSign` submodule plus a small manifest patch—see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Contributing / build instructions
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).

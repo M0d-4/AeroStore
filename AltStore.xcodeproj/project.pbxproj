@@ -1517,7 +1517,7 @@
 				A83FE3652EC90482005ACE9A /* XCRemoteSwiftPackageReference "Starscream" */,
 				A83FE36D2EC90512005ACE9A /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				A80392492F552F4C00097AF1 /* XCRemoteSwiftPackageReference "minimuxer" */,
-				A803924C2F552FDA00097AF1 /* XCRemoteSwiftPackageReference "AltSign" */,
+				A803924C2F552FDA00097AF1 /* XCLocalSwiftPackageReference "AltSign" */,
 				68D569BC2E1B415700A5BA36 /* XCRemoteSwiftPackageReference "CodeEditorView" */,
 			);
 			preferredProjectObjectVersion = 50;
@@ -2470,14 +2470,6 @@
 				kind = branch;
 			};
 		};
-		A803924C2F552FDA00097AF1 /* XCRemoteSwiftPackageReference "AltSign" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SideStore/AltSign";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
-			};
-		};
 		A82067C22D03E0DE00645C0D /* XCRemoteSwiftPackageReference "SemanticVersion" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SwiftPackageIndex/SemanticVersion";
@@ -2528,6 +2520,13 @@
 		};
 /* End XCRemoteSwiftPackageReference section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		A803924C2F552FDA00097AF1 /* XCLocalSwiftPackageReference "AltSign" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Dependencies/AltSign;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		A803924A2F552F4C00097AF1 /* Minimuxer */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -2536,12 +2535,12 @@
 		};
 		A803924D2F552FDA00097AF1 /* AltSign-Static */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A803924C2F552FDA00097AF1 /* XCRemoteSwiftPackageReference "AltSign" */;
+			package = A803924C2F552FDA00097AF1 /* XCLocalSwiftPackageReference "AltSign" */;
 			productName = "AltSign-Static";
 		};
 		A803924F2F55300300097AF1 /* AltSign-Static */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A803924C2F552FDA00097AF1 /* XCRemoteSwiftPackageReference "AltSign" */;
+			package = A803924C2F552FDA00097AF1 /* XCLocalSwiftPackageReference "AltSign" */;
 			productName = "AltSign-Static";
 		};
 		A82067C32D03E0DE00645C0D /* SemanticVersion */ = {

@@ -77,6 +77,7 @@ def count_new_commits(last_commit):
 # PROJECT INFO
 # ----------------------------------------------------------
 def dump_project_settings(outdir=None):
+    patch_altsign_spm_manifest()
     outfile = Path(outdir).resolve() / BUILD_SETTINGS_OUTFILE if outdir else BUILD_SETTINGS_OUTFILE
     run(f"xcodebuild -showBuildSettings 2>&1 > '{outfile}'")
 
@@ -139,7 +140,13 @@ def clean_spm_cache():
 # BUILD
 # ----------------------------------------------------------
 
+def patch_altsign_spm_manifest():
+    script = SCRIPTS / "patch_altsign_package_swift.py"
+    run(f"python3 '{script}'")
+
+
 def build():
+    patch_altsign_spm_manifest()
     run("mkdir -p build/logs")
     run(
         "set -o pipefail && "
@@ -155,6 +162,7 @@ def build():
 # ----------------------------------------------------------
 
 def tests_build():
+    patch_altsign_spm_manifest()
     run("mkdir -p build/logs")
     run(
         "NSUnbufferedIO=YES make -B build-tests "

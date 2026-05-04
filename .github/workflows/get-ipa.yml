@@ -37,6 +37,9 @@ jobs:
           done
           echo "::error::AltStore.xcodeproj not found"; exit 1
 
+      - name: Patch AltSign SPM manifest (SwiftPM / Xcode 26)
+        run: python3 scripts/ci/patch_altsign_package_swift.py
+
       - name: Resolve packages
         run: |
           set -euo pipefail
