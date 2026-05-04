@@ -1,0 +1,76 @@
+# Easiest IPA path: no Makefile, no Nightly. Run manually → download one artifact.
+name: Get IPA (unsigned)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: get-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: SwiftPM — GitHub token (fewer clone/rate-limit issues)
+        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Find Xcode project
+        id: proj
+        run: |
+          set -euo pipefail
+          for d in . proj/FluxStore FluxStore; do
+            if [[ -f "$d/AltStore.xcodeproj/project.pbxproj" ]]; then
+              echo "dir=$d" >> "$GITHUB_OUTPUT"
+              echo "Project: $d/AltStore.xcodeproj"
+              exit 0
+            fi
+          done
+          echo "::error::AltStore.xcodeproj not found"; exit 1
+
+      - name: Resolve packages
+        run: |
+          P="${{ steps.proj.outputs.dir }}"
+          xcodebuild -resolvePackageDependencies -project "$P/AltStore.xcodeproj" -scheme SideStore
+
+      - name: Archive (unsigned)
+        run: |
+          P="${{ steps.proj.outputs.dir }}"
+          mkdir -p build
+          xcodebuild clean archive \
+            -project "$P/AltStore.xcodeproj" \
+            -scheme SideStore \
+            -configuration Debug \
+            -archivePath "build/App.xcarchive" \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_OPTIMIZATION_LEVEL="-Onone"
+
+      - name: Make IPA zip
+        run: |
+          APP="$(find build/App.xcarchive/Products/Applications -maxdepth 1 -name "*.app" -print -quit)"
+          test -n "$APP" && test -d "$APP"
+          rm -rf build/Payload build/App.ipa
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          (cd build && zip -qr App.ipa Payload)
+          rm -rf build/Payload
+          ls -lh build/App.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa-unsigned
+          path: build/App.ipa
+          retention-days: 30
