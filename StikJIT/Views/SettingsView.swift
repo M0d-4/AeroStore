@@ -59,7 +59,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            SwiftUI.Form {
                 // 1) App Header
                 Section {
                     HStack {
@@ -226,10 +226,10 @@ struct SettingsView: View {
             }
         }
         .confirmationDialog("Redownload DDI Files?", isPresented: $showDDIConfirmation, titleVisibility: .visible) {
-            Button("Redownload", role: .destructive) {
+            SwiftUI.Button("Redownload", role: .destructive) {
                 redownloadDDIPressed()
             }
-            Button("Cancel", role: .cancel) { }
+            SwiftUI.Button("Cancel", role: .cancel) { }
         } message: {
             Text("Existing DDI files will be removed before downloading fresh copies.")
         }
@@ -393,7 +393,7 @@ struct TabCustomizationView: View {
         }
         .navigationTitle("Tab Bar")
         .toolbar {
-            EditButton()
+            EditSwiftUI.Button()
         }
     }
 }

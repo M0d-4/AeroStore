@@ -629,7 +629,7 @@ struct LocationSimulationView: View {
                 }
                 .disabled(isBusy || isRouteRunning)
             }
-            ToolbarItem(placement: .topBarTrailing) {
+            SwiftUI.ToolbarItem(placement: .topBarTrailing) {
                 TextField("Search location...", text: $searchText)
                     .padding(.leading, 6)
                     .autocorrectionDisabled()
@@ -639,14 +639,14 @@ struct LocationSimulationView: View {
             }
         }
         .alert(alertTitle, isPresented: $showAlert) {
-            Button("OK", role: .cancel) { }
+            SwiftUI.Button("OK", role: .cancel) { }
         } message: {
             Text(alertMessage)
         }
         .alert("Save Bookmark", isPresented: $showSaveBookmark) {
             TextField("Name", text: $newBookmarkName)
-            Button("Save") { addBookmark() }
-            Button("Cancel", role: .cancel) { newBookmarkName = "" }
+            SwiftUI.Button("Save") { addBookmark() }
+            SwiftUI.Button("Cancel", role: .cancel) { newBookmarkName = "" }
         } message: {
             Text("Enter a name for this location.")
         }
@@ -735,12 +735,12 @@ struct LocationSimulationView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 12) {
-                Button("Stop", action: clear)
+                SwiftUI.Button("Stop", action: clear)
                     .buttonStyle(.bordered)
                     .tint(.red)
                     .disabled(!pairingExists || isBusy || !hasActiveSimulation)
 
-                Button("Simulate Location", action: simulate)
+                SwiftUI.Button("Simulate Location", action: simulate)
                     .buttonStyle(.borderedProminent)
                     .disabled(!pairingExists || isBusy || isLoadingRoute)
 
@@ -778,12 +778,12 @@ struct LocationSimulationView: View {
             routeAttributionLink
 
             HStack(spacing: 12) {
-                Button("Stop", action: clear)
+                SwiftUI.Button("Stop", action: clear)
                     .buttonStyle(.bordered)
                     .tint(.red)
                     .disabled(!pairingExists || isBusy || !hasActiveSimulation)
 
-                Button("Play Route", action: simulateRoute)
+                SwiftUI.Button("Play Route", action: simulateRoute)
                     .buttonStyle(.borderedProminent)
                     .disabled(
                         !pairingExists ||
@@ -794,7 +794,7 @@ struct LocationSimulationView: View {
                         routePlaybackSamples.isEmpty
                     )
 
-                Button("Reset", action: resetRouteSelection)
+                SwiftUI.Button("Reset", action: resetRouteSelection)
                     .buttonStyle(.bordered)
                     .disabled(isBusy || isRouteRunning)
             }
@@ -1206,14 +1206,14 @@ private struct RouteSearchSheet: View {
             .navigationTitle("Simulate Route")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                SwiftUI.ToolbarItem(placement: .cancellationAction) {
+                    SwiftUI.Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Use Route") {
+                SwiftUI.ToolbarItem(placement: .confirmationAction) {
+                    SwiftUI.Button("Use Route") {
                         guard let startSelection, let endSelection else { return }
                         onApply(startSelection, endSelection)
                         dismiss()
@@ -1367,7 +1367,7 @@ struct BookmarksView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !bookmarks.isEmpty {
-                    EditButton()
+                    EditSwiftUI.Button()
                 }
             }
         }

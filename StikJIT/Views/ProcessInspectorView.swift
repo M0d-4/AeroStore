@@ -17,8 +17,8 @@ struct ProcessInspectorView: View {
             content
                 .navigationTitle("Process Inspector")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: viewModel.refresh) {
+                    SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+                        SwiftUI.Button(action: viewModel.refresh) {
                             Label("Refresh", systemImage: "arrow.clockwise")
                         }
                         .disabled(viewModel.isRefreshing)
@@ -33,13 +33,13 @@ struct ProcessInspectorView: View {
             viewModel.stopAutoRefresh()
         }
         .alert(viewModel.actionAlertTitle, isPresented: $viewModel.showActionAlert) {
-            Button("OK", role: .cancel) { }
+            SwiftUI.Button("OK", role: .cancel) { }
         } message: {
             Text(viewModel.actionAlertMessage)
         }
         .alert(viewModel.errorAlertTitle, isPresented: $viewModel.showErrorAlert) {
-            Button("Try Again") { viewModel.refresh() }
-            Button("OK", role: .cancel) { }
+            SwiftUI.Button("Try Again") { viewModel.refresh() }
+            SwiftUI.Button("OK", role: .cancel) { }
         } message: {
             Text(viewModel.errorAlertMessage)
         }

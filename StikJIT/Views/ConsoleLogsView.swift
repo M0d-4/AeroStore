@@ -51,7 +51,7 @@ struct ConsoleLogsView: View {
             .navigationTitle("Console")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
+                SwiftUI.ToolbarItem(placement: .principal) {
                     Picker("", selection: $selectedConsoleTab) {
                         Text("App").tag(ConsoleTab.idevice)
                         Text("System").tag(ConsoleTab.syslog)
@@ -59,30 +59,30 @@ struct ConsoleLogsView: View {
                     .pickerStyle(.segmented)
                     .frame(width: 180)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         if selectedConsoleTab == .idevice {
-                            Button("Refresh", systemImage: "arrow.clockwise") {
+                            SwiftUI.Button("Refresh", systemImage: "arrow.clockwise") {
                                 Task { await loadIdeviceLogsAsync() }
                             }
-                            Button("Clear", systemImage: "trash", role: .destructive) {
+                            SwiftUI.Button("Clear", systemImage: "trash", role: .destructive) {
                                 logManager.clearLogs()
                             }
-                            Button("Copy Logs", systemImage: "doc.on.doc") {
+                            SwiftUI.Button("Copy Logs", systemImage: "doc.on.doc") {
                                 copyJITLogs()
                             }
                             exportMenuOption
                         } else {
-                            Button(syslogControlLabel, systemImage: syslogControlIcon) {
+                            SwiftUI.Button(syslogControlLabel, systemImage: syslogControlIcon) {
                                 toggleSyslogPlayback()
                             }
-                            Button("Clear", systemImage: "trash", role: .destructive) {
+                            SwiftUI.Button("Clear", systemImage: "trash", role: .destructive) {
                                 systemLogStream.clear()
                             }
-                            Button("Copy Logs", systemImage: "doc.on.doc") {
+                            SwiftUI.Button("Copy Logs", systemImage: "doc.on.doc") {
                                 copySyslogToClipboard()
                             }
-                            Button("Adjust Speed", systemImage: "slider.horizontal.3") {
+                            SwiftUI.Button("Adjust Speed", systemImage: "slider.horizontal.3") {
                                 showingSyslogSpeedSelector = true
                             }
                         }
@@ -92,17 +92,17 @@ struct ConsoleLogsView: View {
                 }
             }
             .alert(alertTitle, isPresented: $showingCustomAlert) {
-                Button("OK", role: .cancel) { }
+                SwiftUI.Button("OK", role: .cancel) { }
             } message: {
                 Text(alertMessage)
             }
             .confirmationDialog("Syslog Speed", isPresented: $showingSyslogSpeedSelector) {
                 ForEach(syslogIntervalOptions, id: \.self) { option in
-                    Button(intervalLabel(for: option)) {
+                    SwiftUI.Button(intervalLabel(for: option)) {
                         systemLogStream.updateInterval = option
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                SwiftUI.Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Choose how quickly new relay entries appear.")
             }
@@ -286,7 +286,7 @@ struct ConsoleLogsView: View {
                 Label("Export Logs", systemImage: "square.and.arrow.up")
             }
         } else {
-            Button("Export Logs", systemImage: "square.and.arrow.up") {
+            SwiftUI.Button("Export Logs", systemImage: "square.and.arrow.up") {
                 presentAlert(title: "Export Failed", message: "No idevice logs found")
             }
         }

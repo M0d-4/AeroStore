@@ -115,8 +115,8 @@ struct MainTabView: View {
                 NavigationStack {
                     descriptor.builder()
                         .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Close") {
+                            SwiftUI.ToolbarItem(placement: .cancellationAction) {
+                                SwiftUI.Button("Close") {
                                     detachedTab = nil
                                 }
                             }

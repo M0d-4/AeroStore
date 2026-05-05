@@ -204,8 +204,8 @@ struct HomeView: View {
             NavigationStack {
                 ConsoleLogsView()
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") {
+                        SwiftUI.ToolbarItem(placement: .cancellationAction) {
+                            SwiftUI.Button("Close") {
                                 isShowingConsole = false
                             }
                         }
@@ -217,8 +217,8 @@ struct HomeView: View {
                 if let jsModel {
                     RunJSView(model: jsModel)
                         .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button("Done") { scriptViewShow = false }
+                            SwiftUI.ToolbarItem(placement: .topBarTrailing) {
+                                SwiftUI.Button("Done") { scriptViewShow = false }
                             }
                         }
                         .navigationTitle(selectedScript)

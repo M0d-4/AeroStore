@@ -272,22 +272,22 @@ struct ProfileView: View {
             }
         }
                 .alert(alertTitle, isPresented: $alert) {
-            Button("OK", role: .cancel) { }
+            SwiftUI.Button("OK", role: .cancel) { }
         } message: {
             Text(alertMsg)
         }
         .alert("Confirm Removal", isPresented: $confirmRemove) {
-            Button("Remove", role: .destructive) {
+            SwiftUI.Button("Remove", role: .destructive) {
                 Task { await removeProfile(uuid: removeTargetUUID) }
             }
-            Button("Cancel", role: .cancel) { }
+            SwiftUI.Button("Cancel", role: .cancel) { }
         } message: {
             Text("Remove profile for \(removeTargetName) (UUID: \(removeTargetUUID))?\nApps associated with this profile may become unavailable.")
         }
     }
     
-    private func profileActionButton(icon: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func profileActionSwiftUI.Button(icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        SwiftUI.Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(color)
@@ -329,10 +329,10 @@ struct ProfileView: View {
                 }
                 Spacer()
                 HStack(spacing: 16) {
-                    profileActionButton(icon: "square.and.arrow.down", color: .blue) {
+                    profileActionSwiftUI.Button(icon: "square.and.arrow.down", color: .blue) {
                         saveProfile(profile: match.profile)
                     }
-                    profileActionButton(icon: "trash", color: .refreshRed) {
+                    profileActionSwiftUI.Button(icon: "trash", color: .refreshRed) {
                         removeProfilePrompt(entry: match.profile)
                     }
                 }

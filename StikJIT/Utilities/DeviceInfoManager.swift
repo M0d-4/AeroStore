@@ -228,7 +228,7 @@ struct DeviceInfoView: View {
                 }
             }
             .alert(alertTitle, isPresented: $alert) {
-                Button("OK", role: .cancel) { }
+                SwiftUI.Button("OK", role: .cancel) { }
             } message: {
                 Text(alertMsg)
             }
@@ -267,7 +267,7 @@ struct DeviceInfoView: View {
                         .disabled(mgr.entries.isEmpty)
                     }
                 }
-                ToolbarItem(placement: .navigationBarLeading) {
+                SwiftUI.ToolbarItem(placement: .navigationBarLeading) {
                     if !isPaired {
                         Button { importer = true } label: {
                             Label("Import Pairing File", systemImage: "doc.badge.plus")

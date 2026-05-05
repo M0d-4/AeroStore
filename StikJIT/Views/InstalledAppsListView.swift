@@ -175,7 +175,7 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                         : "Search".localized
                 )
                 .toolbar {
-                    ToolbarItem(placement: .principal) {
+                    SwiftUI.ToolbarItem(placement: .principal) {
                         Picker("", selection: $selectedTab) {
                             ForEach(AppListTab.allCases) { tab in
                                 Text(tab.title.localized).tag(tab)
@@ -185,18 +185,18 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                         .frame(width: 220)
                     }
                     if let onImportPairingFile {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button(action: onImportPairingFile) {
+                        SwiftUI.ToolbarItem(placement: .navigationBarLeading) {
+                            SwiftUI.Button(action: onImportPairingFile) {
                                 Image(systemName: "doc.badge.plus")
                             }
                         }
                     }
                     if showDoneButton {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("Done") { dismiss() }.fontWeight(.semibold)
+                        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+                            SwiftUI.Button("Done") { dismiss() }.fontWeight(.semibold)
                         }
                     } else {
-                        ToolbarItem(placement: .navigationBarTrailing) {
+                        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
                             Button {
                                 viewModel.refreshAppLists()
                             } label: {
@@ -307,7 +307,7 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                     if !filteredFavoriteBundles.isEmpty {
                         Section(String(format: "Favorites (%d/4)".localized, filteredFavoriteBundles.count)) {
                             ForEach(filteredFavoriteBundles, id: \.self) { bundleID in
-                                AppButton(
+                                AppSwiftUI.Button(
                                     bundleID: bundleID,
                                     appName: viewModel.debuggableApps[bundleID] ?? fallbackReadableName(from: bundleID),
                                     recentApps: $recentApps, favoriteApps: $favoriteApps,
@@ -319,7 +319,7 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                     if !filteredRecentBundles.isEmpty {
                         Section("Recents".localized) {
                             ForEach(filteredRecentBundles, id: \.self) { bundleID in
-                                AppButton(
+                                AppSwiftUI.Button(
                                     bundleID: bundleID,
                                     appName: viewModel.debuggableApps[bundleID] ?? fallbackReadableName(from: bundleID),
                                     recentApps: $recentApps, favoriteApps: $favoriteApps,
@@ -330,7 +330,7 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                     }
                     Section("Apps with get-task-allow".localized) {
                         ForEach(filteredDebuggableApps, id: \.key) { bundleID, appName in
-                            AppButton(
+                            AppSwiftUI.Button(
                                 bundleID: bundleID, appName: appName,
                                 recentApps: $recentApps, favoriteApps: $favoriteApps,
                                 onSelectApp: onSelectApp, sharedDefaults: sharedDefaults, performanceMode: performanceMode
@@ -381,11 +381,11 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                                 }
                             }
                             .contextMenu {
-                                Button((isPinned ? "Remove from Home" : "Add to Home").localized,
+                                SwiftUI.Button((isPinned ? "Remove from Home" : "Add to Home").localized,
                                        systemImage: isPinned ? "star.slash" : "star") {
                                     toggleSystemPin(bundleID: bundleID, appName: appName)
                                 }
-                                Button("Copy Bundle ID".localized, systemImage: "doc.on.doc") {
+                                SwiftUI.Button("Copy Bundle ID".localized, systemImage: "doc.on.doc") {
                                     UIPasteboard.general.string = bundleID
                                     Haptics.light()
                                 }
@@ -550,7 +550,7 @@ struct AppButton: View {
     }
 
     var body: some View {
-        Button(action: selectApp) {
+        SwiftUI.Button(action: selectApp) {
             HStack(spacing: loadAppIconsOnJIT ? 16 : 12) {
                 iconView
 
@@ -580,7 +580,7 @@ struct AppButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button(action: toggleFavorite) {
+            SwiftUI.Button(action: toggleFavorite) {
                 Label(
                     favoriteApps.contains(bundleID) ? "Remove Favorite" : "Add to Favorites",
                     systemImage: favoriteApps.contains(bundleID) ? "star.slash" : "star"
