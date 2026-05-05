@@ -18,8 +18,8 @@ struct ScriptEditorView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
-    private var editorTheme: LanguageSupport.Theme {
-        colorScheme == .dark ? LanguageSupport.Theme.defaultDark : LanguageSupport.Theme.defaultLight
+    private var editorTheme: CodeEditorView.Theme {
+        colorScheme == .dark ? CodeEditorView.Theme.defaultDark : CodeEditorView.Theme.defaultLight
     }
 
     var body: some View {
