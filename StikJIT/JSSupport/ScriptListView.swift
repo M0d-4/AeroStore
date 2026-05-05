@@ -42,9 +42,9 @@ struct ScriptListView: View {
             List {
                 if isPickerMode {
                     Section {
-                        Button {
+                        Button(action: {
                             onSelectScript?(nil)
-                        } label: {
+                        }) {
                             Label("No Script", systemImage: "nosign")
                         }
                     }
@@ -157,19 +157,22 @@ struct ScriptListView: View {
 
     // MARK: - Row
 
-    @ViewBuilder
-    private func scriptRow(_ script: URL) -> some View {
+    private func scriptRow(_ script: URL) -> AnyView {
         let isDefault = defaultScriptName == script.lastPathComponent
         if isPickerMode {
-            Button(action: {
+            let button = Button(action: {
                 onSelectScript?(script)
-            }) { rowLabel(script, isDefault: isDefault) }
+            }) {
+                rowLabel(script, isDefault: isDefault)
+            }
+            return AnyView(button)
         } else {
-            NavigationLink {
+            let link = NavigationLink {
                 ScriptEditorView(scriptURL: script)
             } label: {
                 rowLabel(script, isDefault: isDefault)
             }
+            return AnyView(link)
         }
     }
 
@@ -177,10 +180,14 @@ struct ScriptListView: View {
     private var toolbarContent: some ToolbarContent {
         if !isPickerMode {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Import") { showImporter = true }
+                Button(action: { showImporter = true }) {
+                    Text("Import")
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("New") { showNewFileAlert = true }
+                Button(action: { showNewFileAlert = true }) {
+                    Text("New")
+                }
             }
         }
     }

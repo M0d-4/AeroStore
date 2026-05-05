@@ -46,7 +46,9 @@ struct ScriptEditorView: View {
         .onAppear(perform: loadScript)
         .toolbar(content: {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save", action: saveAndDismiss)
+                Button(action: saveAndDismiss) {
+                    Text("Save")
+                }
             }
         })
         .tint(colorScheme == .dark ? .white : .black)
