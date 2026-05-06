@@ -44,7 +44,7 @@ extension OperationError
         case pledgeRequired = 1401
         case pledgeInactive = 1402
 
-        /* SideStore Only */
+        /* FluxStore Only */
         case unableToConnectSideJIT
         case unableToRespondSideJITDevice
         case wrongSideJITIP
@@ -200,27 +200,27 @@ struct OperationError: ALTLocalizedError {
         case .unknownResult: return NSLocalizedString("The operation returned an unknown result.", comment: "")
         case .timedOut: return NSLocalizedString("The operation timed out.", comment: "")
         case .notAuthenticated: return NSLocalizedString("You are not signed in.", comment: "")
-        case .unknownUDID: return NSLocalizedString("SideStore could not determine this device's UDID. Please replace your pairing using iloader.", comment: "")
+        case .unknownUDID: return NSLocalizedString("FluxStore could not determine this device's UDID. Please replace your pairing using iloader.", comment: "")
         case .invalidApp: return NSLocalizedString("The app is in an invalid format.", comment: "")
         case .maximumAppIDLimitReached: return NSLocalizedString("Cannot register more than 10 App IDs within a 7 day period.", comment: "")
-        case .noSources: return NSLocalizedString("There are no SideStore sources.", comment: "")
-        case .missingAppGroup: return NSLocalizedString("SideStore's shared app group could not be accessed.", comment: "")
+        case .noSources: return NSLocalizedString("There are no FluxStore sources.", comment: "")
+        case .missingAppGroup: return NSLocalizedString("FluxStore's shared app group could not be accessed.", comment: "")
         case .forbidden:
             guard let failureReason = self._failureReason else { return NSLocalizedString("The operation is forbidden.", comment: "") }
             return failureReason
             
         case .sourceNotAdded:
             let sourceName = self.sourceName.map { String(format: NSLocalizedString("The source “%@”", comment: ""), $0) } ?? NSLocalizedString("The source", comment: "")
-            return String(format: NSLocalizedString("%@ is not added to SideStore.", comment: ""), sourceName)
+            return String(format: NSLocalizedString("%@ is not added to FluxStore.", comment: ""), sourceName)
 
         case .appNotFound:
             let appName = self.appName ?? NSLocalizedString("The app", comment: "")
             return String(format: NSLocalizedString("%@ could not be found.", comment: ""), appName)
         case .openAppFailed:
             let appName = self.appName ?? NSLocalizedString("The app", comment: "")
-            return String(format: NSLocalizedString("SideStore was denied permission to launch %@.", comment: ""), appName)
-        case .noWiFi: return NSLocalizedString("You do not appear to be connected to Wi-Fi and/or LocalDevVPN!\nSideStore cannot install or refresh applications without Wi-Fi and LocalDevVPN. If both are connected, replace your pairing with iloader.", comment: "")
-        case .tooNewError: return NSLocalizedString("iOS 17.0-17.3.1 changed how JIT is enabled so SideStore cannot enable JIT without SideJITServer on these versions, sorry for any inconvenience.", comment: "")
+            return String(format: NSLocalizedString("FluxStore was denied permission to launch %@.", comment: ""), appName)
+        case .noWiFi: return NSLocalizedString("You do not appear to be connected to Wi-Fi and/or LocalDevVPN!\nFluxStore cannot install or refresh applications without Wi-Fi and LocalDevVPN. If both are connected, replace your pairing with iloader.", comment: "")
+        case .tooNewError: return NSLocalizedString("iOS 17.0-17.3.1 changed how JIT is enabled so FluxStore cannot enable JIT without SideJITServer on these versions, sorry for any inconvenience.", comment: "")
         case .unableToConnectSideJIT: return NSLocalizedString("Unable to connect to SideJITServer. Please check that you are on the same Wi-Fi of and your Firewall has been set correctly on your server.", comment: "")
         case .unableToRespondSideJITDevice: return NSLocalizedString("SideJITServer is unable to connect to your iDevice. Please make sure you have paired your iDevice by running 'SideJITServer -y', or try refreshing SideJITServer from Settings.", comment: "")
         case .wrongSideJITIP: return NSLocalizedString("Incorrect SideJITServer IP. Please make sure that you are on the same Wi-Fi as SideJITServer", comment: "")

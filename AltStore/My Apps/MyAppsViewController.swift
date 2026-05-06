@@ -267,8 +267,8 @@ private extension MyAppsViewController
             
             var versionText = latestSupportedVersion.localizedVersion
 
-            // If the app is SideStore itself, remove the build number to save space
-            if app.bundleIdentifier == Bundle.Info.appbundleIdentifier,
+            // If the app is FluxStore itself, remove the build number to save space
+            if app.bundleIdentifier == Bundle.main.bundleIdentifier,
                let version = SemanticVersion(latestSupportedVersion.version)
             {
                 // leave out the build so that it doesnt take up much space
@@ -1275,7 +1275,7 @@ private extension MyAppsViewController
     
     func remove(_ installedApp: InstalledApp)
     {
-        let title = String(format: NSLocalizedString("Remove “%@” from SideStore?", comment: ""), installedApp.name)
+        let title = String(format: NSLocalizedString("Remove “%@” from FluxStore?", comment: ""), installedApp.name)
         let message: String
         
         if UserDefaults.standard.isLegacyDeactivationSupported
@@ -1310,7 +1310,7 @@ private extension MyAppsViewController
         guard minimuxerStatus else { return }
 
         let title = NSLocalizedString("Start Backup?", comment: "")
-        let message = NSLocalizedString("This will replace any previous backups. Please leave SideStore open until the backup is complete.", comment: "")
+        let message = NSLocalizedString("This will replace any previous backups. Please leave FluxStore open until the backup is complete.", comment: "")
 
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)

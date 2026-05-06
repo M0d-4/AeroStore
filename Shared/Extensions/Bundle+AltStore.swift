@@ -18,8 +18,12 @@ public extension Bundle
         public static let appGroups = "ALTAppGroups"
         public static let altBundleID = "ALTBundleIdentifier"
 
-        public static let orgbundleIdentifier =  "com.SideStore"
-        public static let appbundleIdentifier =  orgbundleIdentifier + ".SideStore"
+        /// Historical SideStore identifier segment; prefer `Bundle.main.bundleIdentifier` via `appbundleIdentifier`.
+        public static let orgbundleIdentifier = "com.flux"
+        /// Main app bundle id from the running app (FluxStore uses `com.flux.fluxstore`, not hardcoded SideStore IDs).
+        public static var appbundleIdentifier: String {
+            Bundle.main.bundleIdentifier ?? "com.flux.fluxstore"
+        }
         public static let devicePairingString = "ALTPairingFile"
         public static let urlTypes = "CFBundleURLTypes"
         public static let exportedUTIs = "UTExportedTypeDeclarations"
@@ -57,15 +61,24 @@ public extension Bundle
 
 public extension Bundle
 {
-    static var baseAltStoreAppGroupID = "group." + Bundle.Info.appbundleIdentifier
+    /// App group prefix must match `group.<GROUP_ID>` in Info.plist (same as bundle id for FluxStore).
+    static var baseAltStoreAppGroupID: String {
+        "group." + Bundle.Info.appbundleIdentifier
+    }
 
     var appGroups: [String] {
         return self.infoDictionary?[Bundle.Info.appGroups] as? [String] ?? []
     }
     
-    var altstoreAppGroup: String? {        
-        let appGroup = self.appGroups.first { $0.contains(Bundle.baseAltStoreAppGroupID) }
-        return appGroup
+    var altstoreAppGroup: String? {
+        self.appGroups.first { $0.contains(Bundle.baseAltStoreAppGroupID) }
+    }
+
+    /// User-visible app name from Info.plist (matches home screen label).
+    public var altAppDisplayName: String {
+        if let n = object(forInfoDictionaryKey: "CFBundleDisplayName") as? String, !n.isEmpty { return n }
+        if let n = object(forInfoDictionaryKey: "CFBundleName") as? String, !n.isEmpty { return n }
+        return "FluxStore"
     }
     
     var completeInfoDictionary: [String : Any]? {

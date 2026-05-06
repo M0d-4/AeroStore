@@ -17,17 +17,20 @@ import UniformTypeIdentifiers
 
 let pairingFileName = "ALTPairingFile.mobiledevicepairing"
 
+/// Set when the user continues without a device pairing file (browse/install blocked until pairing is added).
+private let fluxPreviewWithoutPairingKey = "FluxStore.previewWithoutDevicePairing"
+
 final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
     private var didFinishLaunching = false
     private var retries = 0
     private var maxRetries = 3
     private var splashView: SplashView!
-    private var destinationViewController: TabBarController?
+    fileprivate var destinationViewController: TabBarController?
     private var startTime: Date!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        splashView = SplashView(frame: view.bounds, appName: "SideStore")
+        splashView = SplashView(frame: view.bounds, appName: Bundle.main.altAppDisplayName)
         destinationViewController = storyboard!.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
         view.addSubview(splashView)
     }
@@ -78,11 +81,12 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
         if UserDefaults.standard.enableEMPforWireguard {
             startEMProxy(bind_addr: AppConstants.Proxy.serverURL)
         }
-        guard let pf = fetchPairingFile() else {
-            displayError("Device pairing file not found.")
-            return
+        if let pf = fetchPairingFile() {
+            UserDefaults.standard.set(false, forKey: fluxPreviewWithoutPairingKey)
+            start_minimuxer_threads(pf)
         }
-        start_minimuxer_threads(pf)
+        // No pairing yet: first-run alert + document picker is already shown by PairingFileManager.
+        // User can dismiss the picker to browse in preview mode (no refresh/install until pairing exists).
         #endif
     }
 
@@ -94,7 +98,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
             try minimuxerStartWithLogger(pairing_file, documentsDirectory, loggingEnabled)
         } catch {
             try! FileManager.default.removeItem(at: FileManager.default.documentsDirectory.appendingPathComponent(pairingFileName))
-            displayError("minimuxer failed to start, please restart SideStore. \((error as? LocalizedError)?.failureReason ?? "UNKNOWN ERROR")")
+            displayError(String(format: NSLocalizedString("minimuxer failed to start, please restart %@. %@", comment: ""), Bundle.main.altAppDisplayName, (error as? LocalizedError)?.failureReason ?? "UNKNOWN ERROR"))
         }
         startAutoMounter(documentsDirectory)
     }
@@ -103,7 +107,12 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
 
     func displayError(_ msg: String) {
         print(msg)
-        let alert = UIAlertController(title: "Error launching SideStore", message: msg, preferredStyle: .alert)
+        let alert = UIAlertController(
+            title: String(format: NSLocalizedString("Error launching %@", comment: ""), Bundle.main.altAppDisplayName),
+            message: msg,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
         self.present(alert, animated: true)
     }
 
@@ -123,6 +132,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
                 return
             }
             try pairingString.write(to: FileManager.default.documentsDirectory.appendingPathComponent(pairingFileName), atomically: true, encoding: .utf8)
+            UserDefaults.standard.set(false, forKey: fluxPreviewWithoutPairingKey)
             start_minimuxer_threads(pairingString)
         } catch {
             displayError("Unable to read pairing file")
@@ -132,7 +142,13 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
     }
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        displayError("Choosing a pairing file was cancelled. Please re-open the app and try again.")
+        UserDefaults.standard.set(true, forKey: fluxPreviewWithoutPairingKey)
+        let host = destinationViewController ?? self
+        let toast = ToastView(
+            text: NSLocalizedString("Browsing without pairing", comment: ""),
+            detailText: NSLocalizedString("Add a pairing file in Settings when you’re ready to install, refresh, or use device features.", comment: "")
+        )
+        toast.show(in: host)
     }
     
     func importAccountAtFile(_ file: URL, remove: Bool = false) {
@@ -155,7 +171,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
         if let altCert = ALTCertificate(p12Data: account.cert, password: account.certpass) {
             Keychain.shared.signingCertificate = altCert.encryptedP12Data(withPassword: "")!
             Keychain.shared.signingCertificatePassword = account.certpass
-            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "SideStore should be fully operational!")
+            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: String(format: NSLocalizedString("%@ should be fully operational!", comment: ""), Bundle.main.altAppDisplayName))
             return toastView.show(in: self)
         } else {
             let toastView = ToastView(text: NSLocalizedString("Failed to import account certificate!", comment: ""), detailText: "Failed to create ALTCertificate. Check if the password is correct. Still imported account/adi.pb details!")
@@ -177,7 +193,7 @@ extension LaunchViewController {
     @MainActor
     func handleLaunchError(_ error: Error, retryCallback: (() async -> Void)? = nil) {
         do { throw error } catch let error as NSError {
-            let title = error.userInfo[NSLocalizedFailureErrorKey] as? String ?? NSLocalizedString("Unable to Launch SideStore", comment: "")
+            let title = error.userInfo[NSLocalizedFailureErrorKey] as? String ?? String(format: NSLocalizedString("Unable to Launch %@", comment: ""), Bundle.main.altAppDisplayName)
             let desc: String
             if #available(iOS 14.5, *) {
                 desc = ([error.debugDescription] + error.underlyingErrors.map { ($0 as NSError).debugDescription }).joined(separator: "\n\n")
@@ -357,12 +373,25 @@ final class PairingFileManager {
     }
 
     private func presentPairingFileAlert(on vc: UIViewController) {
-        let alert = UIAlertController(title: "Pairing File", message: "Select the pairing file or select \"Help\" for help.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Help", style: .default) { _ in
+        let alert = UIAlertController(
+            title: NSLocalizedString("Pairing File", comment: ""),
+            message: NSLocalizedString("Import a pairing file to refresh and install apps on your device. You can skip for now to browse sources only.", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Help", comment: ""), style: .default) { _ in
             if let url = URL(string: "https://docs.sidestore.io/docs/advanced/pairing-file") { UIApplication.shared.open(url) }
             sleep(2); exit(0)
         })
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Browse without pairing", comment: ""), style: .cancel) { _ in
+            UserDefaults.standard.set(true, forKey: fluxPreviewWithoutPairingKey)
+            let host = (vc as? LaunchViewController)?.destinationViewController ?? vc
+            let toast = ToastView(
+                text: NSLocalizedString("Preview mode", comment: ""),
+                detailText: NSLocalizedString("Add a pairing file in Settings to install, refresh, or use device features.", comment: "")
+            )
+            toast.show(in: host)
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Choose File…", comment: ""), style: .default) { _ in
             var types = UTType.types(tag: "plist", tagClass: .filenameExtension, conformingTo: nil)
             types.append(contentsOf: UTType.types(tag: "mobiledevicepairing", tagClass: .filenameExtension, conformingTo: .data))
             types.append(.xml)
