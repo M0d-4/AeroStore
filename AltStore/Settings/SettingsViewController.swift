@@ -147,7 +147,7 @@ final class SettingsViewController: UITableViewController
     @IBOutlet private var recreateDatabaseSwitch: UISwitch!
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        return .default
     }
     
     private static var exportDBInProgress = false
@@ -208,16 +208,7 @@ final class SettingsViewController: UITableViewController
     {
         super.viewDidLoad()
         
-        // --- iOS 26 fix ---
-        if #available(iOS 26.0, *) {
-            let appearance = UINavigationBarAppearance()
-//            appearance.configureWithOpaqueBackground()  // or .defaultBackground if you want blur
-//            appearance.backgroundColor = UIColor(named: "SettingsBackground")
-            appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-            navigationController?.navigationBar.standardAppearance = appearance
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance       // required for iOS 26, maybe enforce it in storyboard?
-        } 
+        self.configureFluxAppearance()
         let nib = UINib(nibName: "SettingsHeaderFooterView", bundle: nil)
         self.prototypeHeaderFooterView = nib.instantiate(withOwner: nil, options: nil)[0] as? SettingsHeaderFooterView
         
@@ -267,6 +258,34 @@ final class SettingsViewController: UITableViewController
         detectAndImportAccountFile()
         #endif
     }
+
+    private func configureFluxAppearance()
+    {
+        self.tableView.backgroundColor = .altBackground
+        self.tableView.separatorStyle = .none
+        if #available(iOS 15.0, *) {
+            self.tableView.sectionHeaderTopPadding = 12
+        }
+
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .altBackground
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        appearance.largeTitleTextAttributes = [
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 32, weight: .bold)
+        ]
+        appearance.shadowColor = UIColor.fluxCardBorder
+        appearance.configureWithTintColor(.altPrimary)
+
+        self.navigationController?.navigationBar.tintColor = .altPrimary
+        self.navigationController?.navigationBar.standardAppearance = appearance
+        self.navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        self.navigationController?.navigationBar.compactAppearance = appearance
+    }
     
     func importAccountAtFile(_ file: URL, remove: Bool = false) {
         _ = file.startAccessingSecurityScopedResource()
@@ -290,7 +309,7 @@ final class SettingsViewController: UITableViewController
         if let altCert = ALTCertificate(p12Data: account.cert, password: account.certpass) {
             Keychain.shared.signingCertificate = altCert.encryptedP12Data(withPassword: "")!
             Keychain.shared.signingCertificatePassword = account.certpass
-            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "SideStore should be fully operational!")
+            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: String(format: NSLocalizedString("%@ should be fully operational!", comment: ""), Bundle.main.altAppDisplayName))
             return toastView.show(in: self)
         } else {
             let toastView = ToastView(text: NSLocalizedString("Failed to import account certificate!", comment: ""), detailText: "Failed to create ALTCertificate. Check if the password is correct. Still imported account/adi.pb details!")
@@ -433,17 +452,17 @@ private extension SettingsViewController
                 version.isEmpty  ? "" : " (\(version))"
             } ?? installedApp.localizedVersion
         
-            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "FluxStore Version")
         }
         else if let version = buildInfo.marketing_version
         {
-            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "FluxStore Version")
         }
         else
         {
-            var version = "SideStore\t"
+            var version = "\(Bundle.main.altAppDisplayName)\t"
             version += "\n\(Bundle.Info.appbundleIdentifier)"
-            versionLabel = NSLocalizedString(version, comment: "SideStore Version")
+            versionLabel = NSLocalizedString(version, comment: "FluxStore Version")
         }
         
         // add xcode build version for local builds
@@ -516,7 +535,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to download apps from SideStore.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to download apps from FluxStore.", comment: "")
             }
             
         case .patreon:
@@ -526,7 +545,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the SideStore Team by following our socials or becoming a patron!", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the FluxStore project by following our socials or becoming a patron!", comment: "")
             }
 
         case .account:
@@ -543,7 +562,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow SideStore to keep your device awake during a refresh or install of any apps.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow FluxStore to keep your device awake during a refresh or install of any apps.", comment: "")
             }
             
         case .display:
@@ -553,7 +572,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your SideStore experience by choosing an alternate app icon.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your FluxStore experience by choosing an alternate app icon.", comment: "")
             }
             
             
@@ -802,7 +821,7 @@ private extension SettingsViewController
     
     func clearCache()
     {
-        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to clear SideStore's cache?", comment: ""),
+        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to clear FluxStore's cache?", comment: ""),
                                                 message: NSLocalizedString("This will remove all temporary files as well as backups for uninstalled apps.", comment: ""),
                                                 preferredStyle: .actionSheet)
         alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { [weak self] _ in
@@ -916,7 +935,7 @@ private extension SettingsViewController
     
     @IBAction func followAltStoreGitHub()
     {
-        let safariURL = URL(string: "https://github.com/SideStore")!
+        let safariURL = URL(string: "https://github.com/FluxStore-App/FluxStore")!
         UIApplication.shared.open(safariURL, options: [:])
     }
 }
@@ -1015,6 +1034,12 @@ extension SettingsViewController
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
+
+        // Enforce readable colors regardless of storyboard defaults.
+        cell.backgroundColor = .clear
+        cell.textLabel?.textColor = .label
+        cell.detailTextLabel?.textColor = .fluxSecondaryText
+        cell.tintColor = .altPrimary
         
         if #available(iOS 14, *) {}
         else if let cell = cell as? InsetGroupTableViewCell,
@@ -1166,7 +1191,7 @@ extension SettingsViewController
                 
                 // Option 1: GitHub
                 alertController.addAction(UIAlertAction(title: "GitHub", style: .default) { _ in
-                    if let githubURL = URL(string: "https://github.com/SideStore/SideStore/issues") {
+                    if let githubURL = URL(string: "https://github.com/FluxStore-App/FluxStore/issues") {
                         let safariViewController = SFSafariViewController(url: githubURL)
                         safariViewController.preferredControlTintColor = .altPrimary
                         self.present(safariViewController, animated: true, completion: nil)
@@ -1191,9 +1216,9 @@ extension SettingsViewController
 
                         // TODO: MARKETING_VERSION is going to be set anyways so this needs to be fixed for beta
                         if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                            mailViewController.setSubject("SideStore Beta \(version) Feedback")
+                            mailViewController.setSubject("FluxStore Beta \(version) Feedback")
                         } else {
-                            mailViewController.setSubject("SideStore Beta Feedback")
+                            mailViewController.setSubject("FluxStore Beta Feedback")
                         }
 
                        self.present(mailViewController, animated: true, completion: nil)
@@ -1315,7 +1340,7 @@ extension SettingsViewController
                 let documentsPath = fm.documentsDirectory.appendingPathComponent("/\(filename)")
                 let alertController = UIAlertController(
                     title: NSLocalizedString("Are you sure to reset the pairing file?", comment: ""),
-                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart SideStore.", comment: ""),
+                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart FluxStore.", comment: ""),
                     preferredStyle: UIAlertController.Style.actionSheet)
                 
                 alertController.addAction(UIAlertAction(title: NSLocalizedString("Delete and Reset", comment: ""), style: .destructive){ _ in
@@ -1325,7 +1350,7 @@ extension SettingsViewController
                         NSLog("Pairing File Reseted")
                     }
                     self.tableView.deselectRow(at: indexPath, animated: true)
-                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart SideStore", comment: ""), preferredStyle: .alert)
+                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart FluxStore", comment: ""), preferredStyle: .alert)
                     self.present(dialogMessage, animated: true, completion: nil)
                 })
                 alertController.addAction(.cancel)
@@ -1359,7 +1384,7 @@ extension SettingsViewController
                 
                 // Instantiate SwiftUI View inside UIHostingController
                 let anisetteServersView = AnisetteServersView(selected: UserDefaults.standard.menuAnisetteURL, errorCallback: {
-                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in SideStore.")
+                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in FluxStore.")
                         .show(in: self)
                 }, refreshCallback: {result in
                     handleRefreshResult(result)
@@ -1523,7 +1548,7 @@ extension SettingsViewController
                         return
                     }
                     
-                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("SideStoreSigningCertificate.p12")
+                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("FluxStoreSigningCertificate.p12")
                     do {
                         try newCertData.write(to: newCertTmpPath)
                     } catch {

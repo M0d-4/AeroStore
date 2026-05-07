@@ -84,6 +84,10 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         self.collectionView.dragDelegate = self
         self.collectionView.dropDelegate = self
         self.collectionView.dragInteractionEnabled = true
+        self.collectionView.backgroundColor = .altBackground
+        self.collectionView.alwaysBounceVertical = true
+        self.collectionView.contentInset.bottom = 28
+        self.collectionView.verticalScrollIndicatorInsets.bottom = 12
                 
         self.prototypeUpdateCell = UpdateCollectionViewCell.instantiate(with: UpdateCollectionViewCell.nib!)
         self.prototypeUpdateCell.contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -114,14 +118,25 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         
         NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.didChangeAppIcon(_:)), name: UIApplication.didChangeAppIconNotification, object: nil)
 
+        let settingsButton = UIBarButtonItem(image: UIImage(systemName: "gearshape"), style: .plain, target: self, action: #selector(MyAppsViewController.presentSettings(_:)))
+        settingsButton.accessibilityLabel = NSLocalizedString("Settings", comment: "")
+
         let jitButton = UIBarButtonItem(image: UIImage(systemName: "bolt.fill"), style: .plain, target: self, action: #selector(MyAppsViewController.presentFluxJIT(_:)))
         jitButton.accessibilityLabel = "JIT"
         if var items = navigationItem.rightBarButtonItems {
+            items.append(settingsButton)
             items.append(jitButton)
             navigationItem.rightBarButtonItems = items
         } else {
-            navigationItem.rightBarButtonItems = [jitButton]
+            navigationItem.rightBarButtonItems = [settingsButton, jitButton]
         }
+    }
+
+    @objc private func presentSettings(_ sender: Any?) {
+        let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
+        guard let settingsRoot = settingsStoryboard.instantiateInitialViewController() else { return }
+        settingsRoot.modalPresentationStyle = .formSheet
+        present(settingsRoot, animated: true)
     }
 
     @objc private func presentFluxJIT(_ sender: Any?) {
@@ -267,8 +282,8 @@ private extension MyAppsViewController
             
             var versionText = latestSupportedVersion.localizedVersion
 
-            // If the app is SideStore itself, remove the build number to save space
-            if app.bundleIdentifier == Bundle.Info.appbundleIdentifier,
+            // If the app is FluxStore itself, remove the build number to save space
+            if app.bundleIdentifier == Bundle.main.bundleIdentifier,
                let version = SemanticVersion(latestSupportedVersion.version)
             {
                 // leave out the build so that it doesnt take up much space
@@ -1275,7 +1290,7 @@ private extension MyAppsViewController
     
     func remove(_ installedApp: InstalledApp)
     {
-        let title = String(format: NSLocalizedString("Remove “%@” from SideStore?", comment: ""), installedApp.name)
+        let title = String(format: NSLocalizedString("Remove “%@” from FluxStore?", comment: ""), installedApp.name)
         let message: String
         
         if UserDefaults.standard.isLegacyDeactivationSupported
@@ -1310,7 +1325,7 @@ private extension MyAppsViewController
         guard minimuxerStatus else { return }
 
         let title = NSLocalizedString("Start Backup?", comment: "")
-        let message = NSLocalizedString("This will replace any previous backups. Please leave SideStore open until the backup is complete.", comment: "")
+        let message = NSLocalizedString("This will replace any previous backups. Please leave FluxStore open until the backup is complete.", comment: "")
 
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)

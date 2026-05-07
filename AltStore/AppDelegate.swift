@@ -72,7 +72,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         FluxStikJITHostBootstrap.prepareIntegrations()
 
         // Recreate Database if requested
-        // NOTE: Userdefaults are local to the SideStore.app sandbox and are not shared
+        // NOTE: Userdefaults are local to the FluxStore.app sandbox and are not shared
         if UserDefaults.standard.recreateDatabaseOnNextStart{
             // reset the state
             UserDefaults.standard.recreateDatabaseOnNextStart = false
@@ -201,6 +201,7 @@ private extension AppDelegate
     func setTintColor()
     {
         self.window?.tintColor = .altPrimary
+        self.window?.backgroundColor = .altBackground
     }
     
     func prepareImageCache()
@@ -358,7 +359,7 @@ extension AppDelegate
             
             let content = UNMutableNotificationContent()
             content.title = NSLocalizedString("App Refresh Tip", comment: "")
-            content.body = NSLocalizedString("The more you open SideStore, the more chances it's given to refresh apps in the background.", comment: "")
+            content.body = NSLocalizedString("The more you open FluxStore, the more chances it's given to refresh apps in the background.", comment: "")
             
             let request = UNNotificationRequest(identifier: "background-refresh-reminder5", content: content, trigger: trigger)
             UNUserNotificationCenter.current().add(request)
@@ -501,7 +502,7 @@ private extension AppDelegate
                     }
                     else
                     {
-                        content.title = NSLocalizedString("SideStore News", comment: "")
+                        content.title = NSLocalizedString("FluxStore News", comment: "")
                     }
                     
                     content.body = newsItem.title
