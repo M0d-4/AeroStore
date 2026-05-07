@@ -2498,8 +2498,10 @@ extension MyAppsViewController: NSFetchedResultsControllerDelegate
         let plainText: String
         if isExpired {
             plainText = NSLocalizedString("Expired", comment: "")
-        } else if numberOfDays >= 1 {
+        } else if numberOfDays >= 2 {
             plainText = String(format: NSLocalizedString("%lld days", comment: ""), Int64(numberOfDays))
+        } else if numberOfDays == 1 {
+            plainText = NSLocalizedString("1 day", comment: "")
         } else if let f = fallbackInterval, !f.isEmpty {
             plainText = f
         } else {
@@ -2535,8 +2537,11 @@ extension MyAppsViewController: NSFetchedResultsControllerDelegate
         if isExpired {
             return NSLocalizedString("Expired.", comment: "")
         }
-        if numberOfDays >= 1 {
+        if numberOfDays >= 2 {
             return String(format: NSLocalizedString("%lld days remaining.", comment: ""), Int64(numberOfDays))
+        }
+        if numberOfDays == 1 {
+            return NSLocalizedString("One day remaining.", comment: "")
         }
         if let f = fallbackInterval, !f.isEmpty {
             return String(format: NSLocalizedString("%@ remaining.", comment: ""), f)
