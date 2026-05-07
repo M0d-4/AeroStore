@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png" width="128" height="128" alt="FluxStore app icon" />
+</p>
+
 # FluxStore
 
 > FluxStore is a **fork of [SideStore](https://github.com/SideStore/SideStore)**—an *untethered, community-driven* alternative app store for non-jailbroken iOS devices—with Flux branding and a different on-device JIT story (see below).

@@ -1,0 +1,34 @@
+const fs = require("fs");
+
+const catalog = [
+  { identifier: "com.sidestoreapps.community", sourceURL: "https://community-apps.sidestore.io/sidecommunity.json", displayName: "Community Apps", tagline: "Community-maintained apps for SideStore-style installers." },
+  { identifier: "com.stik.stikdebug", sourceURL: "https://stikdebug.xyz/index.json", displayName: "StikDebug", tagline: "JIT and debugging utilities from the StikDebug ecosystem." },
+  { identifier: "com.livecontainer.source", sourceURL: "https://github.com/LiveContainer/LiveContainer/releases/download/1.0/apps.json", displayName: "LiveContainer", tagline: "Run apps inside containers on your device." },
+  { identifier: "com.aoshuang.manicemu", sourceURL: "https://apps.manicemu.site/altstore", displayName: "ManicEmu", tagline: "Emulators and emulator tooling catalog." },
+  { identifier: "com.stossy11.MeloNX", sourceURL: "https://git.ryujinx.app/melonx/emu/-/raw/XC-ios-ht/source.json", displayName: "MeloNX", tagline: "Experimental Nintendo emulator builds for iOS." },
+  { identifier: "com.chachirie.source", sourceURL: "https://github.com/chachillie/Flycast-iOS/raw/refs/heads/main/flycast-ios.json", displayName: "Flycast iOS", tagline: "Dreamcast emulator builds and updates." },
+  { identifier: "org.geode-sdk.altsource", sourceURL: "https://ios-repo.geode-sdk.org/altsource/main.json", displayName: "Geode", tagline: "Geometry Dash modding tools and related apps." },
+  { identifier: "com.sbuga.retrosekai", sourceURL: "https://repo.untitledcharts.com", displayName: "Retrosekai", tagline: "Retro gaming catalog." },
+  { identifier: "org.provenance-emu.provenance", sourceURL: "https://provenance-emu.com/apps.json", displayName: "Provenance", tagline: "Multi-system emulator from the Provenance project." },
+  { identifier: "com.neo.countdown", sourceURL: "https://neoarz.github.io/Countdown-App/Countdown.json", displayName: "Countdown", tagline: "Companion catalog for the Countdown app." },
+  { identifier: "me.oatmealdome.altstore", sourceURL: "https://altstore.oatmealdome.me", displayName: "OatmealDome AltStore feed", tagline: "Experimental ports and tools from OatmealDome." },
+  { identifier: "com.utmapp.repos.UTM", sourceURL: "https://alt.getutm.app", displayName: "UTM", tagline: "Virtual machines on iOS — official UTM catalog." },
+  { identifier: "dev.crystall1ne.alt", sourceURL: "https://alt.crystall1ne.dev", displayName: "crystall1ne catalog", tagline: "Alternate AltStore-compatible listings." },
+  { identifier: "eu.pokemmo.altstore", sourceURL: "https://pokemmo.eu/altstore/", displayName: "PokéMMO", tagline: "PokéMMO companion catalog." },
+  { identifier: "dev.theodyssey.sidestore", sourceURL: "https://theodyssey.dev/altstore/odysseysource.json", displayName: "Odyssey", tagline: "Odyssey-related utilities and listings." },
+  { identifier: "stream.yattee", sourceURL: "https://repos.yattee.stream/alt/apps.json", displayName: "Yattee", tagline: "Invidious/Piped-style clients and related apps." },
+  { identifier: "com.litritt.litsource", sourceURL: "https://altstore.ignitedemulator.com/", displayName: "Lit Source", tagline: "Ignited emulator ecosystem catalog." },
+  { identifier: "thatstel.la.altsource", sourceURL: "https://alt.thatstel.la/", displayName: "thatstel.la", tagline: "Utility apps and experiments." },
+  { identifier: "com.deliacheminot.mona", sourceURL: "https://raw.githubusercontent.com/delia-cheminot/mona-hrt/refs/heads/main/ios_source.json", displayName: "Mona companion", tagline: "Companion catalog for Mona." },
+];
+
+const o = {
+  version: 2,
+  catalog,
+  trusted: [{ identifier: "io.sidestore.example" }],
+  sources: [{ identifier: "io.sidestore.example" }],
+};
+
+const s = JSON.stringify(o, null, 2);
+fs.writeFileSync("trustedapps.json", s);
+fs.writeFileSync("AltStore/Resources/trustedapps.json", s);

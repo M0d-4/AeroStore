@@ -50,8 +50,8 @@ final class TabBarController: UITabBarController
             myAppsNavigationController.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
             myAppsNavigationController.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
 
-            let fluxBrowse = FluxBrowseSourcesViewController(style: .insetGrouped)
-            fluxBrowse.navigationItem.largeTitleDisplayMode = .always
+            let fluxBrowse = FluxBrowseViewController(style: .insetGrouped)
+            fluxBrowse.navigationItem.largeTitleDisplayMode = .never
             browseNavigationController.setViewControllers([fluxBrowse], animated: false)
 
             self.viewControllers = [myAppsNavigationController, browseNavigationController]
