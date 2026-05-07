@@ -407,15 +407,23 @@ private extension MyAppsViewController
             if(!isExpired) {
                 timeInterval = formatter.string(from: currentDate, to: expirationDate)
             }
-            cell.bannerView.button.setTitle(timeInterval?.uppercased(), for: .normal)
-            
+
             cell.bannerView.button.isIndicatingActivity = false
-            cell.bannerView.configure(for: installedApp, action: .custom((timeInterval?.uppercased())!))
+            cell.bannerView.configure(for: installedApp, action: .custom(""))
             
             cell.bannerView.iconImageView.isIndicatingActivity = true
             
-            cell.bannerView.buttonLabel.isHidden = isExpired
-            cell.bannerView.buttonLabel.text = NSLocalizedString("Expires in", comment: "")
+            cell.bannerView.buttonLabel.isHidden = true
+            
+            let expirationGreen = !isExpired && numberOfDays >= 6
+            let attributedExpiration = Self.attributedExpirationLabel(
+                numberOfDays: numberOfDays,
+                isExpired: isExpired,
+                fallbackInterval: timeInterval,
+                showsGoodStatusDot: expirationGreen
+            )
+            cell.bannerView.button.setAttributedTitle(attributedExpiration, for: .normal)
+            cell.bannerView.button.setTitle(nil, for: .normal)
             
             cell.bannerView.button.removeTarget(self, action: nil, for: .primaryActionTriggered)
             cell.bannerView.button.addTarget(self, action: #selector(MyAppsViewController.refreshApp(_:)), for: .primaryActionTriggered)
@@ -437,7 +445,7 @@ private extension MyAppsViewController
                 cell.bannerView.button.alpha = 1.0
             }
             
-            cell.bannerView.accessibilityLabel? += ". " + String(format: NSLocalizedString("Expires in %@", comment: ""), timeInterval!)
+            cell.bannerView.accessibilityLabel? += ". " + Self.accessibilityExpirationPhrase(numberOfDays: numberOfDays, isExpired: isExpired, fallbackInterval: timeInterval)
             
             // Make sure refresh button is correct size.
             cell.layoutIfNeeded()
@@ -2476,6 +2484,64 @@ extension MyAppsViewController: NSFetchedResultsControllerDelegate
         case self.activeAppsDataSource.fetchedResultsController: return self.activeAppsDataSource
         default: return nil
         }
+    }
+
+    fileprivate static func attributedExpirationLabel(
+        numberOfDays: Int,
+        isExpired: Bool,
+        fallbackInterval: String?,
+        showsGoodStatusDot: Bool
+    ) -> NSAttributedString {
+        let font = UIFont.boldSystemFont(ofSize: 14)
+        let textColor = UIColor.white
+
+        let plainText: String
+        if isExpired {
+            plainText = NSLocalizedString("Expired", comment: "")
+        } else if numberOfDays >= 1 {
+            plainText = String(format: NSLocalizedString("%lld days", comment: ""), Int64(numberOfDays))
+        } else if let f = fallbackInterval, !f.isEmpty {
+            plainText = f
+        } else {
+            plainText = NSLocalizedString("< 1 day", comment: "")
+        }
+
+        guard showsGoodStatusDot else {
+            return NSAttributedString(string: plainText, attributes: [
+                .font: font,
+                .foregroundColor: textColor,
+            ])
+        }
+
+        let attachment = NSTextAttachment()
+        let cfg = UIImage.SymbolConfiguration(pointSize: 11, weight: .heavy)
+        let dotImage = UIImage(systemName: "circle.fill", withConfiguration: cfg)?
+            .withTintColor(UIColor.systemGreen, renderingMode: .alwaysOriginal)
+        attachment.image = dotImage
+        if let img = attachment.image {
+            let mid = font.capHeight / 2
+            attachment.bounds = CGRect(x: 0, y: mid - img.size.height / 2, width: img.size.width + 5, height: img.size.height)
+        }
+
+        let full = NSMutableAttributedString(attachment: attachment)
+        full.append(NSAttributedString(string: plainText, attributes: [
+            .font: font,
+            .foregroundColor: textColor,
+        ]))
+        return full
+    }
+
+    fileprivate static func accessibilityExpirationPhrase(numberOfDays: Int, isExpired: Bool, fallbackInterval: String?) -> String {
+        if isExpired {
+            return NSLocalizedString("Expired.", comment: "")
+        }
+        if numberOfDays >= 1 {
+            return String(format: NSLocalizedString("%lld days remaining.", comment: ""), Int64(numberOfDays))
+        }
+        if let f = fallbackInterval, !f.isEmpty {
+            return String(format: NSLocalizedString("%@ remaining.", comment: ""), f)
+        }
+        return NSLocalizedString("Less than one day remaining.", comment: "")
     }
 }
 

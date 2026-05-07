@@ -59,6 +59,9 @@ extension AddSourceViewController
 
 class AddSourceViewController: UICollectionViewController 
 {
+    /// When presenting modally (e.g. from Flux Browse), set before the controller loads.
+    var prefilledSourceURL: URL?
+
     private var stagedForAdd: LinkedHashMap<Source, Bool> = LinkedHashMap()
     
     private lazy var dataSource = self.makeDataSource()
@@ -97,6 +100,14 @@ class AddSourceViewController: UICollectionViewController
         self.collectionView.prefetchDataSource = self.dataSource
         
         self.startPipeline()
+
+        if let prefilled = self.prefilledSourceURL {
+            self.prefilledSourceURL = nil
+            self.viewModel.sourceAddress = prefilled.absoluteString
+            DispatchQueue.main.async {
+                self.viewModel.isShowingPreviewStatus = true
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool)
