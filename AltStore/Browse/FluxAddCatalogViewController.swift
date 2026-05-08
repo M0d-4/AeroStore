@@ -205,19 +205,39 @@ final class FluxAddCatalogViewController: UIViewController {
         addButton.isHidden = true
         previewIcon.image = nil
 
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 let source = try await AppManager.shared.fetchSource(sourceURL: url)
+                // `fetchSource` uses a background MOC by default; Core Data attributes must be read on that queue.
+                guard let moc = source.managedObjectContext else {
+                    await MainActor.run {
+                        self.activity.stopAnimating()
+                        self.previewButton.isEnabled = true
+                        self.presentAlert(
+                            title: NSLocalizedString("Can’t load catalog", comment: ""),
+                            message: NSLocalizedString("The preview could not be prepared. Try again.", comment: "")
+                        )
+                    }
+                    return
+                }
+                let preview = await moc.performAsync {
+                    (
+                        name: source.name,
+                        subtitleLine: source.subtitle ?? source.sourceURL.absoluteString,
+                        iconURL: source.effectiveIconURL
+                    )
+                }
                 await MainActor.run {
                     self.fetchedSource = source
-                    self.previewTitle.text = source.name
-                    self.previewSubtitle.text = source.subtitle ?? source.sourceURL.absoluteString
+                    self.previewTitle.text = preview.name
+                    self.previewSubtitle.text = preview.subtitleLine
                     self.previewContainer.isHidden = false
                     self.addButton.isHidden = false
                     self.activity.stopAnimating()
                     self.previewButton.isEnabled = true
 
-                    if let iconURL = source.effectiveIconURL {
+                    if let iconURL = preview.iconURL {
                         self.previewIcon.backgroundColor = .white
                         self.previewIcon.tintColor = nil
                         Nuke.loadImage(with: iconURL, into: self.previewIcon)
