@@ -367,16 +367,26 @@ extension AppManager
 
         // Wait for fetch to finish before saving context to make
         // sure there isn't already a source with this identifier.
-        let sourceExists = try await fetchedSource.isAdded
-        
+        let persistedSource = try await fetchedSource
+        let sourceExists = try await persistedSource.isAdded
+
         // This is just a sanity check, so pass nil for existingSource to keep code simple.
         guard !sourceExists else { throw SourceError.duplicate(source, existingSource: nil) }
-        
+
         try await context.performAsync {
             try context.save()
         }
-        
-        NotificationCenter.default.post(name: AppManager.didAddSourceNotification, object: source)
+
+        // Notify with the Source in `viewContext` so observers never touch a stale instance
+        // from the preview fetch or a background-only object graph.
+        let objectID = await context.performAsync {
+            persistedSource.objectID
+        }
+        let viewSourceForNotification: Source = try await DatabaseManager.shared.viewContext.performAsync {
+            try DatabaseManager.shared.viewContext.existingObject(with: objectID) as! Source
+        }
+
+        NotificationCenter.default.post(name: AppManager.didAddSourceNotification, object: viewSourceForNotification)
     }
     
     func remove(@AsyncManaged _ source: Source, presentingViewController: UIViewController) async throws

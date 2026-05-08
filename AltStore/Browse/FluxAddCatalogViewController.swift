@@ -205,7 +205,7 @@ final class FluxAddCatalogViewController: UIViewController {
         addButton.isHidden = true
         previewIcon.image = nil
 
-        Task { [weak self] in
+        Task { @MainActor [weak self] in
             guard let self else { return }
             do {
                 let source = try await AppManager.shared.fetchSource(sourceURL: url)
@@ -260,7 +260,8 @@ final class FluxAddCatalogViewController: UIViewController {
     @objc private func addTapped() {
         guard let source = fetchedSource else { return }
 
-        Task {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             do {
                 try await AppManager.shared.add(
                     source,
@@ -268,15 +269,10 @@ final class FluxAddCatalogViewController: UIViewController {
                     presentingViewController: self
                 )
 
-                await MainActor.run {
-                    self.dismiss(animated: true)
-                }
-            } catch is CancellationError {}
-
-            catch {
-                await MainActor.run {
-                    self.presentAlert(title: NSLocalizedString("Unable to add catalog", comment: ""), message: error.localizedDescription)
-                }
+                self.dismiss(animated: true)
+            } catch is CancellationError {
+            } catch {
+                self.presentAlert(title: NSLocalizedString("Unable to add catalog", comment: ""), message: error.localizedDescription)
             }
         }
     }
