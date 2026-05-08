@@ -50,9 +50,26 @@ final class TabBarController: UITabBarController
             myAppsNavigationController.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
             myAppsNavigationController.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
 
-            let fluxBrowse = FluxBrowseViewController(style: .insetGrouped)
-            fluxBrowse.navigationItem.largeTitleDisplayMode = .never
-            browseNavigationController.setViewControllers([fluxBrowse], animated: false)
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let featured = storyboard.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
+            featured.navigationItem.largeTitleDisplayMode = .always
+
+            let addCatalogAction = UIAction { [weak featured] _ in
+                guard let nav = featured?.navigationController else { return }
+                let add = FluxAddCatalogViewController()
+                let sheet = UINavigationController(rootViewController: add)
+                sheet.modalPresentationStyle = .formSheet
+                sheet.navigationBar.prefersLargeTitles = false
+                nav.present(sheet, animated: true)
+            }
+            featured.navigationItem.rightBarButtonItem = UIBarButtonItem(
+                image: UIImage(systemName: "plus.circle.fill"),
+                style: .plain,
+                primaryAction: addCatalogAction
+            )
+            featured.navigationItem.rightBarButtonItem?.accessibilityLabel = NSLocalizedString("Add catalog", comment: "")
+
+            browseNavigationController.setViewControllers([featured], animated: false)
 
             self.viewControllers = [myAppsNavigationController, browseNavigationController]
         }

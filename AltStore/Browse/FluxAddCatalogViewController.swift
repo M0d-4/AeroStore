@@ -277,11 +277,7 @@ final class FluxAddCatalogViewController: UIViewController {
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                try await AppManager.shared.add(
-                    source,
-                    message: NSLocalizedString("FluxStore only refreshes apps from catalogs you trust. If you don’t recognize this publisher, tap Cancel and verify the URL.", comment: ""),
-                    presentingViewController: self
-                )
+                try await AppManager.shared.addWithoutConfirmation(source)
 
                 self.dismiss(animated: true)
             } catch is CancellationError {

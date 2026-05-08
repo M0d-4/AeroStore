@@ -90,6 +90,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             else
             {
                 print("Started DatabaseManager.")
+                FluxBundledCatalogImporter.startImportWhenReady()
             }
         }
         
