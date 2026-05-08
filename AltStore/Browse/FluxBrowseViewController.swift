@@ -7,7 +7,7 @@ import CoreData
 import AltStoreCore
 
 /// Flux Browse hub: App Store–style catalog rows, Flux-branded add flow, rich headers.
-final class FluxBrowseViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+final class FluxBrowseViewController: UITableViewController, NSFetchedResultsControllerDelegate, UISearchResultsUpdating {
 
     private enum Section: Int, CaseIterable {
         case yours = 0
@@ -38,6 +38,30 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
     private let bundledCatalog: [CatalogEntry] = FluxBrowseViewController.loadBundledCatalogEntries()
     private var catalogRowsToShow: [CatalogEntry] = []
 
+    /// Trimmed search text; empty means show everything.
+    private var searchQuery: String = ""
+
+    private lazy var searchController: UISearchController = {
+        let sc = UISearchController(searchResultsController: nil)
+        sc.searchResultsUpdater = self
+        sc.obscuresBackgroundDuringPresentation = false
+        sc.searchBar.placeholder = NSLocalizedString("Search catalogs & picks", comment: "")
+        sc.searchBar.autocapitalizationType = .none
+        sc.searchBar.autocorrectionType = .no
+        return sc
+    }()
+
+    private var displayedYourSources: [Source] {
+        let all = fetchedSourcesController.fetchedObjects ?? []
+        guard !searchQuery.isEmpty else { return all }
+        return all.filter { matchesYourCatalog($0, query: searchQuery) }
+    }
+
+    private var displayedPickEntries: [CatalogEntry] {
+        guard !searchQuery.isEmpty else { return catalogRowsToShow }
+        return catalogRowsToShow.filter { matchesPick($0, query: searchQuery) }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -51,6 +75,14 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 140
 
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
+        definesPresentationContext = true
+
+        let refresh = UIRefreshControl()
+        refresh.addTarget(self, action: #selector(refreshCatalogsPulled), for: .valueChanged)
+        refreshControl = refresh
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "plus.circle.fill"),
             style: .plain,
@@ -63,6 +95,13 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
         try? fetchedSourcesController.performFetch()
         refreshCatalogRows()
         rebuildHeader()
+    }
+
+    @objc private func refreshCatalogsPulled() {
+        try? fetchedSourcesController.performFetch()
+        refreshCatalogRows()
+        tableView.reloadData()
+        refreshControl?.endRefreshing()
     }
 
     override func viewDidLayoutSubviews() {
@@ -214,6 +253,23 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
         present(nav, animated: true)
     }
 
+    private func matchesYourCatalog(_ source: Source, query: String) -> Bool {
+        if source.name.range(of: query, options: .caseInsensitive) != nil { return true }
+        if source.identifier.range(of: query, options: .caseInsensitive) != nil { return true }
+        if let s = source.subtitle, s.range(of: query, options: .caseInsensitive) != nil { return true }
+        if let host = source.sourceURL.host, host.range(of: query, options: .caseInsensitive) != nil { return true }
+        return source.sourceURL.absoluteString.range(of: query, options: .caseInsensitive) != nil
+    }
+
+    private func matchesPick(_ entry: CatalogEntry, query: String) -> Bool {
+        let title = entry.displayName ?? prettifyIdentifier(entry.identifier)
+        if title.range(of: query, options: .caseInsensitive) != nil { return true }
+        if entry.identifier.range(of: query, options: .caseInsensitive) != nil { return true }
+        if let t = entry.tagline, t.range(of: query, options: .caseInsensitive) != nil { return true }
+        if let host = entry.url.host, host.range(of: query, options: .caseInsensitive) != nil { return true }
+        return entry.url.absoluteString.range(of: query, options: .caseInsensitive) != nil
+    }
+
     // MARK: UITableView
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -222,8 +278,8 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section(rawValue: section)! {
-        case .yours: return fetchedSourcesController.fetchedObjects?.count ?? 0
-        case .picks: return catalogRowsToShow.count
+        case .yours: return displayedYourSources.count
+        case .picks: return displayedPickEntries.count
         }
     }
 
@@ -239,7 +295,8 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
 
         switch Section(rawValue: indexPath.section)! {
         case .yours:
-            guard let source = fetchedSourcesController.fetchedObjects?[indexPath.row] else { return cell }
+            guard indexPath.row < displayedYourSources.count else { return cell }
+            let source = displayedYourSources[indexPath.row]
             let host = source.sourceURL.host ?? source.identifier
             let subtitle: String
             if let s = source.subtitle, !s.isEmpty {
@@ -252,7 +309,8 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
             cell.applyVisuals(mode: .ownedChevron, artworkURL: source.effectiveIconURL, pickGlyph: "sparkles.rectangle.stack")
 
         case .picks:
-            let entry = catalogRowsToShow[indexPath.row]
+            guard indexPath.row < displayedPickEntries.count else { return cell }
+            let entry = displayedPickEntries[indexPath.row]
             let title = entry.displayName ?? prettifyIdentifier(entry.identifier)
             let tagline = entry.tagline ?? NSLocalizedString("Curated catalog • Tap to preview and add", comment: "")
             let host = entry.url.host ?? ""
@@ -268,26 +326,46 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
 
         switch Section(rawValue: indexPath.section)! {
         case .yours:
-            guard let source = fetchedSourcesController.fetchedObjects?[indexPath.row] else { return }
+            guard indexPath.row < displayedYourSources.count else { return }
+            let source = displayedYourSources[indexPath.row]
             let detail = FluxCatalogDetailViewController(source: source)
             navigationController?.pushViewController(detail, animated: true)
 
         case .picks:
-            let entry = catalogRowsToShow[indexPath.row]
+            guard indexPath.row < displayedPickEntries.count else { return }
+            let entry = displayedPickEntries[indexPath.row]
             presentFluxAddCatalog(prefilled: entry.url)
         }
     }
 
     override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        switch Section(rawValue: section)! {
-        case .picks where catalogRowsToShow.isEmpty: return UITableView.automaticDimension
-        default: return 10
+        guard let sec = Section(rawValue: section) else { return 10 }
+        switch sec {
+        case .yours:
+            if !searchQuery.isEmpty, displayedYourSources.isEmpty { return UITableView.automaticDimension }
+            return 10
+        case .picks:
+            if !searchQuery.isEmpty, displayedPickEntries.isEmpty { return UITableView.automaticDimension }
+            if catalogRowsToShow.isEmpty, searchQuery.isEmpty { return UITableView.automaticDimension }
+            return 10
         }
     }
 
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        guard Section(rawValue: section)! == .picks, catalogRowsToShow.isEmpty else { return nil }
-        return NSLocalizedString("You’ve added every Flux pick. Use + to paste any catalog URL.", comment: "")
+        guard let sec = Section(rawValue: section) else { return nil }
+        if !searchQuery.isEmpty {
+            switch sec {
+            case .yours where displayedYourSources.isEmpty:
+                return NSLocalizedString("No catalogs match your search.", comment: "")
+            case .picks where displayedPickEntries.isEmpty:
+                return NSLocalizedString("No Flux picks match your search.", comment: "")
+            default: break
+            }
+        }
+        if sec == .picks, catalogRowsToShow.isEmpty, searchQuery.isEmpty {
+            return NSLocalizedString("You’ve added every Flux pick. Use + to paste any catalog URL.", comment: "")
+        }
+        return nil
     }
 
     private func prettifyIdentifier(_ id: String) -> String {
@@ -299,6 +377,14 @@ final class FluxBrowseViewController: UITableViewController, NSFetchedResultsCon
 
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         refreshCatalogRows()
+        tableView.reloadData()
+    }
+
+    // MARK: UISearchResultsUpdating
+
+    func updateSearchResults(for searchController: UISearchController) {
+        let trimmed = searchController.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        searchQuery = trimmed
         tableView.reloadData()
     }
 }

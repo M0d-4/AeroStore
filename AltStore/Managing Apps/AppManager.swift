@@ -377,13 +377,31 @@ extension AppManager
             try context.save()
         }
 
-        // Notify with the Source in `viewContext` so observers never touch a stale instance
-        // from the preview fetch or a background-only object graph.
-        let objectID = await context.performAsync {
-            persistedSource.objectID
+        // Resolve the persisted row in `viewContext` on the main queue. `existingObject(with:)`
+        // can trap or race right after a background save before merges are visible; fetching
+        // by identifier matches what the rest of the app expects from FRC.
+        let addedSourceID = await context.performAsync {
+            persistedSource.identifier
         }
-        let viewSourceForNotification: Source = try await DatabaseManager.shared.viewContext.performAsync {
-            try DatabaseManager.shared.viewContext.existingObject(with: objectID) as! Source
+
+        let viewSourceForNotification: Source? = await MainActor.run {
+            let ctx = DatabaseManager.shared.viewContext
+            func fetchInViewContext() -> Source? {
+                var found: Source?
+                ctx.performAndWait {
+                    let request = Source.fetchRequest() as NSFetchRequest<Source>
+                    request.fetchLimit = 1
+                    request.predicate = NSPredicate(format: "%K == %@", #keyPath(Source.identifier), addedSourceID)
+                    request.returnsObjectsAsFaults = false
+                    found = try? ctx.fetch(request).first
+                }
+                return found
+            }
+
+            ctx.performAndWait { ctx.processPendingChanges() }
+            if let s = fetchInViewContext() { return s }
+            ctx.performAndWait { ctx.refreshAllObjects() }
+            return fetchInViewContext()
         }
 
         NotificationCenter.default.post(name: AppManager.didAddSourceNotification, object: viewSourceForNotification)
