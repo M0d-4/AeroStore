@@ -131,6 +131,8 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         navigationItem.rightBarButtonItems = [jitButton]
     }
 
+    @objc private func presentFluxJIT(_ sender: Any?)
+    {
         let host = UIHostingController(rootView: FluxJITRootView())
         host.title = "JIT"
         let nav = UINavigationController(rootViewController: host)
