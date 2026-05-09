@@ -267,10 +267,31 @@ final class FluxHomeViewController: UIViewController
 
     private func makeQuickJumpRow() -> UIView
     {
-        let row = UIStackView()
-        row.axis = .horizontal
-        row.spacing = 12
-        row.distribution = .fillEqually
+        let grid = UIStackView()
+        grid.axis = .vertical
+        grid.spacing = 10
+
+        let row1 = UIStackView()
+        row1.axis = .horizontal
+        row1.spacing = 12
+        row1.distribution = .fillEqually
+
+        let row2 = UIStackView()
+        row2.axis = .horizontal
+        row2.spacing = 12
+        row2.distribution = .fillEqually
+
+        var homeCfg = UIButton.Configuration.bordered()
+        homeCfg.title = NSLocalizedString("Home", comment: "")
+        homeCfg.image = UIImage(systemName: "house.fill")
+        homeCfg.baseForegroundColor = .altPrimary
+        homeCfg.background.backgroundColor = .fluxCardBackground
+        homeCfg.background.strokeColor = UIColor.fluxCardBorder
+        homeCfg.cornerStyle = .large
+        let homeBtn = UIButton(configuration: homeCfg, primaryAction: UIAction { [weak self] _ in
+            guard let self, let tab = self.tabBarController as? TabBarController else { return }
+            tab.selectedIndex = TabBarController.Tab.home.rawValue
+        })
 
         var browse = UIButton.Configuration.filled()
         browse.title = NSLocalizedString("Browse", comment: "")
@@ -295,9 +316,25 @@ final class FluxHomeViewController: UIViewController
             tab.selectedIndex = TabBarController.Tab.myApps.rawValue
         })
 
-        row.addArrangedSubview(browseBtn)
-        row.addArrangedSubview(mineBtn)
-        return row
+        var settingsCfg = UIButton.Configuration.bordered()
+        settingsCfg.title = NSLocalizedString("Settings", comment: "")
+        settingsCfg.image = UIImage(systemName: "gearshape.fill")
+        settingsCfg.baseForegroundColor = .altPrimary
+        settingsCfg.background.backgroundColor = .fluxCardBackground
+        settingsCfg.background.strokeColor = UIColor.fluxCardBorder
+        settingsCfg.cornerStyle = .large
+        let settingsBtn = UIButton(configuration: settingsCfg, primaryAction: UIAction { [weak self] _ in
+            guard let self, let tab = self.tabBarController as? TabBarController else { return }
+            tab.selectedIndex = TabBarController.Tab.settings.rawValue
+        })
+
+        row1.addArrangedSubview(homeBtn)
+        row1.addArrangedSubview(browseBtn)
+        row2.addArrangedSubview(mineBtn)
+        row2.addArrangedSubview(settingsBtn)
+        grid.addArrangedSubview(row1)
+        grid.addArrangedSubview(row2)
+        return grid
     }
 
     private func embedFeaturedBrowse()

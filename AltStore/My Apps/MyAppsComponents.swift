@@ -8,6 +8,7 @@
 
 import UIKit
 import Roxas
+import AltStoreCore
 
 final class InstalledAppCollectionViewCell: UICollectionViewCell
 {
@@ -160,6 +161,75 @@ final class FluxStoreSelfUpdateCell: UICollectionViewCell
     {
         titleLabel.text = String(format: NSLocalizedString("FluxStore %@ is available", comment: ""), info.versionString)
         subtitleLabel.text = NSLocalizedString("Tap to download the latest IPA from GitHub", comment: "")
+    }
+}
+
+/// Single row of shortcuts on My Apps (jump between tabs).
+final class FluxQuickActionsCollectionViewCell: UICollectionViewCell
+{
+    private let cardView = UIView()
+    private let stack = UIStackView()
+
+    override init(frame: CGRect)
+    {
+        super.init(frame: frame)
+        contentView.preservesSuperviewLayoutMargins = true
+
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.backgroundColor = .fluxCardBackground
+        cardView.layer.cornerRadius = 20
+        cardView.layer.cornerCurve = .continuous
+        cardView.layer.borderWidth = 1
+        cardView.layer.borderColor = UIColor.fluxCardBorder.cgColor
+
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .horizontal
+        stack.spacing = 10
+        stack.distribution = .fillEqually
+
+        contentView.addSubview(cardView)
+        cardView.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            stack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            stack.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            stack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12),
+        ])
+    }
+
+    required init?(coder: NSCoder)
+    {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(home: @escaping () -> Void, browse: @escaping () -> Void, settings: @escaping () -> Void)
+    {
+        stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        stack.addArrangedSubview(Self.makePillButton(title: NSLocalizedString("Home", comment: ""), symbol: "house.fill", action: home))
+        stack.addArrangedSubview(Self.makePillButton(title: NSLocalizedString("Browse", comment: ""), symbol: "sparkles", action: browse))
+        stack.addArrangedSubview(Self.makePillButton(title: NSLocalizedString("Settings", comment: ""), symbol: "gearshape.fill", action: settings))
+    }
+
+    private static func makePillButton(title: String, symbol: String, action: @escaping () -> Void) -> UIButton
+    {
+        var cfg = UIButton.Configuration.borderedTinted()
+        cfg.title = title
+        cfg.image = UIImage(systemName: symbol)
+        cfg.imagePlacement = .top
+        cfg.imagePadding = 4
+        cfg.cornerStyle = .medium
+        cfg.baseForegroundColor = .altPrimary
+        cfg.background.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.08)
+        cfg.background.strokeColor = UIColor.fluxCardBorder
+        let btn = UIButton(configuration: cfg, primaryAction: UIAction { _ in action() })
+        btn.heightAnchor.constraint(greaterThanOrEqualToConstant: 72).isActive = true
+        return btn
     }
 }
 

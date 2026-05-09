@@ -209,6 +209,8 @@ final class SettingsViewController: UITableViewController
         super.viewDidLoad()
         
         self.configureFluxAppearance()
+        self.title = NSLocalizedString("Settings", comment: "")
+        self.navigationItem.largeTitleDisplayMode = .always
         let nib = UINib(nibName: "SettingsHeaderFooterView", bundle: nil)
         self.prototypeHeaderFooterView = nib.instantiate(withOwner: nil, options: nil)[0] as? SettingsHeaderFooterView
         
@@ -263,6 +265,7 @@ final class SettingsViewController: UITableViewController
     {
         self.tableView.backgroundColor = .altBackground
         self.tableView.separatorStyle = .none
+        self.tableView.indicatorStyle = .default
         if #available(iOS 15.0, *) {
             self.tableView.sectionHeaderTopPadding = 12
         }
@@ -531,11 +534,11 @@ private extension SettingsViewController
         case .signIn:
             if isHeader
             {
-                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("ACCOUNT", comment: "")
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("FluxStore Account", comment: "")
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to download apps from FluxStore.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to install and refresh apps. Your credentials stay on this device in the Keychain.", comment: "")
             }
             
         case .patreon:
@@ -549,7 +552,7 @@ private extension SettingsViewController
             }
 
         case .account:
-            settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("ACCOUNT", comment: "")
+            settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("Signed In", comment: "")
             
             settingsHeaderFooterView.button.setTitle(NSLocalizedString("SIGN OUT", comment: ""), for: .normal)
             settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.signOut(_:)), for: .primaryActionTriggered)

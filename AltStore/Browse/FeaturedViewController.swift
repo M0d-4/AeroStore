@@ -8,6 +8,7 @@
 
 import UIKit
 import AltStoreCore
+import CoreData
 import Roxas
 
 import Nuke
@@ -58,6 +59,14 @@ class FeaturedViewController: UICollectionViewController
 {
     /// When `true`, this controller is embedded on Home: no search, no large title, no side margins, non-scrolling height is sized by the parent.
     var isEmbeddedHomePreview = false
+
+    /// Inner FRC-backed sources (used to disable incremental updates when embedded — `liveFetchLimit` + FRC inserts fight `performBatchUpdates`).
+    private var categoriesKnownDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
+    private var categoriesUnknownDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
+    private var featuredPrimaryDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
+    private var featuredSecondaryDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
+
+    private var embeddedReloadObservers: [NSObjectProtocol] = []
 
     private lazy var dataSource = self.makeDataSource()
     private lazy var recentlyUpdatedDataSource = self.makeRecentlyUpdatedDataSource()
@@ -136,6 +145,27 @@ class FeaturedViewController: UICollectionViewController
             
             self.navigationItem.largeTitleDisplayMode = .always
         }
+        else
+        {
+            self.configureEmbeddedFeaturedReloadPolicy()
+        }
+    }
+
+    deinit
+    {
+        for o in self.embeddedReloadObservers
+        {
+            NotificationCenter.default.removeObserver(o)
+        }
+    }
+
+    override func viewWillAppear(_ animated: Bool)
+    {
+        super.viewWillAppear(animated)
+        if self.isEmbeddedHomePreview
+        {
+            self.reloadEmbeddedFeaturedSnapshot()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) 
@@ -161,6 +191,47 @@ class FeaturedViewController: UICollectionViewController
         guard h > 1, abs(h - self.lastReportedEmbeddedHeight) > 0.5 else { return }
         self.lastReportedEmbeddedHeight = h
         (self.parent as? FluxHomeViewController)?.updateEmbeddedFeaturedHeight(h)
+    }
+
+    private func configureEmbeddedFeaturedReloadPolicy()
+    {
+        self.recentlyUpdatedDataSource.fetchedResultsController.delegate = nil
+        self.categoriesKnownDataSource?.fetchedResultsController.delegate = nil
+        self.categoriesUnknownDataSource?.fetchedResultsController.delegate = nil
+        self.featuredPrimaryDataSource?.fetchedResultsController.delegate = nil
+        self.featuredSecondaryDataSource?.fetchedResultsController.delegate = nil
+
+        let mainQueue = OperationQueue.main
+        let ctx = DatabaseManager.shared.viewContext
+        self.embeddedReloadObservers.append(
+            NotificationCenter.default.addObserver(forName: NSManagedObjectContext.didChangeObjectsNotification, object: ctx, queue: nil) { [weak self] _ in
+                mainQueue.addOperation { self?.reloadEmbeddedFeaturedSnapshot() }
+            }
+        )
+        self.embeddedReloadObservers.append(
+            NotificationCenter.default.addObserver(forName: AppManager.didFetchSourceNotification, object: nil, queue: nil) { [weak self] _ in
+                mainQueue.addOperation { self?.reloadEmbeddedFeaturedSnapshot() }
+            }
+        )
+
+        self.reloadEmbeddedFeaturedSnapshot()
+    }
+
+    private func reloadEmbeddedFeaturedSnapshot()
+    {
+        guard self.isEmbeddedHomePreview else { return }
+
+        try? self.recentlyUpdatedDataSource.fetchedResultsController.performFetch()
+        try? self.categoriesKnownDataSource?.fetchedResultsController.performFetch()
+        try? self.categoriesUnknownDataSource?.fetchedResultsController.performFetch()
+        try? self.featuredPrimaryDataSource?.fetchedResultsController.performFetch()
+        try? self.featuredSecondaryDataSource?.fetchedResultsController.performFetch()
+
+        UIView.performWithoutAnimation {
+            self.collectionView.reloadData()
+        }
+        self.collectionView.layoutIfNeeded()
+        self.notifyParentOfContentSizeChangeIfNeeded()
     }
 }
 
@@ -358,7 +429,10 @@ private extension FeaturedViewController
         let unknownController = NSFetchedResultsController(fetchRequest: unknownFetchRequest, managedObjectContext: DatabaseManager.shared.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         let unknownDataSource = RSTFetchedResultsCollectionViewDataSource<StoreApp>(fetchedResultsController: unknownController)
         unknownDataSource.liveFetchLimit = 1
-        
+
+        self.categoriesKnownDataSource = knownDataSource
+        self.categoriesUnknownDataSource = unknownDataSource
+
         // Use composite data source to ensure "Other" category is always last.
         let dataSource = RSTCompositeCollectionViewDataSource<StoreApp>(dataSources: [knownDataSource, unknownDataSource])
         dataSource.shouldFlattenSections = true // Combine into single section, with one StoreApp per category.
@@ -429,7 +503,10 @@ private extension FeaturedViewController
         let secondaryController = NSFetchedResultsController(fetchRequest: secondaryFetchRequest, managedObjectContext: DatabaseManager.shared.viewContext, sectionNameKeyPath: #keyPath(StoreApp._source.featuredSortID), cacheName: nil)
         let secondaryDataSource = RSTFetchedResultsCollectionViewDataSource<StoreApp>(fetchedResultsController: secondaryController)
         secondaryDataSource.liveFetchLimit = 5
-        
+
+        self.featuredPrimaryDataSource = primaryDataSource
+        self.featuredSecondaryDataSource = secondaryDataSource
+
         // Ensure sources with no remaining apps always come last.
         let dataSource = RSTCompositeCollectionViewPrefetchingDataSource<StoreApp, UIImage>(dataSources: [primaryDataSource, secondaryDataSource])
         dataSource.cellIdentifierHandler = { _ in ReuseID.featuredApp.rawValue }

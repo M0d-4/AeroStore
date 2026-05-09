@@ -16,6 +16,7 @@ extension TabBarController
         case home
         case browse
         case myApps
+        case settings
     }
 }
 
@@ -78,7 +79,19 @@ final class TabBarController: UITabBarController
 
             browseNavigationController.setViewControllers([featured], animated: false)
 
-            self.viewControllers = [homeNavigationController, browseNavigationController, myAppsNavigationController]
+            let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
+            let settingsRoot = settingsStoryboard.instantiateInitialViewController() as! SettingsViewController
+            let settingsNavigationController = UINavigationController(rootViewController: settingsRoot)
+            settingsNavigationController.navigationBar.prefersLargeTitles = true
+            settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
+            settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
+
+            self.viewControllers = [
+                homeNavigationController,
+                browseNavigationController,
+                myAppsNavigationController,
+                settingsNavigationController,
+            ]
         }
     }
 
@@ -157,9 +170,6 @@ private extension TabBarController
 
     func presentSettings()
     {
-        let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
-        guard let settingsRoot = settingsStoryboard.instantiateInitialViewController() else { return }
-        settingsRoot.modalPresentationStyle = .formSheet
-        self.present(settingsRoot, animated: true)
+        self.selectedIndex = Tab.settings.rawValue
     }
 }
