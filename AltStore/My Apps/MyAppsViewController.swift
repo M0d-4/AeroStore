@@ -619,17 +619,11 @@ private extension MyAppsViewController
     {
         Task { @MainActor in
             let next = await FluxStoreGitHubRelease.fetchNewerReleaseIfAvailable()
-            let visibilityChanged = (next != nil) != (self.fluxSelfUpdateInfo != nil)
             self.fluxSelfUpdateInfo = next
             guard self.isViewLoaded, self.view.window != nil else { return }
-            if visibilityChanged
-            {
-                self.collectionView.reloadData()
-            }
-            else if next != nil
-            {
-                self.collectionView.reloadSections(IndexSet(integer: Section.fluxSelfUpdate.rawValue))
-            }
+            // Always reload the whole collection: partial `reloadSections` can abort when the composite
+            // section index shifts (e.g. flux row appears/disappears).
+            self.collectionView.reloadData()
         }
     }
 

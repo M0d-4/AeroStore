@@ -56,19 +56,28 @@ extension FeaturedViewController
 
 class FeaturedViewController: UICollectionViewController
 {
+    /// When `true`, this controller is embedded on Home: no search, no large title, no side margins, non-scrolling height is sized by the parent.
+    var isEmbeddedHomePreview = false
+
     private lazy var dataSource = self.makeDataSource()
     private lazy var recentlyUpdatedDataSource = self.makeRecentlyUpdatedDataSource()
     private lazy var categoriesDataSource = self.makeCategoriesDataSource()
     private lazy var featuredAppsDataSource = self.makeFeaturedAppsDataSource()
     
-    private var searchController: RSTSearchController!
-    private var searchBrowseViewController: BrowseViewController!
+    private var searchController: RSTSearchController?
+    private var searchBrowseViewController: BrowseViewController?
+
+    /// When embedded as a child, `navigationController` is nil; use the parent tab’s navigation controller for pushes.
+    fileprivate var presentationNavigationController: UINavigationController?
+    {
+        self.navigationController ?? self.parent?.navigationController
+    }
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
         
-        self.title = NSLocalizedString("Browse", comment: "")
+        self.title = self.isEmbeddedHomePreview ? "" : NSLocalizedString("Browse", comment: "")
         
         let layout = Self.makeLayout()
         self.collectionView.collectionViewLayout = layout
@@ -86,38 +95,72 @@ class FeaturedViewController: UICollectionViewController
         self.collectionView.register(ButtonCollectionReusableView.self, forSupplementaryViewOfKind: ElementKind.button.rawValue, withReuseIdentifier: ElementKind.button.rawValue)
         
         self.collectionView.backgroundColor = .altBackground
-        self.collectionView.directionalLayoutMargins.leading = 20
-        self.collectionView.directionalLayoutMargins.trailing = 20
-        self.collectionView.contentInset.bottom = 28
-        self.collectionView.verticalScrollIndicatorInsets.bottom = 12
-        
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        self.searchBrowseViewController = storyboard.instantiateViewController(identifier: "browseViewController") { coder in
-            let browseViewController = BrowseViewController(coder: coder)
-            return browseViewController
+        if self.isEmbeddedHomePreview
+        {
+            self.collectionView.directionalLayoutMargins.leading = 0
+            self.collectionView.directionalLayoutMargins.trailing = 0
+            self.collectionView.contentInset.bottom = 8
+            self.collectionView.verticalScrollIndicatorInsets.bottom = 0
+            self.collectionView.isScrollEnabled = false
+            self.navigationItem.largeTitleDisplayMode = .never
+        }
+        else
+        {
+            self.collectionView.directionalLayoutMargins.leading = 20
+            self.collectionView.directionalLayoutMargins.trailing = 20
+            self.collectionView.contentInset.bottom = 28
+            self.collectionView.verticalScrollIndicatorInsets.bottom = 12
         }
         
-        self.searchController = RSTSearchController(searchResultsController: self.searchBrowseViewController)
-        self.searchController.searchableKeyPaths = [#keyPath(StoreApp.name),
-                                                    #keyPath(StoreApp.developerName),
-                                                    #keyPath(StoreApp.subtitle),
-                                                    #keyPath(StoreApp.bundleIdentifier)]
-        self.searchController.searchHandler = { [weak searchBrowseViewController] (searchValue, _) in
-            searchBrowseViewController?.searchPredicate = searchValue.predicate
-            return nil
+        if !self.isEmbeddedHomePreview
+        {
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            let browseVC = storyboard.instantiateViewController(identifier: "browseViewController") { coder in
+                BrowseViewController(coder: coder)
+            }
+            self.searchBrowseViewController = browseVC
+            
+            let search = RSTSearchController(searchResultsController: browseVC)
+            search.searchableKeyPaths = [#keyPath(StoreApp.name),
+                                         #keyPath(StoreApp.developerName),
+                                         #keyPath(StoreApp.subtitle),
+                                         #keyPath(StoreApp.bundleIdentifier)]
+            search.searchHandler = { [weak browseVC] (searchValue, _) in
+                browseVC?.searchPredicate = searchValue.predicate
+                return nil
+            }
+            self.searchController = search
+            
+            self.navigationItem.searchController = search
+            self.navigationItem.hidesSearchBarWhenScrolling = true
+            
+            self.navigationItem.largeTitleDisplayMode = .always
         }
-        
-        self.navigationItem.searchController = self.searchController
-        self.navigationItem.hidesSearchBarWhenScrolling = true
-        
-        self.navigationItem.largeTitleDisplayMode = .always
     }
     
     override func viewDidAppear(_ animated: Bool) 
     {
         super.viewDidAppear(animated)
         
-        self.navigationController?.navigationBar.tintColor = .altPrimary
+        self.presentationNavigationController?.navigationBar.tintColor = .altPrimary
+    }
+
+    override func viewDidLayoutSubviews()
+    {
+        super.viewDidLayoutSubviews()
+        guard self.isEmbeddedHomePreview else { return }
+        self.notifyParentOfContentSizeChangeIfNeeded()
+    }
+
+    private var lastReportedEmbeddedHeight: CGFloat = 0
+
+    private func notifyParentOfContentSizeChangeIfNeeded()
+    {
+        guard self.isEmbeddedHomePreview else { return }
+        let h = self.collectionView.collectionViewLayout.collectionViewContentSize.height
+        guard h > 1, abs(h - self.lastReportedEmbeddedHeight) > 0.5 else { return }
+        self.lastReportedEmbeddedHeight = h
+        (self.parent as? FluxHomeViewController)?.updateEmbeddedFeaturedHeight(h)
     }
 }
 
@@ -674,7 +717,7 @@ extension FeaturedViewController
         case _ where section.isFeaturedAppsSection: fallthrough
         case .recentlyUpdated:
             let appViewController = AppViewController.makeAppViewController(app: storeApp)
-            self.navigationController?.pushViewController(appViewController, animated: true)
+            self.presentationNavigationController?.pushViewController(appViewController, animated: true)
             
         case .categories:
             let category = storeApp.category ?? .other

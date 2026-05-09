@@ -6,39 +6,100 @@
 import UIKit
 import AltStoreCore
 
-/// Home tab: FluxStore update, quick navigation, and summary of app updates.
-final class FluxHomeViewController: UITableViewController
+/// Home tab: FluxStore update, quick navigation, embedded Browse preview (same catalog as Featured), and app update summary.
+final class FluxHomeViewController: UIViewController
 {
-    private enum Section: Int, CaseIterable
-    {
-        case fluxStoreUpdate
-        case goFurther
-        case yourApps
-    }
+    private let scrollView: UIScrollView = {
+        let s = UIScrollView()
+        s.translatesAutoresizingMaskIntoConstraints = false
+        s.alwaysBounceVertical = true
+        s.keyboardDismissMode = .onDrag
+        return s
+    }()
+
+    private let stackView: UIStackView = {
+        let s = UIStackView()
+        s.translatesAutoresizingMaskIntoConstraints = false
+        s.axis = .vertical
+        s.spacing = 20
+        s.isLayoutMarginsRelativeArrangement = true
+        s.layoutMargins = UIEdgeInsets(top: 12, left: 20, bottom: 28, right: 20)
+        return s
+    }()
+
+    private let updateStack = UIStackView()
+
+    private var embeddedFeatured: FeaturedViewController?
+    private var featuredHeightConstraint: NSLayoutConstraint?
 
     private var fluxUpdate: FluxStoreGitHubRelease.UpdateInfo?
     private var pendingAppUpdatesCount = 0
     private var isFetchingRelease = false
 
+    private let yourAppsTitle = UILabel()
+    private let yourAppsSubtitle = UILabel()
+    private let yourAppsChevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+    private lazy var yourAppsControl: UIControl = self.makeYourAppsControl()
+
     init()
     {
-        super.init(style: .insetGrouped)
+        super.init(nibName: nil, bundle: nil)
     }
 
-    @available(*, unavailable)
     required init?(coder: NSCoder)
     {
-        fatalError("init(coder:) has not been implemented")
+        // Must not fatalError: state restoration / storyboards / previews call this and would SIGABRT.
+        super.init(coder: coder)
     }
 
     override func viewDidLoad()
     {
         super.viewDidLoad()
 
+        view.backgroundColor = .altBackground
         title = NSLocalizedString("Home", comment: "")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.backgroundColor = .altBackground
         navigationItem.largeTitleDisplayMode = .always
+
+        view.addSubview(scrollView)
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
+        scrollView.addSubview(stackView)
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+            stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+        ])
+
+        updateStack.axis = .vertical
+        updateStack.spacing = 0
+        stackView.addArrangedSubview(updateStack)
+
+        stackView.addArrangedSubview(makeSectionHeading(
+            title: NSLocalizedString("Jump to", comment: ""),
+            subtitle: NSLocalizedString("Open a tab or keep exploring below.", comment: "")
+        ))
+        stackView.addArrangedSubview(makeQuickJumpRow())
+
+        stackView.addArrangedSubview(makeSectionHeading(
+            title: NSLocalizedString("Discover", comment: ""),
+            subtitle: NSLocalizedString("New & updated, categories, and featured apps from your catalogs—same as Browse.", comment: "")
+        ))
+        embedFeaturedBrowse()
+
+        stackView.addArrangedSubview(makeSectionHeading(
+            title: NSLocalizedString("YOUR APPS", comment: ""),
+            subtitle: nil
+        ))
+        stackView.addArrangedSubview(yourAppsControl)
+
+        configureYourAppsSummary()
     }
 
     override func viewWillAppear(_ animated: Bool)
@@ -46,13 +107,33 @@ final class FluxHomeViewController: UITableViewController
         super.viewWillAppear(animated)
         refreshSummary()
         refreshFluxRelease()
+        embeddedFeatured?.collectionView.reloadData()
+        embeddedFeatured?.collectionView.collectionViewLayout.invalidateLayout()
+        embeddedFeatured?.collectionView.layoutIfNeeded()
+        embeddedFeatured?.view.setNeedsLayout()
+        embeddedFeatured?.view.layoutIfNeeded()
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let cv = self.embeddedFeatured?.collectionView else { return }
+            cv.layoutIfNeeded()
+            let h = cv.collectionViewLayout.collectionViewContentSize.height
+            self.updateEmbeddedFeaturedHeight(h)
+        }
+    }
+
+    /// Called from embedded `FeaturedViewController` when compositional layout finishes sizing.
+    func updateEmbeddedFeaturedHeight(_ height: CGFloat)
+    {
+        featuredHeightConstraint?.constant = max(height, 220)
+        UIView.performWithoutAnimation {
+            self.view.layoutIfNeeded()
+        }
     }
 
     private func refreshSummary()
     {
         let request = InstalledApp.supportedUpdatesFetchRequest()
         pendingAppUpdatesCount = (try? DatabaseManager.shared.viewContext.count(for: request)) ?? 0
-        tableView.reloadSections(IndexSet(integer: Section.yourApps.rawValue), with: .automatic)
+        configureYourAppsSummary()
     }
 
     private func refreshFluxRelease()
@@ -62,114 +143,267 @@ final class FluxHomeViewController: UITableViewController
         Task { @MainActor in
             defer { self.isFetchingRelease = false }
             self.fluxUpdate = await FluxStoreGitHubRelease.fetchNewerReleaseIfAvailable()
-            self.tableView.reloadSections(IndexSet(integer: Section.fluxStoreUpdate.rawValue), with: .automatic)
+            self.rebuildUpdateBanner()
         }
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int
+    private func rebuildUpdateBanner()
     {
-        Section.allCases.count
-    }
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
-    {
-        switch Section(rawValue: section)!
-        {
-        case .fluxStoreUpdate: return fluxUpdate == nil ? 0 : 1
-        case .goFurther: return 2
-        case .yourApps: return 1
+        updateStack.arrangedSubviews.forEach { v in
+            updateStack.removeArrangedSubview(v)
+            v.removeFromSuperview()
         }
+        guard let info = fluxUpdate else { return }
+
+        let outer = UIView()
+        outer.translatesAutoresizingMaskIntoConstraints = false
+
+        let card = UIControl()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = .fluxCardBackground
+        card.layer.cornerRadius = 18
+        card.layer.cornerCurve = .continuous
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor.fluxCardBorder.cgColor
+        card.addAction(UIAction { _ in FluxStoreGitHubRelease.openUpdate(info) }, for: .touchUpInside)
+
+        let icon = UIImageView(image: UIImage(systemName: "arrow.down.circle.fill"))
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.tintColor = .altPrimary
+        icon.contentMode = .scaleAspectFit
+
+        let title = UILabel()
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.font = .preferredFont(forTextStyle: .headline)
+        title.textColor = .label
+        title.numberOfLines = 2
+        title.text = String(format: NSLocalizedString("Update to %@ available", comment: ""), info.versionString)
+        title.isUserInteractionEnabled = false
+
+        let sub = UILabel()
+        sub.translatesAutoresizingMaskIntoConstraints = false
+        sub.font = .preferredFont(forTextStyle: .subheadline)
+        sub.textColor = .fluxSecondaryText
+        sub.numberOfLines = 2
+        sub.text = NSLocalizedString("Download the latest IPA from GitHub", comment: "")
+        sub.isUserInteractionEnabled = false
+
+        let chev = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chev.translatesAutoresizingMaskIntoConstraints = false
+        chev.tintColor = .fluxSecondaryText
+        chev.isUserInteractionEnabled = false
+
+        card.addSubview(icon)
+        card.addSubview(title)
+        card.addSubview(sub)
+        card.addSubview(chev)
+
+        NSLayoutConstraint.activate([
+            card.leadingAnchor.constraint(equalTo: outer.leadingAnchor),
+            card.trailingAnchor.constraint(equalTo: outer.trailingAnchor),
+            card.topAnchor.constraint(equalTo: outer.topAnchor),
+            card.bottomAnchor.constraint(equalTo: outer.bottomAnchor),
+
+            icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            icon.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 32),
+            icon.heightAnchor.constraint(equalToConstant: 32),
+
+            title.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 12),
+            title.trailingAnchor.constraint(equalTo: chev.leadingAnchor, constant: -8),
+            title.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+
+            sub.leadingAnchor.constraint(equalTo: title.leadingAnchor),
+            sub.trailingAnchor.constraint(equalTo: title.trailingAnchor),
+            sub.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 4),
+            sub.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+
+            chev.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            chev.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+        ])
+
+        outer.addSubview(card)
+        updateStack.addArrangedSubview(outer)
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String?
+    private func makeSectionHeading(title: String, subtitle: String?) -> UIView
     {
-        switch Section(rawValue: section)!
+        let wrap = UIView()
+        let t = UILabel()
+        t.translatesAutoresizingMaskIntoConstraints = false
+        t.font = .preferredFont(forTextStyle: .title2)
+        t.textColor = .label
+        t.text = title
+        t.numberOfLines = 0
+        wrap.addSubview(t)
+        var constraints: [NSLayoutConstraint] = [
+            t.leadingAnchor.constraint(equalTo: wrap.leadingAnchor),
+            t.trailingAnchor.constraint(equalTo: wrap.trailingAnchor),
+            t.topAnchor.constraint(equalTo: wrap.topAnchor),
+        ]
+        if let subtitle, !subtitle.isEmpty
         {
-        case .fluxStoreUpdate: return fluxUpdate == nil ? nil : NSLocalizedString("FLUXSTORE", comment: "")
-        case .goFurther: return NSLocalizedString("DISCOVER", comment: "")
-        case .yourApps: return NSLocalizedString("YOUR APPS", comment: "")
+            let s = UILabel()
+            s.translatesAutoresizingMaskIntoConstraints = false
+            s.font = .preferredFont(forTextStyle: .subheadline)
+            s.textColor = .fluxSecondaryText
+            s.text = subtitle
+            s.numberOfLines = 0
+            wrap.addSubview(s)
+            constraints += [
+                s.leadingAnchor.constraint(equalTo: wrap.leadingAnchor),
+                s.trailingAnchor.constraint(equalTo: wrap.trailingAnchor),
+                s.topAnchor.constraint(equalTo: t.bottomAnchor, constant: 4),
+                s.bottomAnchor.constraint(equalTo: wrap.bottomAnchor),
+            ]
         }
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
-    {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.backgroundColor = .fluxCardBackground
-        cell.tintColor = .altPrimary
-        var content = UIListContentConfiguration.cell()
-        content.textProperties.color = .label
-        content.secondaryTextProperties.color = .fluxSecondaryText
-        content.imageProperties.tintColor = .altPrimary
-        content.prefersSideBySideTextAndSecondaryText = false
-
-        switch Section(rawValue: indexPath.section)!
+        else
         {
-        case .fluxStoreUpdate:
-            if let info = fluxUpdate
-            {
-                content.text = String(format: NSLocalizedString("Update to %@ available", comment: ""), info.versionString)
-                content.secondaryText = NSLocalizedString("Download the latest IPA from GitHub", comment: "")
-                content.image = UIImage(systemName: "arrow.down.circle.fill")
-                cell.accessoryType = .disclosureIndicator
-            }
-
-        case .goFurther:
-            cell.accessoryType = .disclosureIndicator
-            switch indexPath.row
-            {
-            case 0:
-                content.text = NSLocalizedString("Browse", comment: "")
-                content.secondaryText = NSLocalizedString("Featured apps and catalogs", comment: "")
-                content.image = UIImage(systemName: "sparkles")
-            case 1:
-                content.text = NSLocalizedString("My Apps", comment: "")
-                content.secondaryText = NSLocalizedString("Installed apps, refreshes, and updates", comment: "")
-                content.image = UIImage(systemName: "square.grid.2x2")
-            default: break
-            }
-
-        case .yourApps:
-            if pendingAppUpdatesCount == 0
-            {
-                content.text = NSLocalizedString("No app updates pending", comment: "")
-                content.secondaryText = NSLocalizedString("Pull to refresh on My Apps to check sources", comment: "")
-                content.image = UIImage(systemName: "checkmark.circle")
-                cell.accessoryType = .none
-            }
-            else
-            {
-                content.text = String(format: NSLocalizedString("%lld updates available", comment: ""), Int64(pendingAppUpdatesCount))
-                content.secondaryText = NSLocalizedString("Open My Apps to refresh or install", comment: "")
-                content.image = UIImage(systemName: "arrow.triangle.2.circlepath")
-                cell.accessoryType = .disclosureIndicator
-            }
+            constraints.append(t.bottomAnchor.constraint(equalTo: wrap.bottomAnchor))
         }
-
-        cell.contentConfiguration = content
-        return cell
+        NSLayoutConstraint.activate(constraints)
+        return wrap
     }
 
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    private func makeQuickJumpRow() -> UIView
     {
-        tableView.deselectRow(at: indexPath, animated: true)
+        let row = UIStackView()
+        row.axis = .horizontal
+        row.spacing = 12
+        row.distribution = .fillEqually
 
-        guard let tab = tabBarController as? TabBarController else { return }
+        var browse = UIButton.Configuration.filled()
+        browse.title = NSLocalizedString("Browse", comment: "")
+        browse.image = UIImage(systemName: "sparkles")
+        browse.baseBackgroundColor = .altPrimary
+        browse.baseForegroundColor = .white
+        browse.cornerStyle = .large
+        let browseBtn = UIButton(configuration: browse, primaryAction: UIAction { [weak self] _ in
+            guard let self, let tab = self.tabBarController as? TabBarController else { return }
+            tab.selectedIndex = TabBarController.Tab.browse.rawValue
+        })
 
-        switch Section(rawValue: indexPath.section)!
-        {
-        case .fluxStoreUpdate:
-            if let info = fluxUpdate { FluxStoreGitHubRelease.openUpdate(info) }
-
-        case .goFurther:
-            switch indexPath.row
-            {
-            case 0: tab.selectedIndex = TabBarController.Tab.browse.rawValue
-            case 1: tab.selectedIndex = TabBarController.Tab.myApps.rawValue
-            default: break
-            }
-
-        case .yourApps:
+        var mine = UIButton.Configuration.bordered()
+        mine.title = NSLocalizedString("My Apps", comment: "")
+        mine.image = UIImage(systemName: "square.grid.2x2")
+        mine.baseForegroundColor = .altPrimary
+        mine.background.backgroundColor = .fluxCardBackground
+        mine.background.strokeColor = UIColor.fluxCardBorder
+        mine.cornerStyle = .large
+        let mineBtn = UIButton(configuration: mine, primaryAction: UIAction { [weak self] _ in
+            guard let self, let tab = self.tabBarController as? TabBarController else { return }
             tab.selectedIndex = TabBarController.Tab.myApps.rawValue
+        })
+
+        row.addArrangedSubview(browseBtn)
+        row.addArrangedSubview(mineBtn)
+        return row
+    }
+
+    private func embedFeaturedBrowse()
+    {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let featured = storyboard.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
+        featured.isEmbeddedHomePreview = true
+
+        addChild(featured)
+        let fv = featured.view!
+        fv.translatesAutoresizingMaskIntoConstraints = false
+
+        let box = UIView()
+        box.translatesAutoresizingMaskIntoConstraints = false
+        box.addSubview(fv)
+
+        let hc = fv.heightAnchor.constraint(equalToConstant: 520)
+        featuredHeightConstraint = hc
+        NSLayoutConstraint.activate([
+            fv.topAnchor.constraint(equalTo: box.topAnchor),
+            fv.leadingAnchor.constraint(equalTo: box.leadingAnchor),
+            fv.trailingAnchor.constraint(equalTo: box.trailingAnchor),
+            fv.bottomAnchor.constraint(equalTo: box.bottomAnchor),
+            hc,
+        ])
+
+        stackView.addArrangedSubview(box)
+        featured.didMove(toParent: self)
+        embeddedFeatured = featured
+    }
+
+    private func makeYourAppsControl() -> UIControl
+    {
+        let card = UIControl()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = .fluxCardBackground
+        card.layer.cornerRadius = 18
+        card.layer.cornerCurve = .continuous
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor.fluxCardBorder.cgColor
+        card.addAction(UIAction { [weak self] _ in
+            guard let self, let tab = self.tabBarController as? TabBarController else { return }
+            tab.selectedIndex = TabBarController.Tab.myApps.rawValue
+        }, for: .touchUpInside)
+
+        yourAppsTitle.translatesAutoresizingMaskIntoConstraints = false
+        yourAppsTitle.font = .preferredFont(forTextStyle: .headline)
+        yourAppsTitle.textColor = .label
+        yourAppsTitle.numberOfLines = 2
+        yourAppsTitle.isUserInteractionEnabled = false
+
+        yourAppsSubtitle.translatesAutoresizingMaskIntoConstraints = false
+        yourAppsSubtitle.font = .preferredFont(forTextStyle: .subheadline)
+        yourAppsSubtitle.textColor = .fluxSecondaryText
+        yourAppsSubtitle.numberOfLines = 2
+        yourAppsSubtitle.isUserInteractionEnabled = false
+
+        yourAppsChevron.translatesAutoresizingMaskIntoConstraints = false
+        yourAppsChevron.tintColor = .fluxSecondaryText
+        yourAppsChevron.isUserInteractionEnabled = false
+
+        let icon = UIImageView(image: UIImage(systemName: "arrow.triangle.2.circlepath"))
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.tintColor = .altPrimary
+        icon.contentMode = .scaleAspectFit
+
+        card.addSubview(icon)
+        card.addSubview(yourAppsTitle)
+        card.addSubview(yourAppsSubtitle)
+        card.addSubview(yourAppsChevron)
+
+        NSLayoutConstraint.activate([
+            icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            icon.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 28),
+            icon.heightAnchor.constraint(equalToConstant: 28),
+
+            yourAppsTitle.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 12),
+            yourAppsTitle.trailingAnchor.constraint(equalTo: yourAppsChevron.leadingAnchor, constant: -8),
+            yourAppsTitle.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+
+            yourAppsSubtitle.leadingAnchor.constraint(equalTo: yourAppsTitle.leadingAnchor),
+            yourAppsSubtitle.trailingAnchor.constraint(equalTo: yourAppsTitle.trailingAnchor),
+            yourAppsSubtitle.topAnchor.constraint(equalTo: yourAppsTitle.bottomAnchor, constant: 4),
+            yourAppsSubtitle.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+
+            yourAppsChevron.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            yourAppsChevron.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+        ])
+
+        return card
+    }
+
+    private func configureYourAppsSummary()
+    {
+        if pendingAppUpdatesCount == 0
+        {
+            yourAppsTitle.text = NSLocalizedString("No app updates pending", comment: "")
+            yourAppsSubtitle.text = NSLocalizedString("Pull to refresh on My Apps after sources sync.", comment: "")
+            yourAppsChevron.isHidden = true
+        }
+        else
+        {
+            yourAppsTitle.text = String(format: NSLocalizedString("%lld updates available", comment: ""), Int64(pendingAppUpdatesCount))
+            yourAppsSubtitle.text = NSLocalizedString("Open My Apps to install or refresh.", comment: "")
+            yourAppsChevron.isHidden = false
         }
     }
 }
