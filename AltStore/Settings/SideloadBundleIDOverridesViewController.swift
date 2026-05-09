@@ -14,8 +14,6 @@ final class SideloadBundleIDOverridesViewController: UITableViewController {
         super.viewDidLoad()
 
         title = NSLocalizedString("Bundle ID presets", comment: "")
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
@@ -52,33 +50,33 @@ final class SideloadBundleIDOverridesViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.backgroundColor = .clear
-        cell.textLabel?.numberOfLines = 0
-        cell.textLabel?.textColor = .label
-        cell.detailTextLabel?.numberOfLines = 0
-        cell.detailTextLabel?.textColor = UIColor.fluxSecondaryText
-
         switch indexPath.section {
         case 0:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "about") ?? UITableViewCell(style: .default, reuseIdentifier: "about")
             cell.selectionStyle = .none
+            cell.backgroundColor = .clear
+            cell.textLabel?.numberOfLines = 0
+            cell.textLabel?.textColor = .label
             cell.textLabel?.font = .preferredFont(forTextStyle: .footnote)
             cell.textLabel?.text = NSLocalizedString(
                 "Turn on “Customize installed app bundle identifier” in Advanced Settings. Add rows here to skip the prompt: use each app’s catalog bundle ID as the key, and the full bundle ID you want when sideloading (often ending with your team ID).",
                 comment: ""
             )
-            cell.detailTextLabel?.text = nil
+            return cell
         default:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "preset") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "preset")
             cell.selectionStyle = .default
+            cell.backgroundColor = .clear
             let row = pairs[indexPath.row]
             cell.textLabel?.font = .preferredFont(forTextStyle: .body)
+            cell.textLabel?.textColor = .label
             cell.detailTextLabel?.font = .preferredFont(forTextStyle: .caption1)
+            cell.detailTextLabel?.textColor = UIColor.fluxSecondaryText
             cell.textLabel?.text = row.source
             cell.detailTextLabel?.text = row.override
             cell.accessoryType = .none
+            return cell
         }
-
-        return cell
     }
 
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
