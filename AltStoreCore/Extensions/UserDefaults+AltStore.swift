@@ -166,4 +166,27 @@ public extension UserDefaults
         UserDefaults.standard.responseCachingDisabled = false
         #endif
     }
+
+    /// Maps **source app bundle ID** → **full bundle ID** to use when installing (with “App ID customization” on).
+    /// Always read/writes `UserDefaults.standard` regardless of the receiver.
+    private static let sideloadBundleIdentifierOverridesKey = "FluxStore.sideloadBundleIdentifierOverrides"
+
+    @nonobjc
+    var sideloadBundleIdentifierOverrides: [String: String] {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: UserDefaults.sideloadBundleIdentifierOverridesKey),
+                  let dict = try? JSONDecoder().decode([String: String].self, from: data)
+            else {
+                return [:]
+            }
+            return dict
+        }
+        set {
+            if newValue.isEmpty {
+                UserDefaults.standard.removeObject(forKey: UserDefaults.sideloadBundleIdentifierOverridesKey)
+            } else if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: UserDefaults.sideloadBundleIdentifierOverridesKey)
+            }
+        }
+    }
 }

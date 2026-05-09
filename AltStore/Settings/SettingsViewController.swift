@@ -1027,12 +1027,27 @@ extension SettingsViewController
         case .signIn: return (self.activeTeam == nil) ? 1 : 0
         case .account: return (self.activeTeam == nil) ? 0 : 3
         case .appRefresh: return AppRefreshRow.allCases.count
+        case .advancedSettings:
+            return AdvancedSettingsRow.allCases.count + 1
         default: return super.tableView(tableView, numberOfRowsInSection: section.rawValue)
         }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
+        let section = Section.allCases[indexPath.section]
+        if section == .advancedSettings, indexPath.row == AdvancedSettingsRow.allCases.count {
+            let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "FluxBundleIDPresets")
+            cell.textLabel?.text = NSLocalizedString("Bundle ID presets", comment: "")
+            cell.detailTextLabel?.text = NSLocalizedString("Saved overrides when sideloading apps", comment: "")
+            cell.accessoryType = .disclosureIndicator
+            cell.backgroundColor = .clear
+            cell.textLabel?.textColor = .label
+            cell.detailTextLabel?.textColor = UIColor.fluxSecondaryText
+            cell.tintColor = .altPrimary
+            return cell
+        }
+
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
 
         // Enforce readable colors regardless of storyboard defaults.
@@ -1183,6 +1198,13 @@ extension SettingsViewController
             }
             
         case .advancedSettings:
+            if indexPath.row == AdvancedSettingsRow.allCases.count {
+                let vc = SideloadBundleIDOverridesViewController(style: .insetGrouped)
+                self.navigationController?.pushViewController(vc, animated: true)
+                tableView.deselectRow(at: indexPath, animated: true)
+                return
+            }
+
             let row = AdvancedSettingsRow.allCases[indexPath.row]
             switch row
             {

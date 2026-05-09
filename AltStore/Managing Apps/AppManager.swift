@@ -740,27 +740,37 @@ extension AppManager
         Task{
             var app: AppProtocol = app
             // ---- Preflight bundle ID resolution ----
-            if UserDefaults.standard.customizeAppId,      // only show prompt when enabled by user
+            if UserDefaults.standard.customizeAppId,
                 let presentingViewController {
                 let originalBundleID = app.bundleIdentifier
 
-                let resolution = await self.resolveBundleID(
-                    initial: originalBundleID,
-                    presentingViewController: presentingViewController
-                )
+                if let preset = UserDefaults.standard.sideloadBundleIdentifierOverrides[originalBundleID],
+                   _isValidBundleID(preset) {
+                    app = AnyApp(
+                        name: app.name,
+                        bundleIdentifier: preset,
+                        url: app.url,
+                        storeApp: app.storeApp
+                    )
+                } else {
+                    let resolution = await self.resolveBundleID(
+                        initial: originalBundleID,
+                        presentingViewController: presentingViewController
+                    )
 
-                switch resolution {
-                    case .cancelled:
-                        completionHandler(.failure(OperationError.cancelled))
-                        group.progress.cancel()
+                    switch resolution {
+                        case .cancelled:
+                            completionHandler(.failure(OperationError.cancelled))
+                            group.progress.cancel()
 
-                    case .resolved(let newBundleID):
-                        app = AnyApp(
-                            name: app.name,
-                            bundleIdentifier: newBundleID,
-                            url: app.url,
-                            storeApp: app.storeApp
-                        )
+                        case .resolved(let newBundleID):
+                            app = AnyApp(
+                                name: app.name,
+                                bundleIdentifier: newBundleID,
+                                url: app.url,
+                                storeApp: app.storeApp
+                            )
+                    }
                 }
             }
             
