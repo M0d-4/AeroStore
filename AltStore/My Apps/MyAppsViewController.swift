@@ -341,7 +341,8 @@ private extension MyAppsViewController
     func makeFluxStoreSelfUpdateDataSource() -> RSTDynamicCollectionViewDataSource<InstalledApp>
     {
         let dataSource = RSTDynamicCollectionViewDataSource<InstalledApp>()
-        dataSource.numberOfSectionsHandler = { self.fluxSelfUpdateInfo != nil ? 1 : 0 }
+        /// Always one composite section so `Section.rawValue` matches layout/delegate indexing (fixes wrong section headers when the flux row is hidden).
+        dataSource.numberOfSectionsHandler = { 1 }
         dataSource.numberOfItemsHandler = { _ in self.fluxSelfUpdateInfo != nil ? 1 : 0 }
         dataSource.cellIdentifierHandler = { _ in "FluxSelfUpdate" }
         dataSource.cellConfigurationHandler = { [weak self] (cell, _, _) in
@@ -2376,6 +2377,7 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         switch section
         {
         case .fluxSelfUpdate:
+            guard self.fluxSelfUpdateInfo != nil else { return .zero }
             return UIEdgeInsets(top: 12, left: 0, bottom: 8, right: 0)
         case .noUpdates where self.updatesDataSource.itemCount != 0: return .zero
         case .noUpdates:

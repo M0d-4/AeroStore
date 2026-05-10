@@ -15,7 +15,6 @@ extension TabBarController
     {
         case browse
         case myApps
-        case liveContainer
         case settings
     }
 }
@@ -44,7 +43,7 @@ final class TabBarController: UITabBarController
         super.viewDidLoad()
         self.configureTabBarAppearance()
 
-        // Browse, My Apps, Live Container hub (opens separate LiveContainer IPA), Settings.
+        // Browse, My Apps, Settings.
         if let vcs = self.viewControllers, vcs.count >= 4 {
             let browseNavigationController = vcs[2] as! UINavigationController
             browseNavigationController.tabBarItem.title = NSLocalizedString("Browse", comment: "")
@@ -75,13 +74,6 @@ final class TabBarController: UITabBarController
 
             browseNavigationController.setViewControllers([featured], animated: false)
 
-            let liveContainerNavigationController = UINavigationController(rootViewController: LiveContainerHubViewController())
-            liveContainerNavigationController.navigationBar.prefersLargeTitles = true
-            liveContainerNavigationController.tabBarItem.title = "LC"
-            liveContainerNavigationController.tabBarItem.image = UIImage(systemName: "shippingbox.fill")
-            liveContainerNavigationController.tabBarItem.selectedImage = UIImage(systemName: "shippingbox.fill")
-            liveContainerNavigationController.tabBarItem.accessibilityLabel = NSLocalizedString("Live Container", comment: "")
-
             let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
             // Settings.storyboard's initial VC is ForwardingNavigationController (nav root), not SettingsViewController.
             let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as! UINavigationController
@@ -92,7 +84,6 @@ final class TabBarController: UITabBarController
             self.viewControllers = [
                 browseNavigationController,
                 myAppsNavigationController,
-                liveContainerNavigationController,
                 settingsNavigationController,
             ]
         }
