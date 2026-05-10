@@ -14,7 +14,7 @@ import Nuke
 
 private let minimumItemSpacing = 8.0
 
-class AppCardCollectionViewCell: UICollectionViewCell
+class AppCardCollectionViewCell: UICollectionViewCell, NSCollectionLayoutEnvironment
 {
     let bannerView: AppBannerView
     let captionLabel: UILabel
@@ -165,8 +165,25 @@ class AppCardCollectionViewCell: UICollectionViewCell
         }
     }
     
+    // MARK: - NSCollectionLayoutEnvironment
+    var container: NSCollectionLayoutContainer {
+        return NSCollectionLayoutContainer(width: .absolute(self.bounds.width), height: .absolute(self.bounds.height))
+    }
+    
     private var layoutEnvironment: NSCollectionLayoutEnvironment {
-        return self.screenshotsCollectionView.collectionViewLayout as? NSCollectionLayoutEnvironment ?? NSCollectionLayoutEnvironment()
+        return self.screenshotsCollectionView.collectionViewLayout as? NSCollectionLayoutEnvironment ?? self
+    }
+    
+    func makeLayout() -> UICollectionViewLayout {
+        let layoutConfig = UICollectionViewCompositionalLayoutConfiguration()
+        layoutConfig.interSectionSpacing = 0
+        
+        let layout = UICollectionViewCompositionalLayout(sectionProvider: { [weak self] (sectionIndex, environment) -> NSCollectionLayoutSection? in
+            guard let self = self else { return nil }
+            return self.makeScreenshotsLayout()
+        }, configuration: layoutConfig)
+        
+        return layout
     }
     
     func makeScreenshotsLayout() -> NSCollectionLayoutSection {
