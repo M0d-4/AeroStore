@@ -142,7 +142,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     {
         self.definesPresentationContext = true
         self.navigationItem.searchController = self.appsSearchController
-        self.navigationItem.hidesSearchBarWhenScrolling = false
+        self.navigationItem.hidesSearchBarWhenScrolling = true
 
         let jitButton = UIBarButtonItem(image: UIImage(systemName: "bolt.fill"), style: .plain, target: self, action: #selector(MyAppsViewController.presentFluxJIT(_:)))
         jitButton.accessibilityLabel = "JIT"
@@ -160,33 +160,38 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
 
+        let muxReady = !UserDefaults.standard.isMinimuxerStatusCheckEnabled || isMinimuxerReady
+        let muxText = muxReady ? NSLocalizedString("Connected", comment: "") : NSLocalizedString("Disconnected", comment: "")
+        let muxColor: UIColor = muxReady ? .systemGreen : .systemOrange
+        let muxSymbol = muxReady ? "link.circle.fill" : "wifi.slash"
+        stack.addArrangedSubview(Self.statusCapsule(text: muxText, symbolName: muxSymbol, color: muxColor))
+
         if let alt = InstalledApp.fetchAltStore(in: DatabaseManager.shared.viewContext)
         {
             let days = alt.expirationDate.numberOfCalendarDays(since: Date())
             let text: String
             let color: UIColor
+            let symbol: String
             if days <= 0
             {
                 text = NSLocalizedString("Expired", comment: "")
                 color = .systemRed
+                symbol = "calendar.badge.exclamationmark"
             }
             else if days <= 2
             {
                 text = String(format: NSLocalizedString("%d days", comment: ""), days)
                 color = .systemOrange
+                symbol = "calendar"
             }
             else
             {
                 text = String(format: NSLocalizedString("%d days", comment: ""), days)
                 color = .systemGreen
+                symbol = "calendar"
             }
-            stack.addArrangedSubview(Self.statusCapsule(text: text, color: color))
+            stack.addArrangedSubview(Self.statusCapsule(text: text, symbolName: symbol, color: color))
         }
-
-        let muxReady = !UserDefaults.standard.isMinimuxerStatusCheckEnabled || isMinimuxerReady
-        let muxText = muxReady ? NSLocalizedString("Connected", comment: "") : NSLocalizedString("Disconnected", comment: "")
-        let muxColor: UIColor = muxReady ? .systemGreen : .systemOrange
-        stack.addArrangedSubview(Self.statusCapsule(text: muxText, color: muxColor))
 
         let wrap = UIView()
         wrap.addSubview(stack)
@@ -200,25 +205,40 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: wrap)
     }
 
-    private static func statusCapsule(text: String, color: UIColor) -> UIView
+    private static func statusCapsule(text: String, symbolName: String, color: UIColor) -> UIView
     {
+        let row = UIStackView()
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 5
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        if let image = UIImage(systemName: symbolName, withConfiguration: symbolConfig)
+        {
+            let icon = UIImageView(image: image)
+            icon.tintColor = color
+            icon.setContentHuggingPriority(.required, for: .horizontal)
+            row.addArrangedSubview(icon)
+        }
+
         let label = UILabel()
         label.text = text
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.font = .systemFont(ofSize: 12, weight: .semibold)
         label.textColor = color
-        label.translatesAutoresizingMaskIntoConstraints = false
+        row.addArrangedSubview(label)
 
         let pill = UIView()
-        pill.backgroundColor = color.withAlphaComponent(0.14)
-        pill.layer.cornerRadius = 14
+        pill.backgroundColor = color.withAlphaComponent(0.12)
+        pill.layer.cornerRadius = 12
         pill.layer.cornerCurve = .continuous
         pill.translatesAutoresizingMaskIntoConstraints = false
-        pill.addSubview(label)
+        pill.addSubview(row)
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 10),
-            label.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -10),
-            label.topAnchor.constraint(equalTo: pill.topAnchor, constant: 5),
-            label.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -5),
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 9),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -9),
+            row.topAnchor.constraint(equalTo: pill.topAnchor, constant: 5),
+            row.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -5),
         ])
         return pill
     }
@@ -339,23 +359,29 @@ private extension MyAppsViewController
         dynamicDataSource.cellIdentifierHandler = { _ in "NoUpdatesCell" }
         dynamicDataSource.cellConfigurationHandler = { (cell, _, indexPath) in
             let cell = cell as! NoUpdatesCollectionViewCell
-            cell.layoutMargins.left = self.view.layoutMargins.left
-            cell.layoutMargins.right = self.view.layoutMargins.right
+            cell.layoutMargins.left = 8
+            cell.layoutMargins.right = 8
             
-            cell.blurView.layer.cornerRadius = 20
+            let corner: CGFloat = 12
+            cell.contentView.layer.cornerRadius = corner
+            cell.blurView.layer.cornerRadius = corner
             cell.blurView.layer.masksToBounds = true
-            cell.blurView.backgroundColor = .altPrimary
+            cell.blurView.backgroundColor = .altPrimary.withAlphaComponent(0.35)
+            cell.textLabel.font = .systemFont(ofSize: 14, weight: .medium)
+            cell.textLabel.textColor = .secondaryLabel
             
             cell.button.addTarget(self, action: #selector(MyAppsViewController.showHiddenUpdatesAlert(_:)), for: .primaryActionTriggered)
             
             if !self.unsupportedUpdates.isEmpty
             {
                 cell.textLabel.text = NSLocalizedString("Unsupported Updates Available", comment: "")
+                cell.textLabel.textColor = .label
                 cell.button.isHidden = false
             }
             else
             {
                 cell.textLabel.text = NSLocalizedString("No Updates Available", comment: "")
+                cell.textLabel.textColor = .secondaryLabel
                 cell.button.isHidden = true
             }
         }
@@ -2259,8 +2285,8 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
             return CGSize(width: collectionView.bounds.width, height: 108)
 
         case .noUpdates:
-            let size = CGSize(width: collectionView.bounds.width, height: 44)
-            return size
+            let w = max(0, collectionView.bounds.width - myAppsInstalledCardInset * 2)
+            return CGSize(width: w, height: 32)
             
         case .updates:
             let item = self.dataSource.item(at: indexPath)
@@ -2301,9 +2327,9 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
             let height: CGFloat = (self.updatesDataSource.fetchedResultsController.fetchedObjects?.count ?? 0 > maximumCollapsedUpdatesCount) ? 26 : 0
             return CGSize(width: collectionView.bounds.width, height: height)
             
-        case .activeApps: return CGSize(width: collectionView.bounds.width, height: 36)
+        case .activeApps: return CGSize(width: collectionView.bounds.width, height: 44)
         case .inactiveApps where self.inactiveAppsDataSource.itemCount == 0: return .zero
-        case .inactiveApps: return CGSize(width: collectionView.bounds.width, height: 36)
+        case .inactiveApps: return CGSize(width: collectionView.bounds.width, height: 44)
         }
     }
     
@@ -2350,9 +2376,11 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         case .fluxSelfUpdate:
             return UIEdgeInsets(top: 12, left: 0, bottom: 8, right: 0)
         case .noUpdates where self.updatesDataSource.itemCount != 0: return .zero
+        case .noUpdates:
+            return UIEdgeInsets(top: 4, left: myAppsInstalledCardInset, bottom: 6, right: myAppsInstalledCardInset)
         case .updates where self.updatesDataSource.itemCount == 0: return .zero
         case .activeApps, .inactiveApps:
-            return UIEdgeInsets(top: 10, left: myAppsInstalledCardInset, bottom: 16, right: myAppsInstalledCardInset)
+            return UIEdgeInsets(top: 4, left: myAppsInstalledCardInset, bottom: 16, right: myAppsInstalledCardInset)
         default: return UIEdgeInsets(top: 12, left: 0, bottom: 20, right: 0)
         }
     }
@@ -2361,6 +2389,7 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
     {
         switch Section.allCases[section]
         {
+        case .noUpdates: return 6
         case .activeApps, .inactiveApps: return 11
         default: return 15
         }

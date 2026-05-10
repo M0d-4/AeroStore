@@ -17,7 +17,7 @@ final class InstalledAppsCollectionHeaderView: UICollectionReusableView
     {
         self.textLabel = UILabel()
         self.textLabel.translatesAutoresizingMaskIntoConstraints = false
-        self.textLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        self.textLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
         self.textLabel.accessibilityTraits.insert(.header)
         
         self.button = UIButton(type: .system)
@@ -31,11 +31,14 @@ final class InstalledAppsCollectionHeaderView: UICollectionReusableView
         self.addSubview(self.textLabel)
         self.addSubview(self.button)
         
-        NSLayoutConstraint.activate([self.textLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
-                                     self.textLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor)])
-        
-        NSLayoutConstraint.activate([self.button.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor),
-                                     self.button.firstBaselineAnchor.constraint(equalTo: self.textLabel.firstBaselineAnchor)])
+        NSLayoutConstraint.activate([
+            self.textLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
+            self.textLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 4),
+        ])
+        NSLayoutConstraint.activate([
+            self.button.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor),
+            self.button.centerYAnchor.constraint(equalTo: self.textLabel.centerYAnchor),
+        ])
         
         self.preservesSuperviewLayoutMargins = true
     }

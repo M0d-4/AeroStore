@@ -47,7 +47,7 @@ final class TabBarController: UITabBarController
         if let vcs = self.viewControllers, vcs.count >= 4 {
             let browseNavigationController = vcs[2] as! UINavigationController
             browseNavigationController.tabBarItem.title = NSLocalizedString("Browse", comment: "")
-            browseNavigationController.tabBarItem.image = UIImage(systemName: "sparkles")
+            browseNavigationController.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
 
             let myAppsNavigationController = vcs[3] as! UINavigationController
             myAppsNavigationController.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
@@ -119,7 +119,7 @@ final class TabBarController: UITabBarController
         floatingTabBarBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         floatingTabBarBackgroundView.isUserInteractionEnabled = false
         floatingTabBarBackgroundView.clipsToBounds = false
-        floatingTabBarBackgroundView.layer.cornerRadius = 26
+        floatingTabBarBackgroundView.layer.cornerRadius = 24
         floatingTabBarBackgroundView.layer.cornerCurve = .continuous
         floatingTabBarBackgroundView.layer.shadowColor = UIColor.black.cgColor
         floatingTabBarBackgroundView.layer.shadowOpacity = 0.10
@@ -144,19 +144,28 @@ final class TabBarController: UITabBarController
     private func updateFloatingTabBarConstraintsIfNeeded()
     {
         guard floatingTabBarBackgroundView.superview === self.tabBar else { return }
-        guard floatingTabBarBackgroundConstraints.isEmpty else { return }
 
-        let sideInset: CGFloat = 18
-        let height: CGFloat = 64
-        let bottomInset: CGFloat = 8
+        NSLayoutConstraint.deactivate(floatingTabBarBackgroundConstraints)
+        floatingTabBarBackgroundConstraints.removeAll()
 
+        let sideInset: CGFloat = 20
+        let height: CGFloat = 56
+        let bottomPadding: CGFloat = 10
+
+        let guide = self.tabBar.safeAreaLayoutGuide
         floatingTabBarBackgroundConstraints = [
-            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor, constant: sideInset),
-            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor, constant: -sideInset),
+            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: sideInset),
+            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -sideInset),
             floatingTabBarBackgroundView.heightAnchor.constraint(equalToConstant: height),
-            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: tabBar.bottomAnchor, constant: -(bottomInset + tabBar.safeAreaInsets.bottom)),
+            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -bottomPadding),
         ]
         NSLayoutConstraint.activate(floatingTabBarBackgroundConstraints)
+
+        let pillRadius = height / 2
+        if abs(floatingTabBarBackgroundView.layer.cornerRadius - pillRadius) > 0.5
+        {
+            floatingTabBarBackgroundView.layer.cornerRadius = pillRadius
+        }
     }
     
     override func viewDidAppear(_ animated: Bool)
