@@ -80,8 +80,8 @@ final class TabBarController: UITabBarController
             browseNavigationController.setViewControllers([featured], animated: false)
 
             let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
-            let settingsRoot = settingsStoryboard.instantiateInitialViewController() as! SettingsViewController
-            let settingsNavigationController = UINavigationController(rootViewController: settingsRoot)
+            // Settings.storyboard's initial VC is ForwardingNavigationController (nav root), not SettingsViewController.
+            let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as! UINavigationController
             settingsNavigationController.navigationBar.prefersLargeTitles = true
             settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
             settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
