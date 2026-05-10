@@ -26,6 +26,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
             FluxAppearancePreference.applyToAllWindows()
         }
         
+        // Initialize notification system
+        Task {
+            await FluxNotificationManager.shared.requestAuthorization()
+        }
+        
         if let context = connectionOptions.urlContexts.first
         {
             self.open(context)

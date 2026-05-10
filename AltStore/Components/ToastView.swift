@@ -92,9 +92,24 @@ class ToastView: RSTToastView
     {
         super.layoutSubviews()
         
-        // Rough calculation to determine height of ToastView with one-line textLabel.
-        let minimumHeight = self.textLabel.font.lineHeight.rounded() + 18
+        // Enhanced modern design with larger rounded corners
+        let minimumHeight = self.textLabel.font.lineHeight.rounded() + 24
         self.layer.cornerRadius = minimumHeight/2
+        self.layer.cornerCurve = .continuous
+        
+        // Enhanced shadow for modern look
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.15
+        self.layer.shadowRadius = 12
+        self.layer.shadowOffset = CGSize(width: 0, height: 4)
+        
+        // Update layout margins for better spacing
+        self.layoutMargins = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
+        
+        if let stackView = self.textLabel.superview as? UIStackView {
+            stackView.spacing = (self.detailTextLabel?.text != nil) ? 6.0 : 0.0
+            stackView.alignment = .leading
+        }
     }
     
     func show(in viewController: UIViewController)

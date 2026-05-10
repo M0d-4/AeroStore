@@ -15,6 +15,7 @@ extension TabBarController
     {
         case browse
         case myApps
+        case notifications
         case settings
     }
 }
@@ -43,7 +44,7 @@ final class TabBarController: UITabBarController
         super.viewDidLoad()
         self.configureTabBarAppearance()
 
-        // Browse, My Apps, Settings.
+        // Browse, My Apps, Notifications, Settings.
         if let vcs = self.viewControllers, vcs.count >= 4 {
             let browseNavigationController = vcs[2] as! UINavigationController
             browseNavigationController.tabBarItem.title = NSLocalizedString("Browse", comment: "")
@@ -74,6 +75,13 @@ final class TabBarController: UITabBarController
 
             browseNavigationController.setViewControllers([featured], animated: false)
 
+            // Notifications tab
+            let notificationsViewController = FluxNotificationCenterViewController()
+            let notificationsNavigationController = UINavigationController(rootViewController: notificationsViewController)
+            notificationsNavigationController.navigationBar.prefersLargeTitles = true
+            notificationsNavigationController.tabBarItem.title = NSLocalizedString("Notifications", comment: "")
+            notificationsNavigationController.tabBarItem.image = UIImage(systemName: "bell.fill")
+
             let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
             // Settings.storyboard's initial VC is ForwardingNavigationController (nav root), not SettingsViewController.
             let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as! UINavigationController
@@ -84,6 +92,7 @@ final class TabBarController: UITabBarController
             self.viewControllers = [
                 browseNavigationController,
                 myAppsNavigationController,
+                notificationsNavigationController,
                 settingsNavigationController,
             ]
         }
@@ -153,9 +162,9 @@ final class TabBarController: UITabBarController
         /// beside/below it, so we fill the tab bar’s full bounds like a classic bar.
         if #available(iOS 26.0, *)
         {
-            let sideInset: CGFloat = self.traitCollection.userInterfaceIdiom == .pad ? 28 : 20
-            let height: CGFloat = 56
-            let bottomPadding: CGFloat = 10
+            let sideInset: CGFloat = self.traitCollection.userInterfaceIdiom == .pad ? 32 : 24
+            let height: CGFloat = 58
+            let bottomPadding: CGFloat = 12
             floatingTabBarBackgroundConstraints = [
                 floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: sideInset),
                 floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -sideInset),

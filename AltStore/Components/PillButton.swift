@@ -145,14 +145,25 @@ class PillButton: UIButton
     {
         super.layoutSubviews()
         
+        // Enhanced modern design with smoother corners
+        self.layer.cornerRadius = self.bounds.height / 2.0
+        self.layer.cornerCurve = .continuous
+        
+        // Enhanced shadow for modern look
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.08
+        self.layer.shadowRadius = 8
+        self.layer.shadowOffset = CGSize(width: 0, height: 2)
+        
+        // Update shadow path for better performance
+        self.layer.shadowPath = UIBezierPath(roundedRect: self.bounds, cornerRadius: self.layer.cornerRadius).cgPath
+        
         self.progressView.bounds.size.width = self.bounds.width
         
         let scale = self.bounds.height / self.progressView.bounds.height
         
         self.progressView.transform = CGAffineTransform.identity.scaledBy(x: 1, y: scale)
         self.progressView.center = CGPoint(x: self.bounds.midX, y: self.bounds.midY)
-        
-        self.layer.cornerRadius = self.bounds.midY
     }
     
     override func tintColorDidChange()

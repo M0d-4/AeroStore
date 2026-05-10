@@ -138,70 +138,38 @@ class AppCardCollectionViewCell: UICollectionViewCell
     {
         super.layoutSubviews()
         
-        self.contentView.layer.shadowColor = UIColor.black.cgColor
-        self.contentView.layer.shadowOpacity = traitCollection.userInterfaceStyle == .dark ? 0.25 : 0.08
-        self.contentView.layer.shadowRadius = 12
-        self.contentView.layer.shadowOffset = CGSize(width: 0, height: 6)
-    }
-}
-
-private extension AppCardCollectionViewCell
-{
-    func makeLayout() -> UICollectionViewCompositionalLayout
-    {
-        let layoutConfig = UICollectionViewCompositionalLayoutConfiguration()
-        layoutConfig.contentInsetsReference = .layoutMargins
+        // Enhanced modern design with larger rounded corners
+        self.layer.cornerRadius = 20
+        self.layer.cornerCurve = .continuous
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.12
+        self.layer.shadowRadius = 16
+        self.layer.shadowOffset = CGSize(width: 0, height: 6)
         
-        let layout = UICollectionViewCompositionalLayout(sectionProvider: { [weak self] (sectionIndex, layoutEnvironment) -> NSCollectionLayoutSection? in
-            guard let self else { return nil }
+        self.layer.shadowPath = UIBezierPath(roundedRect: self.bounds, cornerRadius: self.layer.cornerRadius).cgPath
+        
+        // Add subtle gradient background
+        if self.backgroundColor == nil || self.backgroundColor == UIColor.clear {
+            let gradientLayer = CAGradientLayer()
+            gradientLayer.colors = [
+                UIColor.systemBackground.withAlphaComponent(0.95).cgColor,
+                UIColor.secondarySystemBackground.withAlphaComponent(0.85).cgColor
+            ]
+            gradientLayer.cornerRadius = self.layer.cornerRadius
+            gradientLayer.frame = self.bounds
+            gradientLayer.masksToBounds = true
             
-            var contentWidth = 0.0
-            var numberOfVisibleScreenshots = 0
-            
-            for screenshot in self.screenshots
-            {
-                var aspectRatio = screenshot.aspectRatio
-                if aspectRatio.width > aspectRatio.height
-                {
-                    switch screenshot.deviceType
-                    {
-                    case .iphone:
-                        // Always rotate landscape iPhone screenshots
-                        aspectRatio = CGSize(width: aspectRatio.height, height: aspectRatio.width)
-                        
-                    case .ipad:
-                        // Never rotate iPad screenshots
-                        break
-                        
-                    default: break
-                    }
-                }
-                
-                let screenshotWidth = (layoutEnvironment.container.effectiveContentSize.height * (aspectRatio.width / aspectRatio.height)).rounded(.up) // Round to ensure we over-estimate contentWidth.
-                
-                let totalContentWidth = contentWidth + (screenshotWidth + minimumItemSpacing)
-                if totalContentWidth > layoutEnvironment.container.effectiveContentSize.width
-                {
-                    // totalContentWidth is larger than visible width.
-                    break
-                }
-                
-                contentWidth = totalContentWidth
-                numberOfVisibleScreenshots += 1
-            }
-            
-            // Use .estimated(1) to ensure we don't over-estimate widths, which can cause incorrect layouts for the last group.
-            let itemSize = NSCollectionLayoutSize(widthDimension: .estimated(1), heightDimension: .fractionalHeight(1.0))
-            let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            
-            if numberOfVisibleScreenshots == 1
-            {
-                // If there's only one screenshot visible initially, we'll (reluctantly) opt-in to flexible spacing on both sides.
-                // This ensures the items are always centered, but may result in larger spacings between items than we'd prefer.
-                item.edgeSpacing = NSCollectionLayoutEdgeSpacing(leading: .flexible(0), top: nil, trailing: .flexible(0), bottom: nil)
-            }
-            else
-            {
+            // Remove existing gradient layer if present
+            self.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+            self.layer.insertSublayer(gradientLayer, at: 0)
+        }
+    }
+    
+    private var layoutEnvironment: NSCollectionLayoutEnvironment {
+        return self.screenshotsCollectionView.collectionViewLayout as? NSCollectionLayoutEnvironment ?? NSCollectionLayoutEnvironment()
+    }
+    
+    func makeScreenshotsLayout() -> NSCollectionLayoutSection {
                 // Otherwise, only have flexible spacing on the leading edge, which will be balanced by trailingGroup's flexible trailing spacing.
                 item.edgeSpacing = NSCollectionLayoutEdgeSpacing(leading: .flexible(0), top: nil, trailing: nil, bottom: nil)
             }
