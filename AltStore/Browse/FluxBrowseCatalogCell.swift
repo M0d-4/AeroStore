@@ -52,7 +52,7 @@ final class FluxBrowseCatalogCell: UITableViewCell {
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.contentMode = .scaleAspectFill
         iconView.clipsToBounds = true
-        iconView.layer.cornerRadius = 10
+        iconView.layer.cornerRadius = 12
         iconView.layer.cornerCurve = .continuous
         iconView.tintColor = .altPrimary
         iconView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)

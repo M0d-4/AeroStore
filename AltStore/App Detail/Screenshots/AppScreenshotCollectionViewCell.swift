@@ -95,7 +95,7 @@ class AppScreenshotCollectionViewCell: UICollectionViewCell
         }
         else
         {
-            self.imageView.layer.cornerRadius = 5
+            self.imageView.layer.cornerRadius = 12
         }
     }
 }

@@ -39,6 +39,7 @@ class ScreenshotCollectionViewCell: UICollectionViewCell
     {
         super.layoutSubviews()
         
-        self.imageView.layer.cornerRadius = 4     
+        self.imageView.layer.cornerRadius = 12
+        self.imageView.layer.cornerCurve = .continuous
     }
 }
