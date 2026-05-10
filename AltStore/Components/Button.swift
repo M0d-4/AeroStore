@@ -24,7 +24,8 @@ final class Button: UIButton
         self.setTitleColor(.white, for: .normal)
         
         self.layer.masksToBounds = true
-        self.layer.cornerRadius = 8
+        self.layer.cornerRadius = 14
+        self.layer.cornerCurve = .continuous
         
         self.update()
     }

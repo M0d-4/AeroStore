@@ -26,7 +26,6 @@ extension MyAppsViewController
     private enum Section: Int, CaseIterable
     {
         case fluxSelfUpdate
-        case quickActions
         case noUpdates
         case updates
         case activeApps
@@ -40,7 +39,6 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     private let operationQueue = OperationQueue()
     
     private lazy var fluxStoreSelfUpdateDataSource = self.makeFluxStoreSelfUpdateDataSource()
-    private lazy var quickActionsDataSource = self.makeQuickActionsDataSource()
     private lazy var dataSource = self.makeDataSource()
     private lazy var noUpdatesDataSource = self.makeNoUpdatesDataSource()
     private lazy var updatesDataSource = self.makeUpdatesDataSource()
@@ -99,7 +97,6 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         self.prototypeUpdateCell.contentView.translatesAutoresizingMaskIntoConstraints = false
         
         self.collectionView.register(FluxStoreSelfUpdateCell.self, forCellWithReuseIdentifier: "FluxSelfUpdate")
-        self.collectionView.register(FluxQuickActionsCollectionViewCell.self, forCellWithReuseIdentifier: "QuickActions")
         self.collectionView.register(UpdateCollectionViewCell.nib, forCellWithReuseIdentifier: "UpdateCell")
         self.collectionView.register(UpdatesCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "UpdatesHeader")
         self.collectionView.register(InstalledAppsCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "ActiveAppsHeader")
@@ -171,8 +168,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         {
         case "showApp", "showUpdate":
             guard let cell = sender as? UICollectionViewCell, let indexPath = self.collectionView.indexPath(for: cell) else { return }
-            guard Section.allCases[indexPath.section] != .fluxSelfUpdate,
-                  Section.allCases[indexPath.section] != .quickActions else { return }
+            guard Section.allCases[indexPath.section] != .fluxSelfUpdate else { return }
 
             let installedApp = self.dataSource.item(at: indexPath)
             
@@ -188,8 +184,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         guard identifier == "showApp" else { return true }
         
         guard let cell = sender as? UICollectionViewCell, let indexPath = self.collectionView.indexPath(for: cell) else { return true }
-        guard Section.allCases[indexPath.section] != .fluxSelfUpdate,
-              Section.allCases[indexPath.section] != .quickActions else { return false }
+        guard Section.allCases[indexPath.section] != .fluxSelfUpdate else { return false }
 
         let installedApp = self.dataSource.item(at: indexPath)
         return !installedApp.isSideloaded
@@ -213,7 +208,7 @@ private extension MyAppsViewController
 {
     func makeDataSource() -> RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>
     {
-        let dataSource = RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>(dataSources: [self.fluxStoreSelfUpdateDataSource, self.quickActionsDataSource, self.noUpdatesDataSource, self.updatesDataSource, self.activeAppsDataSource, self.inactiveAppsDataSource])
+        let dataSource = RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>(dataSources: [self.fluxStoreSelfUpdateDataSource, self.noUpdatesDataSource, self.updatesDataSource, self.activeAppsDataSource, self.inactiveAppsDataSource])
         dataSource.proxy = self
         return dataSource
     }
@@ -232,35 +227,6 @@ private extension MyAppsViewController
             cell.contentView.layoutMargins.right = self.view.layoutMargins.right
         }
         return dataSource
-    }
-
-    func makeQuickActionsDataSource() -> RSTDynamicCollectionViewDataSource<InstalledApp>
-    {
-        let dynamicDataSource = RSTDynamicCollectionViewDataSource<InstalledApp>()
-        dynamicDataSource.numberOfSectionsHandler = { 1 }
-        dynamicDataSource.numberOfItemsHandler = { _ in 1 }
-        dynamicDataSource.cellIdentifierHandler = { _ in "QuickActions" }
-        dynamicDataSource.cellConfigurationHandler = { [weak self] (cell, _, _) in
-            guard let self else { return }
-            let cell = cell as! FluxQuickActionsCollectionViewCell
-            cell.configure(
-                home: {
-                    guard let tab = self.tabBarController as? TabBarController else { return }
-                    tab.selectedIndex = TabBarController.Tab.home.rawValue
-                },
-                browse: {
-                    guard let tab = self.tabBarController as? TabBarController else { return }
-                    tab.selectedIndex = TabBarController.Tab.browse.rawValue
-                },
-                settings: {
-                    guard let tab = self.tabBarController as? TabBarController else { return }
-                    tab.selectedIndex = TabBarController.Tab.settings.rawValue
-                }
-            )
-            cell.contentView.layoutMargins.left = self.view.layoutMargins.left
-            cell.contentView.layoutMargins.right = self.view.layoutMargins.right
-        }
-        return dynamicDataSource
     }
 
     func makeNoUpdatesDataSource() -> RSTDynamicCollectionViewDataSource<InstalledApp>
@@ -811,8 +777,7 @@ private extension MyAppsViewController
     {
         let point = self.collectionView.convert(sender.center, from: sender.superview)
         guard let indexPath = self.collectionView.indexPathForItem(at: point) else { return }
-        guard Section.allCases[indexPath.section] != .fluxSelfUpdate,
-              Section.allCases[indexPath.section] != .quickActions else { return }
+        guard Section.allCases[indexPath.section] != .fluxSelfUpdate else { return }
 
         let installedApp = self.dataSource.item(at: indexPath)
         
@@ -847,8 +812,7 @@ private extension MyAppsViewController
     {
         let point = self.collectionView.convert(sender.center, from: sender.superview)
         guard let indexPath = self.collectionView.indexPathForItem(at: point) else { return }
-        guard Section.allCases[indexPath.section] != .fluxSelfUpdate,
-              Section.allCases[indexPath.section] != .quickActions else { return }
+        guard Section.allCases[indexPath.section] != .fluxSelfUpdate else { return }
 
         let installedApp = self.dataSource.item(at: indexPath)
         self.refresh(installedApp)
@@ -900,8 +864,7 @@ private extension MyAppsViewController
     {
         let point = self.collectionView.convert(sender.center, from: sender.superview)
         guard let indexPath = self.collectionView.indexPathForItem(at: point) else { return }
-        guard Section.allCases[indexPath.section] != .fluxSelfUpdate,
-              Section.allCases[indexPath.section] != .quickActions else { return }
+        guard Section.allCases[indexPath.section] != .fluxSelfUpdate else { return }
 
         let installedApp = self.dataSource.item(at: indexPath)
         
@@ -1758,7 +1721,6 @@ extension MyAppsViewController
         switch section
         {
         case .fluxSelfUpdate: return UICollectionReusableView()
-        case .quickActions: return UICollectionReusableView()
         case .noUpdates: return UICollectionReusableView()
         case .updates:
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "UpdatesHeader", for: indexPath) as! UpdatesCollectionHeaderView
@@ -1880,9 +1842,6 @@ extension MyAppsViewController
             {
                 FluxStoreGitHubRelease.openUpdate(info)
             }
-
-        case .quickActions: break
-
         case .updates:
             guard let cell = collectionView.cellForItem(at: indexPath) else { break }
             self.performSegue(withIdentifier: "showUpdate", sender: cell)
@@ -2126,7 +2085,7 @@ extension MyAppsViewController
         let section = Section(rawValue: indexPath.section)!
         switch section
         {
-        case .fluxSelfUpdate, .quickActions, .updates, .noUpdates: return nil
+        case .fluxSelfUpdate, .updates, .noUpdates: return nil
         case .activeApps, .inactiveApps:
             let installedApp = self.dataSource.item(at: indexPath)
             
@@ -2166,9 +2125,6 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         case .fluxSelfUpdate:
             return CGSize(width: collectionView.bounds.width, height: 108)
 
-        case .quickActions:
-            return CGSize(width: collectionView.bounds.width, height: 104)
-
         case .noUpdates:
             let size = CGSize(width: collectionView.bounds.width, height: 44)
             return size
@@ -2206,7 +2162,6 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         switch section
         {
         case .fluxSelfUpdate: return .zero
-        case .quickActions: return .zero
         case .noUpdates: return .zero
         case .updates:
             let height: CGFloat = (self.updatesDataSource.fetchedResultsController.fetchedObjects?.count ?? 0 > maximumCollapsedUpdatesCount) ? 26 : 0
@@ -2242,7 +2197,6 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         switch section
         {
         case .fluxSelfUpdate: return .zero
-        case .quickActions: return .zero
         case .noUpdates: return .zero
         case .updates: return .zero
             
@@ -2261,8 +2215,6 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         {
         case .fluxSelfUpdate:
             return UIEdgeInsets(top: 12, left: 0, bottom: 8, right: 0)
-        case .quickActions:
-            return UIEdgeInsets(top: 0, left: 0, bottom: 8, right: 0)
         case .noUpdates where self.updatesDataSource.itemCount != 0: return .zero
         case .updates where self.updatesDataSource.itemCount == 0: return .zero
         default: return UIEdgeInsets(top: 12, left: 0, bottom: 20, right: 0)
@@ -2276,7 +2228,7 @@ extension MyAppsViewController: UICollectionViewDragDelegate
     {
         switch Section(rawValue: indexPath.section)!
         {
-        case .fluxSelfUpdate, .quickActions, .updates, .noUpdates:
+        case .fluxSelfUpdate, .updates, .noUpdates:
             return []
             
         case .activeApps, .inactiveApps:
@@ -2662,7 +2614,7 @@ extension MyAppsViewController: UIViewControllerPreviewingDelegate
         let section = Section.allCases[indexPath.section]
         switch section
         {
-        case .fluxSelfUpdate, .quickActions, .noUpdates: return nil
+        case .fluxSelfUpdate, .noUpdates: return nil
         case .updates:
             previewingContext.sourceRect = cell.frame
             

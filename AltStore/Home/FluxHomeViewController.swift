@@ -38,8 +38,7 @@ final class FluxHomeViewController: UIViewController
 
     private let yourAppsTitle = UILabel()
     private let yourAppsSubtitle = UILabel()
-    private let yourAppsChevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-    private lazy var yourAppsControl: UIControl = self.makeYourAppsControl()
+    private lazy var yourAppsCard: UIView = self.makeYourAppsCard()
 
     init()
     {
@@ -82,22 +81,16 @@ final class FluxHomeViewController: UIViewController
         stackView.addArrangedSubview(updateStack)
 
         stackView.addArrangedSubview(makeSectionHeading(
-            title: NSLocalizedString("Jump to", comment: ""),
-            subtitle: NSLocalizedString("Open a tab or keep exploring below.", comment: "")
-        ))
-        stackView.addArrangedSubview(makeQuickJumpRow())
-
-        stackView.addArrangedSubview(makeSectionHeading(
             title: NSLocalizedString("Discover", comment: ""),
             subtitle: NSLocalizedString("New & updated, categories, and featured apps from your catalogs—same as Browse.", comment: "")
         ))
         embedFeaturedBrowse()
 
         stackView.addArrangedSubview(makeSectionHeading(
-            title: NSLocalizedString("YOUR APPS", comment: ""),
+            title: NSLocalizedString("Your apps", comment: ""),
             subtitle: nil
         ))
-        stackView.addArrangedSubview(yourAppsControl)
+        stackView.addArrangedSubview(yourAppsCard)
 
         configureYourAppsSummary()
     }
@@ -265,78 +258,6 @@ final class FluxHomeViewController: UIViewController
         return wrap
     }
 
-    private func makeQuickJumpRow() -> UIView
-    {
-        let grid = UIStackView()
-        grid.axis = .vertical
-        grid.spacing = 10
-
-        let row1 = UIStackView()
-        row1.axis = .horizontal
-        row1.spacing = 12
-        row1.distribution = .fillEqually
-
-        let row2 = UIStackView()
-        row2.axis = .horizontal
-        row2.spacing = 12
-        row2.distribution = .fillEqually
-
-        var homeCfg = UIButton.Configuration.bordered()
-        homeCfg.title = NSLocalizedString("Home", comment: "")
-        homeCfg.image = UIImage(systemName: "house.fill")
-        homeCfg.baseForegroundColor = .altPrimary
-        homeCfg.background.backgroundColor = .fluxCardBackground
-        homeCfg.background.strokeColor = UIColor.fluxCardBorder
-        homeCfg.cornerStyle = .large
-        let homeBtn = UIButton(configuration: homeCfg, primaryAction: UIAction { [weak self] _ in
-            guard let self, let tab = self.tabBarController as? TabBarController else { return }
-            tab.selectedIndex = TabBarController.Tab.home.rawValue
-        })
-
-        var browse = UIButton.Configuration.filled()
-        browse.title = NSLocalizedString("Browse", comment: "")
-        browse.image = UIImage(systemName: "sparkles")
-        browse.baseBackgroundColor = .altPrimary
-        browse.baseForegroundColor = .white
-        browse.cornerStyle = .large
-        let browseBtn = UIButton(configuration: browse, primaryAction: UIAction { [weak self] _ in
-            guard let self, let tab = self.tabBarController as? TabBarController else { return }
-            tab.selectedIndex = TabBarController.Tab.browse.rawValue
-        })
-
-        var mine = UIButton.Configuration.bordered()
-        mine.title = NSLocalizedString("My Apps", comment: "")
-        mine.image = UIImage(systemName: "square.grid.2x2")
-        mine.baseForegroundColor = .altPrimary
-        mine.background.backgroundColor = .fluxCardBackground
-        mine.background.strokeColor = UIColor.fluxCardBorder
-        mine.cornerStyle = .large
-        let mineBtn = UIButton(configuration: mine, primaryAction: UIAction { [weak self] _ in
-            guard let self, let tab = self.tabBarController as? TabBarController else { return }
-            tab.selectedIndex = TabBarController.Tab.myApps.rawValue
-        })
-
-        var settingsCfg = UIButton.Configuration.bordered()
-        settingsCfg.title = NSLocalizedString("Settings", comment: "")
-        settingsCfg.image = UIImage(systemName: "gearshape.fill")
-        settingsCfg.baseForegroundColor = .altPrimary
-        settingsCfg.background.backgroundColor = .fluxCardBackground
-        settingsCfg.background.strokeColor = UIColor.fluxCardBorder
-        settingsCfg.cornerStyle = .large
-        let settingsBtn = UIButton(configuration: settingsCfg, primaryAction: UIAction { [weak self] _ in
-            guard let self, let tab = self.tabBarController as? TabBarController else { return }
-            tab.selectedIndex = TabBarController.Tab.settings.rawValue
-        })
-
-        row1.addArrangedSubview(homeBtn)
-        row1.addArrangedSubview(browseBtn)
-        row2.addArrangedSubview(mineBtn)
-        row2.addArrangedSubview(settingsBtn)
-        grid.addArrangedSubview(row1)
-        grid.addArrangedSubview(row2)
-        return grid
-    }
-
     private func embedFeaturedBrowse()
     {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -366,19 +287,15 @@ final class FluxHomeViewController: UIViewController
         embeddedFeatured = featured
     }
 
-    private func makeYourAppsControl() -> UIControl
+    private func makeYourAppsCard() -> UIView
     {
-        let card = UIControl()
+        let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
         card.backgroundColor = .fluxCardBackground
         card.layer.cornerRadius = 18
         card.layer.cornerCurve = .continuous
         card.layer.borderWidth = 1
         card.layer.borderColor = UIColor.fluxCardBorder.cgColor
-        card.addAction(UIAction { [weak self] _ in
-            guard let self, let tab = self.tabBarController as? TabBarController else { return }
-            tab.selectedIndex = TabBarController.Tab.myApps.rawValue
-        }, for: .touchUpInside)
 
         yourAppsTitle.translatesAutoresizingMaskIntoConstraints = false
         yourAppsTitle.font = .preferredFont(forTextStyle: .headline)
@@ -392,10 +309,6 @@ final class FluxHomeViewController: UIViewController
         yourAppsSubtitle.numberOfLines = 2
         yourAppsSubtitle.isUserInteractionEnabled = false
 
-        yourAppsChevron.translatesAutoresizingMaskIntoConstraints = false
-        yourAppsChevron.tintColor = .fluxSecondaryText
-        yourAppsChevron.isUserInteractionEnabled = false
-
         let icon = UIImageView(image: UIImage(systemName: "arrow.triangle.2.circlepath"))
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.tintColor = .altPrimary
@@ -404,7 +317,6 @@ final class FluxHomeViewController: UIViewController
         card.addSubview(icon)
         card.addSubview(yourAppsTitle)
         card.addSubview(yourAppsSubtitle)
-        card.addSubview(yourAppsChevron)
 
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
@@ -413,16 +325,13 @@ final class FluxHomeViewController: UIViewController
             icon.heightAnchor.constraint(equalToConstant: 28),
 
             yourAppsTitle.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 12),
-            yourAppsTitle.trailingAnchor.constraint(equalTo: yourAppsChevron.leadingAnchor, constant: -8),
+            yourAppsTitle.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
             yourAppsTitle.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
 
             yourAppsSubtitle.leadingAnchor.constraint(equalTo: yourAppsTitle.leadingAnchor),
             yourAppsSubtitle.trailingAnchor.constraint(equalTo: yourAppsTitle.trailingAnchor),
             yourAppsSubtitle.topAnchor.constraint(equalTo: yourAppsTitle.bottomAnchor, constant: 4),
             yourAppsSubtitle.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
-
-            yourAppsChevron.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
-            yourAppsChevron.centerYAnchor.constraint(equalTo: card.centerYAnchor),
         ])
 
         return card
@@ -434,13 +343,11 @@ final class FluxHomeViewController: UIViewController
         {
             yourAppsTitle.text = NSLocalizedString("No app updates pending", comment: "")
             yourAppsSubtitle.text = NSLocalizedString("Pull to refresh on My Apps after sources sync.", comment: "")
-            yourAppsChevron.isHidden = true
         }
         else
         {
             yourAppsTitle.text = String(format: NSLocalizedString("%lld updates available", comment: ""), Int64(pendingAppUpdatesCount))
             yourAppsSubtitle.text = NSLocalizedString("Open My Apps to install or refresh.", comment: "")
-            yourAppsChevron.isHidden = false
         }
     }
 }

@@ -21,7 +21,8 @@ extension UIColor
     static let fluxCardBorder = UIColor { traits in
         // Match iOS separators while keeping a subtle Flux border.
         let base = UIColor.separator
-        return traits.userInterfaceStyle == .dark ? base.withAlphaComponent(0.35) : base.withAlphaComponent(0.6)
+        // Lighter border in light mode looks less "boxed" / AI-card-ish.
+        return traits.userInterfaceStyle == .dark ? base.withAlphaComponent(0.32) : base.withAlphaComponent(0.28)
     }
     static let fluxSecondaryText = UIColor { traits in
         // Use dynamic label colors so light mode reads correctly.
