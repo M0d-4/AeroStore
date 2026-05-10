@@ -49,7 +49,7 @@ extension UpdateCollectionViewCell
         
         self.bannerView.backgroundEffectView.isHidden = true
         
-        self.blurView.layer.cornerRadius = 20
+        self.blurView.layer.cornerRadius = 16
         self.blurView.layer.masksToBounds = true
         
         self.update()

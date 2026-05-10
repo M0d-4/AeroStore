@@ -404,11 +404,11 @@ private extension MyAppsViewController
             guard let app = installedApp.storeApp, let latestSupportedVersion = app.latestSupportedVersion else { return }
             
             let cell = cell as! UpdateCollectionViewCell
-            cell.layoutMargins.left = self.view.layoutMargins.left
-            cell.layoutMargins.right = self.view.layoutMargins.right
+            cell.layoutMargins.left = myAppsInstalledCardInset
+            cell.layoutMargins.right = myAppsInstalledCardInset
             
             cell.tintColor = app.tintColor ?? .altPrimary
-            cell.versionDescriptionTextView.maximumNumberOfLines = 2
+            cell.versionDescriptionTextView.maximumNumberOfLines = 1
             cell.versionDescriptionTextView.text = latestSupportedVersion.localizedDescription ?? "nil"
             
             cell.bannerView.iconImageView.image = nil
@@ -1911,8 +1911,7 @@ extension MyAppsViewController
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "ActiveAppsHeader", for: indexPath) as! InstalledAppsCollectionHeaderView
             
             UIView.performWithoutAnimation {
-                headerView.layoutMargins.left = self.view.layoutMargins.left
-                headerView.layoutMargins.right = self.view.layoutMargins.right
+                headerView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: myAppsInstalledCardInset, bottom: 0, trailing: myAppsInstalledCardInset)
                 
                 if UserDefaults.standard.activeAppsLimit == nil || UserDefaults.standard.isAppLimitDisabled
                 {
@@ -1949,8 +1948,7 @@ extension MyAppsViewController
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "InactiveAppsHeader", for: indexPath) as! InstalledAppsCollectionHeaderView
             
             UIView.performWithoutAnimation {
-                headerView.layoutMargins.left = self.view.layoutMargins.left
-                headerView.layoutMargins.right = self.view.layoutMargins.right
+                headerView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: myAppsInstalledCardInset, bottom: 0, trailing: myAppsInstalledCardInset)
                 
                 headerView.textLabel.text = NSLocalizedString("Inactive", comment: "")
                 headerView.button.setTitle(nil, for: .normal)
@@ -2296,14 +2294,15 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
                 return previousHeight
             }
             
+            let updateWidth = max(0, collectionView.bounds.width - myAppsInstalledCardInset * 2)
             // Manually change cell's width to prevent conflicting with UIView-Encapsulated-Layout-Width constraints.
-            self.prototypeUpdateCell.frame.size.width = collectionView.bounds.width
+            self.prototypeUpdateCell.frame.size.width = updateWidth
             
             // Must use the updates data source only — composite `cellConfigurationHandler` forwards to
             // every section handler; active/inactive handlers force-cast to InstalledAppCollectionViewCell.
             self.updatesDataSource.cellConfigurationHandler(self.prototypeUpdateCell, item, indexPath)
             
-            let size = self.prototypeUpdateCell.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width, height: UIView.layoutFittingCompressedSize.height),
+            let size = self.prototypeUpdateCell.systemLayoutSizeFitting(CGSize(width: updateWidth, height: UIView.layoutFittingCompressedSize.height),
                                                                         withHorizontalFittingPriority: .required, // Width is fixed
                                                                         verticalFittingPriority: .fittingSizeLevel) // Height can be as large as needed
             
@@ -2324,12 +2323,12 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         case .fluxSelfUpdate: return .zero
         case .noUpdates: return .zero
         case .updates:
-            let height: CGFloat = (self.updatesDataSource.fetchedResultsController.fetchedObjects?.count ?? 0 > maximumCollapsedUpdatesCount) ? 26 : 0
+            let height: CGFloat = (self.updatesDataSource.fetchedResultsController.fetchedObjects?.count ?? 0 > maximumCollapsedUpdatesCount) ? 22 : 0
             return CGSize(width: collectionView.bounds.width, height: height)
             
-        case .activeApps: return CGSize(width: collectionView.bounds.width, height: 44)
+        case .activeApps: return CGSize(width: collectionView.bounds.width, height: 40)
         case .inactiveApps where self.inactiveAppsDataSource.itemCount == 0: return .zero
-        case .inactiveApps: return CGSize(width: collectionView.bounds.width, height: 44)
+        case .inactiveApps: return CGSize(width: collectionView.bounds.width, height: 40)
         }
     }
     
@@ -2379,8 +2378,10 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         case .noUpdates:
             return UIEdgeInsets(top: 4, left: myAppsInstalledCardInset, bottom: 6, right: myAppsInstalledCardInset)
         case .updates where self.updatesDataSource.itemCount == 0: return .zero
+        case .updates:
+            return UIEdgeInsets(top: 6, left: myAppsInstalledCardInset, bottom: 8, right: myAppsInstalledCardInset)
         case .activeApps, .inactiveApps:
-            return UIEdgeInsets(top: 4, left: myAppsInstalledCardInset, bottom: 16, right: myAppsInstalledCardInset)
+            return UIEdgeInsets(top: 2, left: myAppsInstalledCardInset, bottom: 14, right: myAppsInstalledCardInset)
         default: return UIEdgeInsets(top: 12, left: 0, bottom: 20, right: 0)
         }
     }
@@ -2390,6 +2391,7 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
         switch Section.allCases[section]
         {
         case .noUpdates: return 6
+        case .updates: return 8
         case .activeApps, .inactiveApps: return 11
         default: return 15
         }

@@ -200,19 +200,23 @@ final class CollapsingMarkdownView: UIView {
     }
     
     // MARK: - Layout
+    
+    private func reservedToggleHeight() -> CGFloat {
+        guard !toggleButton.isHidden else { return 0 }
+        return toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000)).height
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         
         UIView.performWithoutAnimation {
-            // Calculate button height (for spacing)
-            let buttonHeight = toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000)).height
+            let chromeBelowText = reservedToggleHeight()
             
-            // Set textView frame to leave space for button
             textView.frame = CGRect(
                 x: 0,
                 y: 0,
                 width: bounds.width,
-                height: bounds.height - buttonHeight
+                height: max(0, bounds.height - chromeBelowText)
             )
             
             // Check if layout changed
@@ -222,14 +226,19 @@ final class CollapsingMarkdownView: UIView {
                 previousSize = bounds.size
             }
             
-            // Position toggle button at bottom right
-            let buttonSize = toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000))
-            toggleButton.frame = CGRect(
-                x: bounds.width - buttonSize.width,
-                y: textView.frame.maxY,
-                width: buttonSize.width,
-                height: buttonHeight
-            )
+            let chrome = reservedToggleHeight()
+            if chrome > 0 {
+                let buttonSize = toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000))
+                toggleButton.frame = CGRect(
+                    x: bounds.width - buttonSize.width,
+                    y: textView.frame.maxY,
+                    width: buttonSize.width,
+                    height: chrome
+                )
+            }
+            else {
+                toggleButton.frame = .zero
+            }
         }
     }
     
@@ -244,22 +253,21 @@ final class CollapsingMarkdownView: UIView {
         }
         
         let lineHeight = font.lineHeight
-        let buttonHeight = toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000)).height
+        let toggleChrome = toggleButton.isHidden ? 0 : toggleButton.sizeThatFits(CGSize(width: 1000, height: 1000)).height
         
-        // Always add button height to reserve space for it
         if isCollapsed && needsCollapsing {
             // When collapsed and needs collapsing, use maximumNumberOfLines
             let collapsedHeight = lineHeight * CGFloat(maximumNumberOfLines) + 
                              lineSpacing * CGFloat(max(0, maximumNumberOfLines - 1))
-            return CGSize(width: UIView.noIntrinsicMetric, height: collapsedHeight + buttonHeight)
+            return CGSize(width: UIView.noIntrinsicMetric, height: collapsedHeight + toggleChrome)
         } else if !needsCollapsing {
             // Text is shorter than max lines - use actual text height
             let textSize = textView.sizeThatFits(CGSize(width: bounds.width, height: .greatestFiniteMagnitude))
-            return CGSize(width: UIView.noIntrinsicMetric, height: textSize.height + buttonHeight)
+            return CGSize(width: UIView.noIntrinsicMetric, height: textSize.height + toggleChrome)
         } else {
             // When expanded and needs collapsing, use full text height plus button
             let textSize = textView.sizeThatFits(CGSize(width: bounds.width, height: .greatestFiniteMagnitude))
-            return CGSize(width: UIView.noIntrinsicMetric, height: textSize.height + buttonHeight)
+            return CGSize(width: UIView.noIntrinsicMetric, height: textSize.height + toggleChrome)
         }
     }
 

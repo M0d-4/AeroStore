@@ -33,7 +33,7 @@
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Nop-pL-Icx" customClass="AppBannerView" customModule="SideStore" customModuleProvider="target">
                                                     <rect key="frame" x="0.0" y="0.0" width="343" height="50"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="height" constant="88" id="EPP-7O-1Ad"/>
+                                                        <constraint firstAttribute="height" constant="68" id="EPP-7O-1Ad"/>
                                                     </constraints>
                                                 </view>
                                                 <stackView opaque="NO" contentMode="scaleToFill" alignment="firstBaseline" translatesAutoresizingMaskIntoConstraints="NO" id="RSR-5W-7tt" userLabel="Release Notes">
@@ -46,7 +46,7 @@
                                                             <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                                         </textView>
                                                     </subviews>
-                                                    <edgeInsets key="layoutMargins" top="0.0" left="15" bottom="15" right="15"/>
+                                                    <edgeInsets key="layoutMargins" top="0.0" left="10" bottom="6" right="10"/>
                                                 </stackView>
                                             </subviews>
                                         </stackView>
@@ -68,7 +68,7 @@
                             <constraint firstAttribute="trailing" secondItem="1xN-9h-DFd" secondAttribute="trailing" id="kbY-Z6-V86"/>
                             <constraint firstItem="1xN-9h-DFd" firstAttribute="leading" secondItem="dmf-hv-bwx" secondAttribute="leading" id="ofk-a7-m0Y"/>
                         </constraints>
-                        <edgeInsets key="layoutMargins" top="20" left="20" bottom="20" right="20"/>
+                        <edgeInsets key="layoutMargins" top="8" left="10" bottom="8" right="10"/>
                     </view>
                 </subviews>
             </view>
