@@ -95,6 +95,7 @@
 		A8EB89C22F5448B20094BC01 /* em_proxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BD2F652F543FD40045335F /* em_proxy.swift */; };
 		A8EB89CE2F5451B50094BC01 /* SemanticVersion in Frameworks */ = {isa = PBXBuildFile; productRef = A8EB89CD2F5451B50094BC01 /* SemanticVersion */; };
 		A8EB89D02F5451C20094BC01 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = A8EB89CF2F5451C20094BC01 /* KeychainAccess */; };
+		FLUXUSER1 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FLUXUSER2 /* UserNotifications.framework */; };
 		A8EB955C2F5455B30094BC01 /* debug.c in Sources */ = {isa = PBXBuildFile; fileRef = A8BD30312F5440300045335F /* debug.c */; };
 		A8EB95C92F5455FE0094BC01 /* debug.h in Headers */ = {isa = PBXBuildFile; fileRef = A8BD30302F5440300045335F /* debug.h */; };
 		A8EB96042F54561E0094BC01 /* afc.c in Sources */ = {isa = PBXBuildFile; fileRef = A8BD30932F5440300045335F /* afc.c */; };
@@ -539,6 +540,7 @@
 		B3C39608284F4C8400DA9E2F /* CodeSigning.xcconfig.sample */ = {isa = PBXFileReference; lastKnownFileType = text; path = CodeSigning.xcconfig.sample; sourceTree = "<group>"; };
 		BF58047B246A28F7008AE704 /* AltBackup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AltBackup.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF580497246A3D19008AE704 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		FLUXUSER2 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		BF66EE7E2501AE50007EE018 /* AltStoreCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AltStoreCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF989167250AABF3002ACF50 /* AltWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AltWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD2476A2284B9A500981D42 /* FluxStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FluxStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -767,6 +769,7 @@
 				BF66EE852501AE50007EE018 /* AltStoreCore.framework in Frameworks */,
 				A803924B2F552F4C00097AF1 /* Minimuxer in Frameworks */,
 				A8635D062F4CF16D00E66784 /* OpenSSL.xcframework in Frameworks */,
+				FLUXUSER1 /* UserNotifications.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1251,6 +1254,7 @@
 			children = (
 				A8635D052F4CF16D00E66784 /* OpenSSL.xcframework */,
 				BF580497246A3D19008AE704 /* UIKit.framework */,
+				FLUXUSER2 /* UserNotifications.framework */,
 				BFD247862284BB3B00981D42 /* Roxas.framework */,
 				A8945AA52D059B6100D86CBE /* Roxas.framework */,
 			);
