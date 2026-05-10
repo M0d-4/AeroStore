@@ -107,7 +107,7 @@ class ToastView: RSTToastView
         self.layoutMargins = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
         
         if let stackView = self.textLabel.superview as? UIStackView {
-            stackView.spacing = (self.detailTextLabel?.text?.isEmpty == false) ? 6.0 : 0.0
+            stackView.spacing = (self.detailTextLabel.text?.isEmpty == false) ? 6.0 : 0.0
             stackView.alignment = .leading
         }
     }

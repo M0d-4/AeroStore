@@ -14,7 +14,7 @@ import Nuke
 
 private let minimumItemSpacing = 8.0
 
-class AppCardCollectionViewCell: UICollectionViewCell, NSCollectionLayoutEnvironment
+class AppCardCollectionViewCell: UICollectionViewCell
 {
     let bannerView: AppBannerView
     let captionLabel: UILabel
@@ -165,13 +165,8 @@ class AppCardCollectionViewCell: UICollectionViewCell, NSCollectionLayoutEnviron
         }
     }
     
-    // MARK: - NSCollectionLayoutEnvironment
-    var container: NSCollectionLayoutContainer {
-        return NSCollectionLayoutContainer(width: .absolute(self.bounds.width), height: .absolute(self.bounds.height))
-    }
-    
-    private var layoutEnvironment: NSCollectionLayoutEnvironment {
-        return self.screenshotsCollectionView.collectionViewLayout as? NSCollectionLayoutEnvironment ?? self
+    private func getEffectiveContentSize() -> CGSize {
+        return self.bounds.size
     }
     
     func makeLayout() -> UICollectionViewLayout {
@@ -209,10 +204,10 @@ class AppCardCollectionViewCell: UICollectionViewCell, NSCollectionLayoutEnviron
                 }
             }
             
-            let screenshotWidth = (layoutEnvironment.container.effectiveContentSize.height * (aspectRatio.width / aspectRatio.height)).rounded(.up) // Round to ensure we over-estimate contentWidth.
+            let screenshotWidth = (self.getEffectiveContentSize().height * (aspectRatio.width / aspectRatio.height)).rounded(.up) // Round to ensure we over-estimate contentWidth.
             
             let totalContentWidth = contentWidth + (screenshotWidth + minimumItemSpacing)
-            if totalContentWidth > layoutEnvironment.container.effectiveContentSize.width
+            if totalContentWidth > self.getEffectiveContentSize().width
             {
                 // totalContentWidth is larger than visible width.
                 break
@@ -254,7 +249,7 @@ class AppCardCollectionViewCell: UICollectionViewCell, NSCollectionLayoutEnviron
         {
             // We're showing all screenshots initially, so make sure they're centered.
             
-            let insetWidth = (layoutEnvironment.container.effectiveContentSize.width - contentWidth) / 2.0
+            let insetWidth = (self.getEffectiveContentSize().width - contentWidth) / 2.0
             group.contentInsets.leading = (insetWidth - 1).rounded(.down) // Subtract 1 to avoid overflowing/clipping
         }
         
