@@ -60,13 +60,13 @@ class FeaturedViewController: UICollectionViewController
     /// When `true`, this controller is embedded on Home: no search, no large title, no side margins, non-scrolling height is sized by the parent.
     var isEmbeddedHomePreview = false
 
-    /// Inner FRC-backed sources (used to disable incremental updates when embedded — `liveFetchLimit` + FRC inserts fight `performBatchUpdates`).
+    /// Inner FRC-backed sources (`liveFetchLimit` caps visible rows; incremental FRC updates disagree with that and crash `performBatchUpdates`).
     private var categoriesKnownDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
     private var categoriesUnknownDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
     private var featuredPrimaryDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
     private var featuredSecondaryDataSource: RSTFetchedResultsCollectionViewDataSource<StoreApp>?
 
-    private var embeddedReloadObservers: [NSObjectProtocol] = []
+    private var featuredSnapshotReloadObservers: [NSObjectProtocol] = []
 
     private lazy var dataSource = self.makeDataSource()
     private lazy var recentlyUpdatedDataSource = self.makeRecentlyUpdatedDataSource()
@@ -145,15 +145,13 @@ class FeaturedViewController: UICollectionViewController
             
             self.navigationItem.largeTitleDisplayMode = .always
         }
-        else
-        {
-            self.configureEmbeddedFeaturedReloadPolicy()
-        }
+
+        self.configureFeaturedSnapshotReloadPolicy()
     }
 
     deinit
     {
-        for o in self.embeddedReloadObservers
+        for o in self.featuredSnapshotReloadObservers
         {
             NotificationCenter.default.removeObserver(o)
         }
@@ -164,7 +162,7 @@ class FeaturedViewController: UICollectionViewController
         super.viewWillAppear(animated)
         if self.isEmbeddedHomePreview
         {
-            self.reloadEmbeddedFeaturedSnapshot()
+            self.reloadFeaturedSnapshot()
         }
     }
     
@@ -193,7 +191,7 @@ class FeaturedViewController: UICollectionViewController
         (self.parent as? FluxHomeViewController)?.updateEmbeddedFeaturedHeight(h)
     }
 
-    private func configureEmbeddedFeaturedReloadPolicy()
+    private func configureFeaturedSnapshotReloadPolicy()
     {
         self.recentlyUpdatedDataSource.fetchedResultsController.delegate = nil
         self.categoriesKnownDataSource?.fetchedResultsController.delegate = nil
@@ -201,26 +199,26 @@ class FeaturedViewController: UICollectionViewController
         self.featuredPrimaryDataSource?.fetchedResultsController.delegate = nil
         self.featuredSecondaryDataSource?.fetchedResultsController.delegate = nil
 
+        guard self.featuredSnapshotReloadObservers.isEmpty else { return }
+
         let mainQueue = OperationQueue.main
         let ctx = DatabaseManager.shared.viewContext
-        self.embeddedReloadObservers.append(
+        self.featuredSnapshotReloadObservers.append(
             NotificationCenter.default.addObserver(forName: NSManagedObjectContext.didChangeObjectsNotification, object: ctx, queue: nil) { [weak self] _ in
-                mainQueue.addOperation { self?.reloadEmbeddedFeaturedSnapshot() }
+                mainQueue.addOperation { self?.reloadFeaturedSnapshot() }
             }
         )
-        self.embeddedReloadObservers.append(
+        self.featuredSnapshotReloadObservers.append(
             NotificationCenter.default.addObserver(forName: AppManager.didFetchSourceNotification, object: nil, queue: nil) { [weak self] _ in
-                mainQueue.addOperation { self?.reloadEmbeddedFeaturedSnapshot() }
+                mainQueue.addOperation { self?.reloadFeaturedSnapshot() }
             }
         )
 
-        self.reloadEmbeddedFeaturedSnapshot()
+        self.reloadFeaturedSnapshot()
     }
 
-    private func reloadEmbeddedFeaturedSnapshot()
+    private func reloadFeaturedSnapshot()
     {
-        guard self.isEmbeddedHomePreview else { return }
-
         try? self.recentlyUpdatedDataSource.fetchedResultsController.performFetch()
         try? self.categoriesKnownDataSource?.fetchedResultsController.performFetch()
         try? self.categoriesUnknownDataSource?.fetchedResultsController.performFetch()
@@ -231,7 +229,10 @@ class FeaturedViewController: UICollectionViewController
             self.collectionView.reloadData()
         }
         self.collectionView.layoutIfNeeded()
-        self.notifyParentOfContentSizeChangeIfNeeded()
+        if self.isEmbeddedHomePreview
+        {
+            self.notifyParentOfContentSizeChangeIfNeeded()
+        }
     }
 }
 

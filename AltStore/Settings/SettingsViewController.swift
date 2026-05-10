@@ -575,7 +575,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your FluxStore experience by choosing an alternate app icon.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Choose light, dark, or system appearance, and pick an alternate app icon.", comment: "")
             }
             
             
@@ -1011,6 +1011,11 @@ private extension SettingsViewController
 
 extension SettingsViewController
 {
+    private func displaySectionStoryboardRowCount() -> Int
+    {
+        super.tableView(self.tableView, numberOfRowsInSection: Section.display.rawValue)
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int
     {
         var numberOfSections = super.numberOfSections(in: tableView)
@@ -1034,6 +1039,8 @@ extension SettingsViewController
         case .appRefresh: return AppRefreshRow.allCases.count
         case .advancedSettings:
             return AdvancedSettingsRow.allCases.count + 1
+        case .display:
+            return self.displaySectionStoryboardRowCount() + 1
         default: return super.tableView(tableView, numberOfRowsInSection: section.rawValue)
         }
     }
@@ -1041,6 +1048,19 @@ extension SettingsViewController
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
         let section = Section.allCases[indexPath.section]
+        if section == .display, indexPath.row == self.displaySectionStoryboardRowCount()
+        {
+            let cell = UITableViewCell(style: .value1, reuseIdentifier: "FluxAppearancePreference")
+            cell.textLabel?.text = NSLocalizedString("Appearance", comment: "")
+            cell.detailTextLabel?.text = FluxAppearancePreference.current.localizedTitle
+            cell.accessoryType = .none
+            cell.backgroundColor = .clear
+            cell.textLabel?.textColor = .label
+            cell.detailTextLabel?.textColor = UIColor.fluxSecondaryText
+            cell.selectionStyle = .default
+            cell.tintColor = .altPrimary
+            return cell
+        }
         if section == .advancedSettings, indexPath.row == AdvancedSettingsRow.allCases.count {
             let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "FluxBundleIDPresets")
             cell.textLabel?.text = NSLocalizedString("Bundle ID presets", comment: "")
@@ -1648,8 +1668,30 @@ extension SettingsViewController
             }
             
             
+        case .display:
+            if indexPath.row == self.displaySectionStoryboardRowCount()
+            {
+                let sheet = UIAlertController(title: NSLocalizedString("Appearance", comment: ""), message: nil, preferredStyle: .actionSheet)
+                for mode in FluxAppearancePreference.allCases
+                {
+                    let mark = (mode == FluxAppearancePreference.current) ? "✓ " : ""
+                    sheet.addAction(UIAlertAction(title: mark + mode.localizedTitle, style: .default) { _ in
+                        mode.saveAndApply()
+                        self.tableView.reloadRows(at: [indexPath], with: .none)
+                    })
+                }
+                sheet.addAction(.cancel)
+                if let popover = sheet.popoverPresentationController
+                {
+                    popover.sourceView = self.tableView
+                    popover.sourceRect = self.tableView.rectForRow(at: indexPath)
+                }
+                self.present(sheet, animated: true)
+                return
+            }
+
         // case .account, .patreon, .display, .instructions, .macDirtyCow: break
-        case .account, .patreon, .display, .instructions, .betaTesting: break
+        case .account, .patreon, .instructions, .betaTesting: break
         }
         
         

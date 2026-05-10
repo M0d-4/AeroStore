@@ -68,6 +68,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Register default settings before doing anything else.
         UserDefaults.registerDefaults()
+        UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.dark.rawValue])
 
         FluxStikJITHostBootstrap.prepareIntegrations()
 
@@ -96,6 +97,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         
         self.setTintColor()
         self.prepareImageCache()
+
+        DispatchQueue.main.async {
+            FluxAppearancePreference.applyToAllWindows()
+        }
 
         // TODO: @mahee96: find if we need to start em_proxy as in altstore?
         if UserDefaults.standard.enableEMPforWireguard {
