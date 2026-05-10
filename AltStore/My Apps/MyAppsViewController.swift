@@ -2184,7 +2184,9 @@ extension MyAppsViewController: UICollectionViewDelegateFlowLayout
             // Manually change cell's width to prevent conflicting with UIView-Encapsulated-Layout-Width constraints.
             self.prototypeUpdateCell.frame.size.width = collectionView.bounds.width
             
-            self.dataSource.cellConfigurationHandler(self.prototypeUpdateCell, item, indexPath)
+            // Must use the updates data source only — composite `cellConfigurationHandler` forwards to
+            // every section handler; active/inactive handlers force-cast to InstalledAppCollectionViewCell.
+            self.updatesDataSource.cellConfigurationHandler(self.prototypeUpdateCell, item, indexPath)
             
             let size = self.prototypeUpdateCell.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width, height: UIView.layoutFittingCompressedSize.height),
                                                                         withHorizontalFittingPriority: .required, // Width is fixed
