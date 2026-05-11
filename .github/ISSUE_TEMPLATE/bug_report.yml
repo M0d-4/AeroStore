@@ -29,7 +29,7 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: What version of SideStore are you using?
+      label: What version of FluxStore are you using?
       description: To retrieve this, go to `Settings` in the SideStore app and scroll down to the bottom.
     validations:
       required: true
