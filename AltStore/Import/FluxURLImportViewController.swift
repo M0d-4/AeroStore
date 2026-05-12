@@ -21,7 +21,7 @@ class FluxURLImportViewController: UIViewController {
     private lazy var importButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("Import", comment: ""), for: .normal)
-        button.backgroundColor = .altPrimary
+        button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 8
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -32,9 +32,10 @@ class FluxURLImportViewController: UIViewController {
         super.viewDidLoad()
         
         self.title = NSLocalizedString("Import from URL", comment: "")
-        self.view.backgroundColor = .altBackground
+        self.view.backgroundColor = .systemBackground
         
         setupViews()
+        setupNavigationBar()
     }
     
     private func setupViews() {
@@ -55,6 +56,14 @@ class FluxURLImportViewController: UIViewController {
         importButton.addTarget(self, action: #selector(importFromURL), for: .touchUpInside)
     }
     
+    private func setupNavigationBar() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(dismissImport)
+        )
+    }
+    
     @objc private func importFromURL() {
         guard let urlString = urlTextField.text, !urlString.isEmpty,
               let url = URL(string: urlString) else {
@@ -70,6 +79,10 @@ class FluxURLImportViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
         present(alert, animated: true)
+    }
+    
+    @objc private func dismissImport() {
+        dismiss(animated: true)
     }
     
     private func showError(_ message: String) {
