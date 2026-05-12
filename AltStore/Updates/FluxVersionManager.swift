@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import AltStoreCore
 
 class FluxVersionManager {
     
@@ -21,7 +20,6 @@ class FluxVersionManager {
         let version: String
         let isNightly: Bool
         let baseVersion: String
-        let buildNumber: String?
         
         init(version: String) {
             self.version = version
@@ -32,13 +30,6 @@ class FluxVersionManager {
             } else {
                 self.isNightly = false
                 self.baseVersion = version
-            }
-            
-            // Extract build number if present
-            if let buildRange = version.range(of: "+build.") {
-                self.buildNumber = String(version[buildRange.upperBound...])
-            } else {
-                self.buildNumber = nil
             }
         }
     }
@@ -51,24 +42,20 @@ class FluxVersionManager {
         
         // Handle nightly comparisons
         if info1.isNightly && info2.isNightly {
-            // Both are nightly, compare base versions
             return compareSemanticVersions(info1.baseVersion, info2.baseVersion)
         } else if info1.isNightly {
-            // Nightly is considered newer than stable of same base version
             if compareSemanticVersions(info1.baseVersion, info2.baseVersion) == .orderedSame {
                 return .orderedDescending
             } else {
                 return compareSemanticVersions(info1.baseVersion, info2.baseVersion)
             }
         } else if info2.isNightly {
-            // Stable is considered older than nightly of same base version
             if compareSemanticVersions(info1.baseVersion, info2.baseVersion) == .orderedSame {
                 return .orderedAscending
             } else {
                 return compareSemanticVersions(info1.baseVersion, info2.baseVersion)
             }
         } else {
-            // Both are stable, compare normally
             return compareSemanticVersions(info1.baseVersion, info2.baseVersion)
         }
     }
@@ -99,19 +86,6 @@ class FluxVersionManager {
         return compareVersions(currentVersion, availableVersion) == .orderedAscending
     }
     
-    func getUpdateType(currentVersion: String, availableVersion: String) -> UpdateType {
-        let currentInfo = VersionInfo(version: currentVersion)
-        let availableInfo = VersionInfo(version: availableVersion)
-        
-        if availableInfo.isNightly {
-            return .nightly
-        } else if currentInfo.isNightly && !availableInfo.isNightly {
-            return .stableFromNightly
-        } else {
-            return .standard
-        }
-    }
-    
     // MARK: - Ignored Updates
     
     private let ignoredUpdatesKey = "FluxStore.ignoredUpdates"
@@ -132,7 +106,6 @@ class FluxVersionManager {
         let ignoredUpdates = getIgnoredUpdates()
         guard let ignoredVersion = ignoredUpdates[appID] else { return false }
         
-        // If there's a newer version than the ignored one, don't ignore anymore
         return compareVersions(version, ignoredVersion) != .orderedDescending
     }
     
