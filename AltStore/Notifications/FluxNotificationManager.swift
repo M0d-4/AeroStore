@@ -10,6 +10,74 @@ import UIKit
 import UserNotifications
 import AltStoreCore
 
+// MARK: - FluxNotification Model
+
+struct FluxNotification {
+    let id: String
+    let title: String
+    let message: String
+    let category: FluxNotificationCategory
+    let userInfo: [String: Any]
+    let date: Date
+    let isRead: Bool
+    
+    init(id: String = UUID().uuidString, title: String, message: String, category: FluxNotificationCategory, userInfo: [String: Any] = [:], date: Date = Date(), isRead: Bool = false) {
+        self.id = id
+        self.title = title
+        self.message = message
+        self.category = category
+        self.userInfo = userInfo
+        self.date = date
+        self.isRead = isRead
+    }
+}
+
+enum FluxNotificationCategory {
+    case appUpdate
+    case refreshReminder
+    case system
+    case general
+    
+    var localizedTitle: String {
+        switch self {
+        case .appUpdate:
+            return NSLocalizedString("App Update", comment: "")
+        case .refreshReminder:
+            return NSLocalizedString("Refresh Reminder", comment: "")
+        case .system:
+            return NSLocalizedString("System", comment: "")
+        case .general:
+            return NSLocalizedString("General", comment: "")
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .appUpdate:
+            return "arrow.up.circle.fill"
+        case .refreshReminder:
+            return "clock.circle.fill"
+        case .system:
+            return "gear.circle.fill"
+        case .general:
+            return "bell.circle.fill"
+        }
+    }
+    
+    var color: UIColor {
+        switch self {
+        case .appUpdate:
+            return .systemBlue
+        case .refreshReminder:
+            return .systemOrange
+        case .system:
+            return .systemGray
+        case .general:
+            return .systemPurple
+        }
+    }
+}
+
 class FluxNotificationManager: NSObject {
     
     static let shared = FluxNotificationManager()
