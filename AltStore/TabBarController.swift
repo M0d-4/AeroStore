@@ -75,19 +75,33 @@ final class TabBarController: UITabBarController
             let featured = storyboard.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
             featured.navigationItem.largeTitleDisplayMode = .always
 
-            let addCatalogAction = UIAction { [weak featured] _ in
-                guard let nav = featured?.navigationController else { return }
-                let add = FluxAddCatalogViewController()
-                let sheet = UINavigationController(rootViewController: add)
-                sheet.modalPresentationStyle = .formSheet
-                sheet.navigationBar.prefersLargeTitles = false
-                nav.present(sheet, animated: true)
-            }
+            let addMenu = UIMenu(title: NSLocalizedString("Add", comment: ""), children: [
+                UIAction(title: NSLocalizedString("Import from Files", comment: ""), image: UIImage(systemName: "folder.fill")) { [weak featured] _ in
+                    // Handle Files import - existing functionality
+                    guard let nav = featured?.navigationController else { return }
+                    let add = FluxAddCatalogViewController()
+                    let sheet = UINavigationController(rootViewController: add)
+                    sheet.modalPresentationStyle = .formSheet
+                    sheet.navigationBar.prefersLargeTitles = false
+                    nav.present(sheet, animated: true)
+                },
+                UIAction(title: NSLocalizedString("Import from URL", comment: ""), image: UIImage(systemName: "link.fill")) { [weak featured] _ in
+                    // Handle URL import
+                    guard let nav = featured?.navigationController else { return }
+                    let urlImport = FluxURLImportViewController()
+                    let sheet = UINavigationController(rootViewController: urlImport)
+                    sheet.modalPresentationStyle = .formSheet
+                    sheet.navigationBar.prefersLargeTitles = false
+                    nav.present(sheet, animated: true)
+                }
+            ])
+            
             // Avoid UIBarButtonItem initializers whose signatures differ across Xcode/iOS SDKs.
             let addHost = UIButton(type: .system)
             addHost.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
-            addHost.addAction(addCatalogAction, for: .touchUpInside)
-            addHost.accessibilityLabel = NSLocalizedString("Add catalog", comment: "")
+            addHost.showsMenuAsPrimaryAction = true
+            addHost.menu = addMenu
+            addHost.accessibilityLabel = NSLocalizedString("Add", comment: "")
             featured.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addHost)
 
             browseNavigationController.setViewControllers([featured], animated: false)

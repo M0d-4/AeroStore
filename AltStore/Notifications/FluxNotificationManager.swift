@@ -1,0 +1,206 @@
+//
+//  FluxNotificationManager.swift
+//  FluxStore
+//
+//  Created by FluxStore Team on 5/12/2024.
+//  Copyright © 2024. All rights reserved.
+//
+
+import UIKit
+import UserNotifications
+import AltStoreCore
+
+class FluxNotificationManager: NSObject {
+    
+    static let shared = FluxNotificationManager()
+    
+    private let notificationCenter = UNUserNotificationCenter.current()
+    private let refreshReminderKey = "FluxStore.refreshReminder"
+    
+    private override init() {
+        super.init()
+        notificationCenter.delegate = self
+    }
+    
+    // MARK: - Permission Management
+    
+    func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
+        notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            DispatchQueue.main.async {
+                completion(granted)
+            }
+        }
+    }
+    
+    // MARK: - Refresh Reminders
+    
+    func scheduleRefreshReminder(for app: App) {
+        guard let expirationDate = app.expirationDate else { return }
+        
+        let reminderDays = [2, 1] // Remind 2 days and 1 day before expiry
+        
+        for days in reminderDays {
+            let reminderDate = Calendar.current.date(byAdding: .day, value: -days, to: expirationDate)!
+            
+            // Only schedule if reminder date is in the future
+            if reminderDate > Date() {
+                let content = UNMutableNotificationContent()
+                content.title = NSLocalizedString("FluxStore Refresh Needed", comment: "")
+                content.body = String(format: NSLocalizedString("%@ will expire in %d day(s). Please refresh it to prevent expiration.", comment: ""), app.name, days)
+                content.sound = .default
+                content.badge = 1
+                content.userInfo = [
+                    "type": "refresh_reminder",
+                    "appBundleIdentifier": app.bundleIdentifier,
+                    "days": days
+                ]
+                
+                let identifier = "\(refreshReminderKey)_\(app.bundleIdentifier)_\(days)"
+                let trigger = UNCalendarNotificationTrigger(dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: reminderDate), repeats: false)
+                
+                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                
+                notificationCenter.add(request) { error in
+                    if let error = error {
+                        print("Failed to schedule refresh reminder: \(error)")
+                    }
+                }
+            }
+        }
+    }
+    
+    func cancelRefreshReminder(for app: App) {
+        let identifiers = ["\(refreshReminderKey)_\(app.bundleIdentifier)_1", "\(refreshReminderKey)_\(app.bundleIdentifier)_2"]
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+    
+    func scheduleAllRefreshReminders() {
+        let apps = DatabaseManager.shared.apps(of: .any)
+        
+        for app in apps {
+            if app.isRefreshing || app.needsRefresh {
+                scheduleRefreshReminder(for: app)
+            }
+        }
+    }
+    
+    func cancelAllRefreshReminders() {
+        notificationCenter.removeAllPendingNotificationRequests()
+    }
+    
+    // MARK: - Update Notifications
+    
+    func scheduleUpdateNotification(for app: App, newVersion: String, updateType: UpdateType) {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("FluxStore Update Available", comment: "")
+        
+        switch updateType {
+        case .standard:
+            content.body = String(format: NSLocalizedString("%@ version %@ is now available.", comment: ""), app.name, newVersion)
+        case .nightly:
+            content.body = String(format: NSLocalizedString("%@ nightly build %@ is now available.", comment: ""), app.name, newVersion)
+        case .stableFromNightly:
+            content.body = String(format: NSLocalizedString("%@ stable version %@ is now available (from nightly).", comment: ""), app.name, newVersion)
+        }
+        
+        content.sound = .default
+        content.badge = 1
+        content.userInfo = [
+            "type": "update_available",
+            "appBundleIdentifier": app.bundleIdentifier,
+            "newVersion": newVersion,
+            "updateType": updateType.rawValue
+        ]
+        
+        // Schedule immediately
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let identifier = "update_\(app.bundleIdentifier)_\(newVersion)"
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Failed to schedule update notification: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Settings Integration
+    
+    func updateNotificationSettings() {
+        let settings = UserDefaults.standard
+        
+        if settings.bool(forKey: "FluxStore.refreshNotificationsEnabled") {
+            scheduleAllRefreshReminders()
+        } else {
+            cancelAllRefreshReminders()
+        }
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension FluxNotificationManager: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show notifications even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        handleNotificationResponse(response)
+        completionHandler()
+    }
+    
+    private func handleNotificationResponse(_ response: UNNotificationResponse) {
+        let userInfo = response.notification.request.content.userInfo
+        guard let type = userInfo["type"] as? String else { return }
+        
+        switch type {
+        case "refresh_reminder":
+            handleRefreshReminder(userInfo: userInfo)
+        case "update_available":
+            handleUpdateAvailable(userInfo: userInfo)
+        default:
+            break
+        }
+    }
+    
+    private func handleRefreshReminder(userInfo: [AnyHashable: Any]) {
+        guard let appBundleIdentifier = userInfo["appBundleIdentifier"] as? String else { return }
+        
+        // Navigate to the app and trigger refresh
+        NotificationCenter.default.post(name: .fluxRefreshApp, object: nil, userInfo: [
+            "appBundleIdentifier": appBundleIdentifier
+        ])
+    }
+    
+    private func handleUpdateAvailable(userInfo: [AnyHashable: Any]) {
+        guard let appBundleIdentifier = userInfo["appBundleIdentifier"] as? String else { return }
+        
+        // Navigate to the app in My Apps
+        NotificationCenter.default.post(name: .fluxShowApp, object: nil, userInfo: [
+            "appBundleIdentifier": appBundleIdentifier
+        ])
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let fluxRefreshApp = Notification.Name("FluxRefreshApp")
+    static let fluxShowApp = Notification.Name("FluxShowApp")
+}
+
+// MARK: - UpdateType Extension
+
+extension UpdateType {
+    var rawValue: String {
+        switch self {
+        case .standard:
+            return "standard"
+        case .nightly:
+            return "nightly"
+        case .stableFromNightly:
+            return "stableFromNightly"
+        }
+    }
+}
