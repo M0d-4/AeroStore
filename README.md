@@ -11,20 +11,15 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/FluxStore-App/FluxStore/get-ipa.yml?branch=main&label=Get%20IPA&logo=github)](https://github.com/FluxStore-App/FluxStore/actions/workflows/get-ipa.yml)
-[![Nightly build](https://img.shields.io/github/actions/workflow/status/FluxStore-App/FluxStore/nightly.yml?branch=main&label=Nightly&logo=github)](https://github.com/FluxStore-App/FluxStore/actions/workflows/nightly.yml)
-[![PR build](https://img.shields.io/github/actions/workflow/status/FluxStore-App/FluxStore/pr.yml?label=PR%20build&logo=github)](https://github.com/FluxStore-App/FluxStore/actions/workflows/pr.yml)
-
-Clone this repo (including submodules):
-
-```bash
-git clone --recurse-submodules https://github.com/FluxStore-App/FluxStore.git
-```
-
-Manual unsigned IPA builds: open [Actions → Get IPA (unsigned)](https://github.com/FluxStore-App/FluxStore/actions/workflows/get-ipa.yml) and run **Run workflow**.
 
 In the app, **Settings → Advanced → Bundle ID presets** (with **Customize installed app bundle identifier** enabled) lets you save per-app bundle ID overrides used when sideloading.
 
 Like SideStore, FluxStore is an iOS application that lets you sideload apps using your Apple ID. It resigns apps with your personal development certificate and uses a [specially designed VPN](https://github.com/jkcoxson/em_proxy) so iOS can install them. Background refresh helps keep the usual 7-day development provisioning window from expiring unexpectedly.
+
+## How to Install
+Now, installing FluxStore is almost the **exact** same as installing SideStore!
+
+this section is unfinished, ill work on it later
 
 ## How FluxStore differs from SideStore
 
