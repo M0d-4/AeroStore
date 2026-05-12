@@ -71,10 +71,52 @@ class FluxURLImportViewController: UIViewController {
             return
         }
         
-        // TODO: Implement actual URL download functionality
+        // Validate URL scheme
+        guard url.scheme == "http" || url.scheme == "https" else {
+            showError(NSLocalizedString("URL must use http or https scheme", comment: ""))
+            return
+        }
+        
+        startDownload(from: url)
+    }
+    
+    private func startDownload(from url: URL) {
+        importButton.isEnabled = false
+        urlTextField.isEnabled = false
+        
+        let session = URLSession.shared
+        let task = session.downloadTask(with: url) { [weak self] localURL, response, error in
+            DispatchQueue.main.async {
+                self?.importButton.isEnabled = true
+                self?.urlTextField.isEnabled = true
+                self?.handleDownloadCompletion(localURL: localURL, response: response, error: error)
+            }
+        }
+        
+        task.resume()
+    }
+    
+    private func handleDownloadCompletion(localURL: URL?, response: URLResponse?, error: Error?) {
+        if let error = error {
+            showError(NSLocalizedString("Download failed: \(error.localizedDescription)", comment: ""))
+            return
+        }
+        
+        guard let localURL = localURL else {
+            showError(NSLocalizedString("Download failed: No file received", comment: ""))
+            return
+        }
+        
+        // Verify it's an IPA file
+        guard localURL.pathExtension.lowercased() == "ipa" else {
+            showError(NSLocalizedString("The downloaded file is not an IPA file", comment: ""))
+            return
+        }
+        
+        // Show success message
         let alert = UIAlertController(
-            title: NSLocalizedString("URL Import", comment: ""),
-            message: NSLocalizedString("URL import functionality will be implemented soon.", comment: ""),
+            title: NSLocalizedString("Download Complete", comment: ""),
+            message: NSLocalizedString("IPA file downloaded successfully. Import functionality will be available in the next update.", comment: ""),
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))

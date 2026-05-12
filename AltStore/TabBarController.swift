@@ -86,15 +86,13 @@ final class TabBarController: UITabBarController
                     nav.present(sheet, animated: true)
                 },
                 UIAction(title: NSLocalizedString("Import from URL", comment: ""), image: UIImage(systemName: "link.fill")) { [weak featured] _ in
-                    // Handle URL import - temporarily disabled for compilation
+                    // Handle URL import
                     guard let nav = featured?.navigationController else { return }
-                    let alert = UIAlertController(
-                        title: NSLocalizedString("URL Import", comment: ""),
-                        message: NSLocalizedString("URL import functionality will be available in a future update.", comment: ""),
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
-                    nav.present(alert, animated: true)
+                    let urlImport = FluxURLImportViewController()
+                    let sheet = UINavigationController(rootViewController: urlImport)
+                    sheet.modalPresentationStyle = .formSheet
+                    sheet.navigationBar.prefersLargeTitles = false
+                    nav.present(sheet, animated: true)
                 }
             ])
             
