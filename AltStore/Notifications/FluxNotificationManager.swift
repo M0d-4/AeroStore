@@ -133,7 +133,7 @@ class FluxNotificationManager: NSObject {
     // MARK: - Refresh Reminders
     
     func scheduleRefreshReminder(for app: InstalledApp) {
-        guard let expirationDate = app.expirationDate else { return }
+        let expirationDate = app.expirationDate
         
         let reminderDays = [2, 1] // Remind 2 days and 1 day before expiry
         
