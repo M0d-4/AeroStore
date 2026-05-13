@@ -140,9 +140,8 @@ private func makeBulkWriteCommands(startAddress: UInt64, regionSize: UInt64) -> 
 func handleJITPageWrite(_ context: JSContext?, _ startAddr: UInt64, _ jitPagesSize: UInt64, _ debugProxy: OpaquePointer?) -> String? {
     guard let debugProxy else {
         jsException("debug proxy is unavailable", in: context)
-    return nil
-}
-#endif
+        return nil
+    }
 
     let commandBuffer = makeBulkWriteCommands(startAddress: startAddr, regionSize: jitPagesSize)
     let commandCount = jitPageCount(for: jitPagesSize)
@@ -180,3 +179,4 @@ func handleJITPageWrite(_ context: JSContext?, _ startAddr: UInt64, _ jitPagesSi
 
     return "OK"
 }
+#endif
