@@ -198,6 +198,10 @@ extension FluxNotificationCenterViewController: UITableViewDelegate {
             if let bundleIdentifier = notification.userInfo["bundleIdentifier"] as? String {
                 navigateToApp(bundleIdentifier: bundleIdentifier)
             }
+        case .refreshReminder:
+            if let appName = notification.userInfo["appName"] as? String {
+                navigateToApp(appName: appName)
+            }
         case .certificateWarning:
             navigateToSettings()
         case .jitStatus:
@@ -205,6 +209,8 @@ extension FluxNotificationCenterViewController: UITableViewDelegate {
                 navigateToApp(appName: appName)
             }
         case .system:
+            break
+        case .general:
             break
         }
     }
@@ -323,12 +329,16 @@ class FluxNotificationTableViewCell: UITableViewCell {
         switch notification.category {
         case .appUpdate:
             iconImageView.image = UIImage(systemName: "arrow.down.circle.fill")
+        case .refreshReminder:
+            iconImageView.image = UIImage(systemName: "clock.fill")
         case .certificateWarning:
             iconImageView.image = UIImage(systemName: "exclamationmark.triangle.fill")
         case .jitStatus:
             iconImageView.image = UIImage(systemName: "bolt.circle.fill")
         case .system:
             iconImageView.image = UIImage(systemName: "info.circle.fill")
+        case .general:
+            iconImageView.image = UIImage(systemName: "bell.fill")
         }
     }
 }

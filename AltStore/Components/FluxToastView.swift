@@ -130,6 +130,10 @@ class FluxToastView: UIView {
             iconImageView.image = UIImage(systemName: "arrow.down.circle.fill")
             actionButton.setTitle(NSLocalizedString("Update Now", comment: ""), for: .normal)
             
+        case .refreshReminder:
+            iconImageView.image = UIImage(systemName: "clock.fill")
+            actionButton.setTitle(NSLocalizedString("Refresh Now", comment: ""), for: .normal)
+            
         case .certificateWarning:
             iconImageView.image = UIImage(systemName: "exclamationmark.triangle.fill")
             actionButton.setTitle(NSLocalizedString("View Certificate", comment: ""), for: .normal)
@@ -141,6 +145,10 @@ class FluxToastView: UIView {
         case .system:
             iconImageView.image = UIImage(systemName: "info.circle.fill")
             actionButton.setTitle(NSLocalizedString("Learn More", comment: ""), for: .normal)
+            
+        case .general:
+            iconImageView.image = UIImage(systemName: "bell.fill")
+            actionButton.setTitle(NSLocalizedString("OK", comment: ""), for: .normal)
         }
     }
     
@@ -198,6 +206,8 @@ class FluxToastView: UIView {
                 rootViewController.selectedIndex = TabBarController.Tab.myApps.rawValue
             case NSLocalizedString("Certificate Expiring Soon", comment: ""):
                 rootViewController.selectedIndex = TabBarController.Tab.settings.rawValue
+            case NSLocalizedString("Refresh Reminder", comment: ""):
+                rootViewController.selectedIndex = TabBarController.Tab.myApps.rawValue
             default:
                 break
             }
