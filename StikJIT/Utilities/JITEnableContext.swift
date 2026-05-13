@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 import Darwin
 
 typealias LogFunc = (String?) -> Void
@@ -14,6 +16,39 @@ typealias DebugAppCallback = (_ pid: Int32, _ debugProxy: OpaquePointer?, _ remo
 typealias SyslogLineHandler = (String) -> Void
 typealias SyslogErrorHandler = (NSError?) -> Void
 
+#if targetEnvironment(simulator)
+final class JITEnableContext {
+    static let shared = JITEnableContext()
+
+    var adapterHandle: OpaquePointer? { nil }
+    var handshakeHandle: OpaquePointer? { nil }
+
+    private init() {}
+
+    private func simulatorError(_ message: String = "StikJIT device features are unavailable in Simulator.") -> NSError {
+        NSError(domain: "StikJIT", code: -1, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+
+    func startTunnel() throws { throw simulatorError() }
+    func ensureTunnel() throws { throw simulatorError() }
+    func debugApp(withBundleID bundleID: String, logger: LogFunc?, jsCallback: DebugAppCallback?) -> Bool {
+        logger?(simulatorError().localizedDescription)
+        return false
+    }
+    func debugApp(withPID pid: Int32, logger: LogFunc?, jsCallback: DebugAppCallback?) -> Bool {
+        logger?(simulatorError().localizedDescription)
+        return false
+    }
+    func launchAppWithoutDebug(_ bundleID: String, logger: LogFunc?) -> Bool {
+        logger?(simulatorError().localizedDescription)
+        return false
+    }
+    func startSyslogRelay(handler: @escaping SyslogLineHandler, onError: @escaping SyslogErrorHandler) {
+        onError(simulatorError())
+    }
+    func stopSyslogRelay() {}
+}
+#else
 final class JITEnableContext {
     static let shared = JITEnableContext()
 
@@ -769,3 +804,4 @@ final class JITEnableContext {
         }
     }
 }
+#endif

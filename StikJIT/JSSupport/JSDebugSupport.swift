@@ -7,13 +7,26 @@
 
 import Foundation
 import JavaScriptCore
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 
 private func jsException(_ message: String, in context: JSContext?) {
     guard let context else { return }
     context.exception = JSValue(object: message, in: context)
 }
 
+#if targetEnvironment(simulator)
+func handleJSContextSendDebugCommand(_ context: JSContext?, _ commandStr: String, _ debugProxy: OpaquePointer?) -> String? {
+    jsException("Debug commands are unavailable in Simulator.", in: context)
+    return nil
+}
+
+func handleJITPageWrite(_ context: JSContext?, _ startAddr: UInt64, _ jitPagesSize: UInt64, _ debugProxy: OpaquePointer?) -> String? {
+    jsException("JIT page writes are unavailable in Simulator.", in: context)
+    return nil
+}
+#else
 private func describeIdeviceError(_ ffiError: UnsafeMutablePointer<IdeviceFfiError>) -> String {
     if let message = ffiError.pointee.message {
         return "error code \(ffiError.pointee.code), msg \(String(cString: message))"
@@ -127,8 +140,9 @@ private func makeBulkWriteCommands(startAddress: UInt64, regionSize: UInt64) -> 
 func handleJITPageWrite(_ context: JSContext?, _ startAddr: UInt64, _ jitPagesSize: UInt64, _ debugProxy: OpaquePointer?) -> String? {
     guard let debugProxy else {
         jsException("debug proxy is unavailable", in: context)
-        return nil
-    }
+    return nil
+}
+#endif
 
     let commandBuffer = makeBulkWriteCommands(startAddress: startAddr, regionSize: jitPagesSize)
     let commandCount = jitPageCount(for: jitPagesSize)

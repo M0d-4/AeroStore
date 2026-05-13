@@ -7,8 +7,81 @@
 
 import Foundation
 import UIKit
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 
+#if targetEnvironment(simulator)
+private enum IdeviceBridge {
+    static func makeError(
+        domain: String = "StikDebug",
+        code: Int = -1,
+        message: String
+    ) -> NSError {
+        NSError(domain: domain, code: code, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+
+    static let unavailable = makeError(message: "StikJIT device features are unavailable in Simulator.")
+}
+
+extension JITEnableContext {
+    func getMountedDeviceCount() throws -> Int { throw IdeviceBridge.unavailable }
+    func mountPersonalDDI(withImagePath imagePath: String, trustcachePath: String, manifestPath: String) throws { throw IdeviceBridge.unavailable }
+    func fetchAllProfiles() throws -> [Data] { throw IdeviceBridge.unavailable }
+    func removeProfile(withUUID uuid: String) throws { throw IdeviceBridge.unavailable }
+    func addProfile(_ profile: Data) throws { throw IdeviceBridge.unavailable }
+    func fetchProcessList() throws -> [NSDictionary] { throw IdeviceBridge.unavailable }
+    func sendSignal(_ signal: Int32, toProcessWithPID pid: Int32) throws { throw IdeviceBridge.unavailable }
+    func killProcess(withPID pid: Int32) throws { throw IdeviceBridge.unavailable }
+    func getAppList() throws -> [String: String] { [:] }
+    func getAllApps() throws -> [String: String] { [:] }
+    func getHiddenSystemApps() throws -> [String: String] { [:] }
+    func getSideloadedApps() throws -> [NSDictionary] { [] }
+    func getAppIcon(withBundleId bundleId: String) throws -> UIImage { throw IdeviceBridge.unavailable }
+    func ideviceInfoInit() throws -> OpaquePointer { throw IdeviceBridge.unavailable }
+    func ideviceInfoGetXML(withLockdownClient lockdownClient: OpaquePointer?) throws -> UnsafeMutablePointer<CChar>? { throw IdeviceBridge.unavailable }
+}
+
+func FetchDeviceProcessList(_ error: NSErrorPointer) -> [NSDictionary]? {
+    error?.pointee = IdeviceBridge.unavailable
+    return nil
+}
+
+func KillDeviceProcess(_ pid: Int32, _ error: NSErrorPointer) -> Bool {
+    error?.pointee = IdeviceBridge.unavailable
+    return false
+}
+
+struct ProcessInfoEntry: Identifiable {
+    let pid: Int
+    private let rawPath: String
+    let bundleID: String?
+    let name: String?
+
+    init?(dictionary: NSDictionary) {
+        guard let pidNumber = dictionary["pid"] as? NSNumber else { return nil }
+        pid = pidNumber.intValue
+        rawPath = dictionary["path"] as? String ?? "Unknown"
+        bundleID = dictionary["bundleID"] as? String
+        name = dictionary["name"] as? String
+    }
+
+    static func currentEntries(_ error: NSErrorPointer = nil) -> [ProcessInfoEntry] { [] }
+
+    var id: Int { pid }
+    var executablePath: String { rawPath.replacingOccurrences(of: "file://", with: "") }
+    var displayName: String { name ?? bundleID ?? executablePath.split(separator: "/").last.map(String.init) ?? "Process \(pid)" }
+    var stableIdentifier: String { bundleID ?? displayName }
+}
+
+@objcMembers
+final class CMSDecoderHelper: NSObject {
+    static func decodeCMSData(_ cmsData: Data) throws -> Data { cmsData }
+}
+
+func simulate_location(_ deviceIP: String, _ latitude: Double, _ longitude: Double, _ pairingFile: String) -> Int32 { 1 }
+func clear_simulated_location() -> Int32 { 1 }
+#else
 private enum IdeviceBridge {
     static let processQueue = DispatchQueue(label: "com.stikdebug.processInspector", qos: .userInitiated)
 
@@ -855,3 +928,4 @@ func clear_simulated_location() -> Int32 {
 
     return LocationSimulationStatus.ok
 }
+#endif

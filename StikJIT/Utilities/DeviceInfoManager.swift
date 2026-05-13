@@ -8,7 +8,9 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 
 // MARK: - Device Info Manager
 
@@ -27,6 +29,10 @@ final class DeviceInfoManager: ObservableObject {
     private var lockdownHandle: LockdownClientSendable? = nil
 
     func initAndLoad() {
+#if targetEnvironment(simulator)
+        error = ("Unavailable", "Device info is unavailable in Simulator.")
+        busy = false
+#else
         guard !initialized else { loadInfo(); return }
         busy = true
         Task.detached {
@@ -55,9 +61,14 @@ final class DeviceInfoManager: ObservableObject {
             }
 
         }
+#endif
     }
 
     private func loadInfo() {
+#if targetEnvironment(simulator)
+        error = ("Unavailable", "Device info is unavailable in Simulator.")
+        busy = false
+#else
         busy = true
         Task.detached {
             let lockdownHandle = await MainActor.run { self.lockdownHandle }
@@ -99,13 +110,18 @@ final class DeviceInfoManager: ObservableObject {
                 }
             }
         }
+#endif
     }
 
     func cleanup() {
+#if !targetEnvironment(simulator)
         if let lockdownHandle {
             lockdownd_client_free(lockdownHandle.raw)
             self.lockdownHandle = nil
         }
+#else
+        self.lockdownHandle = nil
+#endif
 
         initialized = false
     }

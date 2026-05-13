@@ -7,7 +7,9 @@
 
 import SwiftUI
 import JavaScriptCore
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 
 typealias RemoteServerHandle = OpaquePointer
 typealias ScreenshotClientHandle = OpaquePointer
@@ -95,6 +97,10 @@ final class RunJSViewModel: ObservableObject, @unchecked Sendable {
     }
     
     private func captureScreenshot(named preferredName: String?) -> String {
+#if targetEnvironment(simulator)
+        raiseException("Screenshot capture is unavailable in Simulator.")
+        return ""
+#else
         if executionInterrupted {
             raiseException("Script execution is interrupted by StikDebug.")
             return ""
@@ -142,6 +148,7 @@ final class RunJSViewModel: ObservableObject, @unchecked Sendable {
             raiseException("Failed to save screenshot: \(error.localizedDescription)")
             return ""
         }
+#endif
     }
     
     private func screenshotFileURL(preferredName: String?) throws -> URL {
@@ -191,12 +198,14 @@ final class RunJSViewModel: ObservableObject, @unchecked Sendable {
         return sanitized
     }
     
+#if !targetEnvironment(simulator)
     private func describeIdeviceError(_ error: UnsafeMutablePointer<IdeviceFfiError>) -> String {
         if let messagePointer = error.pointee.message {
             return "[\(error.pointee.code)] \(String(cString: messagePointer))"
         }
         return "[\(error.pointee.code)] Unknown error"
     }
+#endif
     
     private func raiseException(_ message: String) {
         guard let context else { return }

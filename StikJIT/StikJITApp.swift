@@ -8,7 +8,9 @@
 import SwiftUI
 import UIKit
 import Network
+#if !targetEnvironment(simulator)
 import idevice
+#endif
 
 // Register default settings before the app starts
 private func registerAdvancedOptionsDefault() {
@@ -248,12 +250,16 @@ class MountingProgress: ObservableObject {
 }
 
 func isPairing() -> Bool {
+#if targetEnvironment(simulator)
+    return false
+#else
     let pairingpath = PairingFileStore.prepareURL().path
     var pairingFile: RpPairingFileHandle?
     let err = rp_pairing_file_read(pairingpath, &pairingFile)
     if err != nil { return false }
     rp_pairing_file_free(pairingFile)
     return true
+#endif
 }
 
 func startTunnelInBackground(showErrorUI: Bool = true) {
