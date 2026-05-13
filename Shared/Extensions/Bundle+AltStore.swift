@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Security
 
 public extension Bundle
 {
@@ -67,22 +66,12 @@ public extension Bundle
         "group." + Bundle.Info.appbundleIdentifier
     }
 
-    private var appGroupEntitlements: [String] {
-        guard let task = SecTaskCreateFromSelf(nil) else { return [] }
-        let entitlement = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil)
-        return entitlement as? [String] ?? []
-    }
-
     var appGroups: [String] {
         return self.infoDictionary?[Bundle.Info.appGroups] as? [String] ?? []
     }
     
     var altstoreAppGroup: String? {
         guard let appGroup = self.appGroups.first(where: { $0.contains(Bundle.baseAltStoreAppGroupID) }) else {
-            return nil
-        }
-
-        guard self.appGroupEntitlements.contains(appGroup) else {
             return nil
         }
 
