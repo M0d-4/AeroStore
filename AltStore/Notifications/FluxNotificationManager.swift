@@ -132,7 +132,7 @@ class FluxNotificationManager: NSObject {
     
     // MARK: - Refresh Reminders
     
-    func scheduleRefreshReminder(for app: App) {
+    func scheduleRefreshReminder(for app: InstalledApp) {
         guard let expirationDate = app.expirationDate else { return }
         
         let reminderDays = [2, 1] // Remind 2 days and 1 day before expiry
@@ -167,18 +167,16 @@ class FluxNotificationManager: NSObject {
         }
     }
     
-    func cancelRefreshReminder(for app: App) {
+    func cancelRefreshReminder(for app: InstalledApp) {
         let identifiers = ["\(refreshReminderKey)_\(app.bundleIdentifier)_1", "\(refreshReminderKey)_\(app.bundleIdentifier)_2"]
         notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
     
     func scheduleAllRefreshReminders() {
-        let apps = DatabaseManager.shared.apps(of: .any)
+        let apps = InstalledApp.all(in: DatabaseManager.shared.viewContext)
         
         for app in apps {
-            if app.isRefreshing || app.needsRefresh {
-                scheduleRefreshReminder(for: app)
-            }
+            scheduleRefreshReminder(for: app)
         }
     }
     
@@ -188,7 +186,7 @@ class FluxNotificationManager: NSObject {
     
     // MARK: - Update Notifications
     
-    func scheduleUpdateNotification(for app: App, newVersion: String, updateType: UpdateType) {
+    func scheduleUpdateNotification(for app: InstalledApp, newVersion: String, updateType: UpdateType) {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("FluxStore Update Available", comment: "")
         
