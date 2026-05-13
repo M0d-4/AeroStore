@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Security
 
 public extension Bundle
 {
@@ -76,10 +75,6 @@ public extension Bundle
             return nil
         }
 
-        guard Self.hasApplicationGroupEntitlement(appGroup) else {
-            return nil
-        }
-
         return appGroup
     }
 
@@ -93,27 +88,5 @@ public extension Bundle
     var completeInfoDictionary: [String : Any]? {
         let infoPlistURL = self.infoPlistURL
         return NSDictionary(contentsOf: infoPlistURL) as? [String : Any]
-    }
-}
-
-private extension Bundle
-{
-    static func hasApplicationGroupEntitlement(_ appGroup: String) -> Bool
-    {
-        guard let task = SecTaskCreateFromSelf(nil),
-              let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil)
-        else {
-            return false
-        }
-
-        if let groups = value as? [String] {
-            return groups.contains(appGroup)
-        }
-
-        if let group = value as? String {
-            return group == appGroup
-        }
-
-        return false
     }
 }
