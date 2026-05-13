@@ -333,9 +333,6 @@ extension AppDelegate
         // "Fetch" every hour, but then refresh only those that need to be refreshed (so we don't drain the battery).
         (UIApplication.shared as LegacyBackgroundFetching).setMinimumBackgroundFetchInterval(1 * 60 * 60)
         
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { (success, error) in
-        }
-        
         #if DEBUG && targetEnvironment(simulator)
         UIApplication.shared.registerForRemoteNotifications()
         #endif
