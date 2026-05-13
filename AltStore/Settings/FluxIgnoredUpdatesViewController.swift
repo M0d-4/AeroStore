@@ -93,7 +93,7 @@ extension FluxIgnoredUpdatesViewController {
             cell.detailTextLabel?.text = NSLocalizedString("Ignored version: \(ignoredVersion)", comment: "")
             cell.imageView?.image = UIImage(systemName: "app.fill")
             if let iconURL = app.storeApp?.iconURL {
-                Nuke.loadImage(with: iconURL, into: cell.imageView!)
+                Nuke.loadImage(with: iconURL, options: .init(), into: cell.imageView!) { _ in }
             }
             cell.accessoryType = .disclosureIndicator
         } else {
