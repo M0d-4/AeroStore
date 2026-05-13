@@ -7,12 +7,13 @@
 //
 
 import UIKit
+import Nuke
 import AltStoreCore
 
 class FluxIgnoredUpdatesViewController: UITableViewController {
     
     private var ignoredUpdates: [String: String] = [:]
-    private var apps: [App] = []
+    private var apps: [InstalledApp] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,7 +37,7 @@ class FluxIgnoredUpdatesViewController: UITableViewController {
         ignoredUpdates = FluxVersionManager.shared.getIgnoredUpdates()
         
         // Load app information
-        apps = DatabaseManager.shared.apps(of: .any).filter { app in
+        apps = InstalledApp.all(in: DatabaseManager.shared.viewContext).filter { app in
             ignoredUpdates.keys.contains(app.bundleIdentifier)
         }
         
@@ -90,7 +91,16 @@ extension FluxIgnoredUpdatesViewController {
             
             cell.textLabel?.text = app.name
             cell.detailTextLabel?.text = NSLocalizedString("Ignored version: \(ignoredVersion)", comment: "")
-            cell.imageView?.image = app.icon?.image
+            cell.imageView?.image = UIImage(systemName: "app.fill")
+            if let iconURL = app.storeApp?.iconURL {
+                Nuke.loadImage(with: iconURL) { result in
+                    guard case let .success(response) = result else { return }
+                    DispatchQueue.main.async {
+                        cell.imageView?.image = response.image
+                        cell.setNeedsLayout()
+                    }
+                }
+            }
             cell.accessoryType = .disclosureIndicator
         } else {
             cell.textLabel?.text = NSLocalizedString("Clear All Ignored Updates", comment: "")
@@ -129,7 +139,7 @@ extension FluxIgnoredUpdatesViewController {
         }
     }
     
-    private func showUnignoreAlert(for app: App) {
+    private func showUnignoreAlert(for app: InstalledApp) {
         let alert = UIAlertController(
             title: NSLocalizedString("Unignore Update?", comment: ""),
             message: NSLocalizedString("Do you want to receive update notifications for \(app.name) again?", comment: ""),
