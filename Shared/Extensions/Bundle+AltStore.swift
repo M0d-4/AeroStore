@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Security
 
 public extension Bundle
 {
@@ -75,8 +76,7 @@ public extension Bundle
             return nil
         }
 
-        // If the group cannot be opened on-device, treat it as unavailable so startup can fall back safely.
-        guard UserDefaults(suiteName: appGroup) != nil else {
+        guard Self.hasApplicationGroupEntitlement(appGroup) else {
             return nil
         }
 
@@ -93,5 +93,27 @@ public extension Bundle
     var completeInfoDictionary: [String : Any]? {
         let infoPlistURL = self.infoPlistURL
         return NSDictionary(contentsOf: infoPlistURL) as? [String : Any]
+    }
+}
+
+private extension Bundle
+{
+    static func hasApplicationGroupEntitlement(_ appGroup: String) -> Bool
+    {
+        guard let task = SecTaskCreateFromSelf(nil),
+              let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil)
+        else {
+            return false
+        }
+
+        if let groups = value as? [String] {
+            return groups.contains(appGroup)
+        }
+
+        if let group = value as? String {
+            return group == appGroup
+        }
+
+        return false
     }
 }
