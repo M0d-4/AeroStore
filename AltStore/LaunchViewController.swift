@@ -357,7 +357,7 @@ extension LaunchViewController {
                     guard !sourceErrors.isEmpty else { return }
                     Task {
                         for error in sourceErrors {
-                            let title = String(format: NSLocalizedString(""%@" Blocked", comment: ""), error.$source.name)
+                            let title = String(format: NSLocalizedString("\"%@\" Blocked", comment: ""), error.$source.name)
                             let message = [error.localizedDescription, error.recoverySuggestion].compactMap { $0 }.joined(separator: "\n\n")
                             await self.presentAlert(title: title, message: message)
                         }
