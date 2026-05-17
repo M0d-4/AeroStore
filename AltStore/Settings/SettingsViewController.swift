@@ -1224,13 +1224,20 @@ extension SettingsViewController
         // Get correct section considering debug mode
         let actualSections = Section.allCases
         let adjustedSection: Section
-        
-        if !UserDefaults.standard.isDebugModeEnabled && section >= actualSections.count - 1 {
+
+        // When debug mode is disabled, the diagnostics section is hidden
+        // We need to map the section index to the correct enum case
+        if !UserDefaults.standard.isDebugModeEnabled {
+            // Skip diagnostics section when debug mode is disabled
+            if section >= Section.diagnostics.rawValue {
+                // This shouldn't happen if numberOfSections is correct, but handle it safely
+                return 1.0
+            }
             adjustedSection = actualSections[section]
         } else {
             adjustedSection = actualSections[section]
         }
-        
+
         switch adjustedSection
         {
         case _ where isSectionHidden(adjustedSection): return 1.0
@@ -1239,7 +1246,7 @@ extension SettingsViewController
         case .signIn, .account, .patreon, .display, .appRefresh, .techyThings, .credits, .advancedSettings, .signing, .betaTesting, .diagnostics:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: adjustedSection, isHeader: true)
             return height
-            
+
         case .instructions: return 0.0
         }
     }
@@ -1249,23 +1256,30 @@ extension SettingsViewController
         // Get correct section considering debug mode
         let actualSections = Section.allCases
         let adjustedSection: Section
-        
-        if !UserDefaults.standard.isDebugModeEnabled && section >= actualSections.count - 1 {
+
+        // When debug mode is disabled, the diagnostics section is hidden
+        // We need to map the section index to the correct enum case
+        if !UserDefaults.standard.isDebugModeEnabled {
+            // Skip diagnostics section when debug mode is disabled
+            if section >= Section.diagnostics.rawValue {
+                // This shouldn't happen if numberOfSections is correct, but handle it safely
+                return 1.0
+            }
             adjustedSection = actualSections[section]
         } else {
             adjustedSection = actualSections[section]
         }
-        
+
         switch adjustedSection
         {
         case _ where isSectionHidden(adjustedSection): return 1.0
         case .signIn where self.activeTeam != nil: return 1.0
-        case .account where self.activeTeam == nil: return 1.0            
+        case .account where self.activeTeam == nil: return 1.0
         // case .signIn, .patreon, .display, .appRefresh, .techyThings, .macDirtyCow:
         case .signIn, .patreon, .display, .appRefresh, .techyThings, .signing, .diagnostics, .betaTesting:
             let height = self.preferredHeight(for: self.prototypeHeaderFooterView, in: adjustedSection, isHeader: false)
             return height
-            
+
         case .account, .credits, .advancedSettings, .instructions: return 0.0
         }
     }
