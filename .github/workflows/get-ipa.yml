@@ -93,8 +93,11 @@ jobs:
           XC="${PIPESTATUS[0]}"
           set -e
           if [[ "$XC" -ne 0 ]]; then
-            echo "::error::xcodebuild archive failed (exit $XC). First compiler/driver errors:"
-            grep -E " error: |fatal error:" "$LOG" | head -120 || true
+            echo "::error::xcodebuild archive failed (exit $XC)"
+            echo "---- Last 100 lines of xcode-archive.log ----"
+            tail -n 100 "$LOG" || true
+            echo "---- Errors / failures in log ----"
+            grep -iE ' error: |fatal error:|\\*\\* .* FAILED \\*\\*|Command .* failed|BUILD FAILED|IPA failed|Error:' "$LOG" | tail -80 || true
             exit "$XC"
           fi
 
