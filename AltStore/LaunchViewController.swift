@@ -184,12 +184,11 @@ extension LaunchViewController {
     }
 
     @MainActor
-    private func makeTabBarController() -> TabBarController? {
+    private func makeTabBarController() -> TabBarController {
         if let mainTabBarController {
             return mainTabBarController
         }
-        let storyboard = storyboard ?? UIStoryboard(name: "Main", bundle: nil)
-        let controller = storyboard.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
+        let controller = TabBarController.makeMainInterface()
         mainTabBarController = controller
         return controller
     }
@@ -199,10 +198,7 @@ extension LaunchViewController {
         guard !didFinishLaunching else { return }
         didFinishLaunching = true
 
-        guard let destinationVC = makeTabBarController() else {
-            displayError(NSLocalizedString("Could not load the main interface.", comment: ""))
-            return
-        }
+        let destinationVC = makeTabBarController()
 
         if startTime == nil { startTime = Date() }
 
@@ -213,32 +209,31 @@ extension LaunchViewController {
         }
 
         destinationVC.loadViewIfNeeded()
+        destinationVC.selectedViewController?.loadViewIfNeeded()
 
-        if let window = view.window ?? Self.activeWindow {
-            window.backgroundColor = .systemBackground
-            window.rootViewController = destinationVC
-            window.makeKeyAndVisible()
-            FluxAppearancePreference.applyToAllWindows()
-            splashView.removeFromSuperview()
-            runDeferredLaunchWork(on: destinationVC)
+        guard let window = Self.resolveWindow(for: view) else {
+            displayError(NSLocalizedString("Could not attach to the app window.", comment: ""))
             return
         }
 
-        // Fallback if the scene window is not wired yet.
-        addChild(destinationVC)
-        destinationVC.view.frame = view.bounds
-        destinationVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        view.insertSubview(destinationVC.view, belowSubview: splashView)
-        destinationVC.didMove(toParent: self)
-        splashView.removeFromSuperview()
+        window.backgroundColor = .systemBackground
+        window.rootViewController = destinationVC
+        window.makeKeyAndVisible()
+        FluxAppearancePreference.applyToAllWindows()
+
         runDeferredLaunchWork(on: destinationVC)
     }
 
-    private static var activeWindow: UIWindow? {
-        UIApplication.shared.connectedScenes
+    private static func resolveWindow(for view: UIView?) -> UIWindow? {
+        if let window = view?.window { return window }
+        return UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first(where: \.isKeyWindow)
+            ?? UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap(\.windows)
+                .first
     }
 
     func runDeferredLaunchWork(on tabBarController: TabBarController) {

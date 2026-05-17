@@ -525,7 +525,7 @@
         <!--Browse-->
         <scene sceneID="VHa-uP-bFU">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="faz-B4-Sub" customClass="ForwardingNavigationController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="browseNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="faz-B4-Sub" customClass="ForwardingNavigationController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Browse" image="Browse" id="Uwh-Bg-Ymq"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" largeTitles="YES" id="dIv-qd-9L5" customClass="NavigationBar" customModule="SideStore" customModuleProvider="target">
@@ -554,7 +554,7 @@
         <!--My Apps-->
         <scene sceneID="nhh-BJ-XiT">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="3Ew-ox-i4n" customClass="ForwardingNavigationController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="myAppsNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="3Ew-ox-i4n" customClass="ForwardingNavigationController" customModule="SideStore" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="My Apps" image="MyApps" id="4gT-9u-k7y">
                         <color key="badgeColor" name="Primary"/>
                     </tabBarItem>

@@ -2355,7 +2355,8 @@
 				MARKETING_VERSION = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = FluxStore;
+				INFOPLIST_KEY_CFBundleDisplayName = AeroStore;
+				PRODUCT_NAME = AeroStore;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
@@ -2408,7 +2409,8 @@
 				MARKETING_VERSION = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = FluxStore;
+				INFOPLIST_KEY_CFBundleDisplayName = AeroStore;
+				PRODUCT_NAME = AeroStore;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_COMPILATION_MODE = singlefile;

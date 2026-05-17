@@ -22,52 +22,91 @@ extension TabBarController
 final class TabBarController: UITabBarController
 {
     private var initialSegue: (identifier: String, sender: Any?)?
-    
     private var _viewDidAppear = false
+    private var didConfigurePrimaryTabs = false
 
     private let floatingTabBarBackgroundView = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
     private var floatingTabBarBackgroundConstraints: [NSLayoutConstraint] = []
-    
+
+    /// Builds the main tab interface from storyboard scenes (does not rely on tab-bar relationship segues).
+    static func makeMainInterface() -> TabBarController {
+        let tabBar = TabBarController()
+        tabBar.configurePrimaryTabs()
+        return tabBar
+    }
+
     required init?(coder aDecoder: NSCoder)
     {
         super.init(coder: aDecoder)
-        
+        registerForNotifications()
+    }
+
+    init()
+    {
+        super.init(nibName: nil, bundle: nil)
+        registerForNotifications()
+    }
+
+    private func registerForNotifications()
+    {
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.importApp(_:)), name: AppDelegate.importAppDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.presentSources(_:)), name: AppDelegate.addSourceDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.exportFiles(_:)), name: AppDelegate.exportCertificateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(TabBarController.openErrorLog(_:)), name: ToastView.openErrorLogNotification, object: nil)
     }
-    
-    override func viewDidLoad() 
+
+    override func viewDidLoad()
     {
         super.viewDidLoad()
-        self.view.backgroundColor = .systemBackground
-        self.configureTabBarAppearance()
-        self.configurePrimaryTabs()
+        view.backgroundColor = .systemBackground
+        configureTabBarAppearance()
+        if !didConfigurePrimaryTabs {
+            configurePrimaryTabs()
+        }
     }
 
-    /// Storyboard tab order: News (0), Browse (1), My Apps (2), Settings placeholder (3). We expose Browse, My Apps, Settings only.
     private func configurePrimaryTabs()
     {
-        guard let vcs = self.viewControllers, vcs.count >= 4 else {
-            assertionFailure("TabBarController expected 4 storyboard tabs (News, Browse, My Apps, Settings).")
-            return
-        }
+        guard !didConfigurePrimaryTabs else { return }
+        didConfigurePrimaryTabs = true
 
-        let browseNavigationController = vcs[1] as! UINavigationController
+        let main = UIStoryboard(name: "Main", bundle: nil)
+        let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
+
+        let browseNavigationController = main.instantiateViewController(withIdentifier: "browseNavigationController") as! UINavigationController
         browseNavigationController.tabBarItem.title = NSLocalizedString("Browse", comment: "")
         browseNavigationController.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
         browseNavigationController.navigationBar.prefersLargeTitles = true
 
-        let myAppsNavigationController = vcs[2] as! UINavigationController
+        if browseNavigationController.viewControllers.isEmpty {
+            let featured = main.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
+            featured.navigationItem.largeTitleDisplayMode = .always
+            configureFeaturedBrowseActions(featured)
+            browseNavigationController.setViewControllers([featured], animated: false)
+        } else if let featured = browseNavigationController.viewControllers.first as? FeaturedViewController {
+            configureFeaturedBrowseActions(featured)
+        }
+
+        let myAppsNavigationController = main.instantiateViewController(withIdentifier: "myAppsNavigationController") as! UINavigationController
         myAppsNavigationController.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
         myAppsNavigationController.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
         myAppsNavigationController.navigationBar.prefersLargeTitles = true
 
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let featured = storyboard.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
-        featured.navigationItem.largeTitleDisplayMode = .always
+        let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as! UINavigationController
+        settingsNavigationController.navigationBar.prefersLargeTitles = true
+        settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
+        settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
 
+        viewControllers = [
+            browseNavigationController,
+            myAppsNavigationController,
+            settingsNavigationController,
+        ]
+        selectedIndex = Tab.browse.rawValue
+    }
+
+    private func configureFeaturedBrowseActions(_ featured: FeaturedViewController)
+    {
         let addCatalogAction = UIAction { [weak featured] _ in
             guard let nav = featured?.navigationController else { return }
             let add = FluxAddCatalogViewController()
@@ -81,20 +120,6 @@ final class TabBarController: UITabBarController
         addHost.addAction(addCatalogAction, for: .touchUpInside)
         addHost.accessibilityLabel = NSLocalizedString("Add catalog", comment: "")
         featured.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addHost)
-        browseNavigationController.setViewControllers([featured], animated: false)
-
-        let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
-        let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as! UINavigationController
-        settingsNavigationController.navigationBar.prefersLargeTitles = true
-        settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
-        settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
-
-        self.viewControllers = [
-            browseNavigationController,
-            myAppsNavigationController,
-            settingsNavigationController,
-        ]
-        self.selectedIndex = Tab.browse.rawValue
     }
 
     private func configureTabBarAppearance()
@@ -114,11 +139,11 @@ final class TabBarController: UITabBarController
             .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
         ]
 
-        self.tabBar.standardAppearance = appearance
-        self.tabBar.scrollEdgeAppearance = appearance
-        self.tabBar.tintColor = .altPrimary
-        self.tabBar.unselectedItemTintColor = .fluxSecondaryText
-        self.tabBar.isTranslucent = false
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+        tabBar.tintColor = .altPrimary
+        tabBar.unselectedItemTintColor = .fluxSecondaryText
+        tabBar.isTranslucent = false
 
         if #available(iOS 26.0, *)
         {
@@ -126,9 +151,9 @@ final class TabBarController: UITabBarController
             return
         }
 
-        self.tabBar.backgroundImage = UIImage()
-        self.tabBar.shadowImage = UIImage()
-        self.tabBar.isTranslucent = true
+        tabBar.backgroundImage = UIImage()
+        tabBar.shadowImage = UIImage()
+        tabBar.isTranslucent = true
 
         floatingTabBarBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         floatingTabBarBackgroundView.isUserInteractionEnabled = false
@@ -139,16 +164,16 @@ final class TabBarController: UITabBarController
         floatingTabBarBackgroundView.layer.shadowOpacity = 0.10
         floatingTabBarBackgroundView.layer.shadowRadius = 18
         floatingTabBarBackgroundView.layer.shadowOffset = CGSize(width: 0, height: 6)
-        self.applyFloatingTabBarVisualStyle()
+        applyFloatingTabBarVisualStyle()
 
-        self.tabBar.insertSubview(floatingTabBarBackgroundView, at: 0)
-        self.updateFloatingTabBarConstraintsIfNeeded()
+        tabBar.insertSubview(floatingTabBarBackgroundView, at: 0)
+        updateFloatingTabBarConstraintsIfNeeded()
     }
 
     override func viewDidLayoutSubviews()
     {
         super.viewDidLayoutSubviews()
-        self.updateFloatingTabBarConstraintsIfNeeded()
+        updateFloatingTabBarConstraintsIfNeeded()
         guard !floatingTabBarBackgroundView.isHidden else { return }
         floatingTabBarBackgroundView.layer.shadowPath = UIBezierPath(
             roundedRect: floatingTabBarBackgroundView.bounds,
@@ -158,16 +183,16 @@ final class TabBarController: UITabBarController
 
     private func updateFloatingTabBarConstraintsIfNeeded()
     {
-        guard floatingTabBarBackgroundView.superview === self.tabBar else { return }
+        guard floatingTabBarBackgroundView.superview === tabBar else { return }
 
         NSLayoutConstraint.deactivate(floatingTabBarBackgroundConstraints)
         floatingTabBarBackgroundConstraints.removeAll()
 
         floatingTabBarBackgroundConstraints = [
-            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: self.tabBar.leadingAnchor),
-            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: self.tabBar.trailingAnchor),
-            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: self.tabBar.topAnchor),
-            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: self.tabBar.bottomAnchor),
+            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor),
+            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor),
+            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: tabBar.topAnchor),
+            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: tabBar.bottomAnchor),
         ]
         floatingTabBarBackgroundView.layer.cornerRadius = 0
         floatingTabBarBackgroundView.layer.shadowOpacity = 0
@@ -187,29 +212,29 @@ final class TabBarController: UITabBarController
         guard traitCollection.horizontalSizeClass != previousTraitCollection?.horizontalSizeClass
             || traitCollection.userInterfaceIdiom != previousTraitCollection?.userInterfaceIdiom
             else { return }
-        self.updateFloatingTabBarConstraintsIfNeeded()
+        updateFloatingTabBarConstraintsIfNeeded()
     }
-    
+
     override func viewDidAppear(_ animated: Bool)
     {
         super.viewDidAppear(animated)
-        
+
         _viewDidAppear = true
-        
-        if let (identifier, sender) = self.initialSegue
+
+        if let (identifier, sender) = initialSegue
         {
-            self.initialSegue = nil
-            self.performSegue(withIdentifier: identifier, sender: sender)
+            initialSegue = nil
+            performSegue(withIdentifier: identifier, sender: sender)
         }
     }
-    
+
     override func performSegue(withIdentifier identifier: String, sender: Any?)
     {
         guard _viewDidAppear else {
-            self.initialSegue = (identifier, sender)
+            initialSegue = (identifier, sender)
             return
         }
-        
+
         super.performSegue(withIdentifier: identifier, sender: sender)
     }
 }
@@ -218,7 +243,7 @@ extension TabBarController
 {
     @objc func presentSources(_ sender: Any)
     {
-        self.selectedIndex = Tab.browse.rawValue
+        selectedIndex = Tab.browse.rawValue
     }
 }
 
@@ -226,21 +251,21 @@ private extension TabBarController
 {
     @objc func importApp(_ notification: Notification)
     {
-        self.selectedIndex = Tab.myApps.rawValue
+        selectedIndex = Tab.myApps.rawValue
     }
 
     @objc func openErrorLog(_ notification: Notification)
     {
-        self.presentSettings()
+        presentSettings()
     }
-    
+
     @objc func exportFiles(_ notification: Notification)
     {
-        self.presentSettings()
+        presentSettings()
     }
 
     func presentSettings()
     {
-        self.selectedIndex = Tab.settings.rawValue
+        selectedIndex = Tab.settings.rawValue
     }
 }
