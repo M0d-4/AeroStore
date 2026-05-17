@@ -100,6 +100,20 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             DatabaseManager.shared.start { error in
                 if let error {
                     print("❌ Failed to start DatabaseManager. Error: \(error)")
+                    // Check if it's a model incompatibility error
+                    let nsError = error as NSError
+                    if nsError.code == 134020 { // NSPersistentStoreIncompatibleVersionError
+                        print("⚠️ Database model incompatibility detected, recreating database...")
+                        DatabaseManager.recreateDatabase()
+                        print("✅ Database recreated, retrying start...")
+                        DatabaseManager.shared.start { retryError in
+                            if let retryError {
+                                print("❌ Failed to start DatabaseManager after recreation. Error: \(retryError)")
+                            } else {
+                                print("✅ DatabaseManager started successfully after recreation")
+                            }
+                        }
+                    }
                 } else {
                     print("✅ DatabaseManager started successfully")
                 }
