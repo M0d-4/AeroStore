@@ -53,92 +53,141 @@ final class TabBarController: UITabBarController
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        configureTabBarAppearance()
+        do {
+            view.backgroundColor = .systemBackground
+            print("⏳ TabBarController: Configuring tab bar appearance...")
+            configureTabBarAppearance()
+            print("✅ TabBarController: viewDidLoad completed successfully")
+        } catch {
+            print("❌ TabBarController: viewDidLoad failed: \(error)")
+        }
     }
 
     override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         if viewControllers?.isEmpty != false {
+            print("⏳ TabBarController: View controllers empty, configuring primary tabs...")
             configurePrimaryTabs()
+        } else {
+            print("✅ TabBarController: View controllers already configured")
         }
     }
 
     func configurePrimaryTabs()
     {
-        let main = UIStoryboard(name: "Main", bundle: nil)
-        let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
+        do {
+            print("⏳ TabBarController: Configuring primary tabs...")
+            let main = UIStoryboard(name: "Main", bundle: nil)
+            let settingsStoryboard = UIStoryboard(name: "Settings", bundle: nil)
 
-        let browseNavigationController = Self.instantiateBrowseNavigationController(main: main)
-        let myAppsNavigationController = Self.instantiateMyAppsNavigationController(main: main)
-        guard let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as? UINavigationController else {
-            print("❌ TabBarController: Settings storyboard failed to load")
-            return
+            let browseNavigationController = Self.instantiateBrowseNavigationController(main: main)
+            let myAppsNavigationController = Self.instantiateMyAppsNavigationController(main: main)
+
+            guard let settingsNavigationController = settingsStoryboard.instantiateInitialViewController() as? UINavigationController else {
+                print("❌ TabBarController: Settings storyboard failed to load")
+                // Create fallback settings controller
+                let settingsVC = UIViewController()
+                settingsVC.title = NSLocalizedString("Settings", comment: "")
+                settingsVC.view.backgroundColor = .systemBackground
+                let fallbackSettingsNav = UINavigationController(rootViewController: settingsVC)
+                fallbackSettingsNav.tabBarItem.title = NSLocalizedString("Settings", comment: "")
+                fallbackSettingsNav.tabBarItem.image = UIImage(systemName: "gearshape.fill")
+                viewControllers = [browseNavigationController, myAppsNavigationController, fallbackSettingsNav]
+                selectedIndex = Tab.browse.rawValue
+                return
+            }
+
+            settingsNavigationController.navigationBar.prefersLargeTitles = true
+            settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
+            settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
+
+            viewControllers = [
+                browseNavigationController,
+                myAppsNavigationController,
+                settingsNavigationController,
+            ]
+            selectedIndex = Tab.browse.rawValue
+            print("✅ TabBarController: Primary tabs configured successfully")
+        } catch {
+            print("❌ TabBarController: Failed to configure primary tabs: \(error)")
         }
-
-        settingsNavigationController.navigationBar.prefersLargeTitles = true
-        settingsNavigationController.tabBarItem.title = NSLocalizedString("Settings", comment: "")
-        settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
-
-        viewControllers = [
-            browseNavigationController,
-            myAppsNavigationController,
-            settingsNavigationController,
-        ]
-        selectedIndex = Tab.browse.rawValue
     }
 
     private static func instantiateBrowseNavigationController(main: UIStoryboard) -> UINavigationController
     {
-        if let nav = main.instantiateViewController(withIdentifier: "browseNavigationController") as? UINavigationController {
+        do {
+            if let nav = main.instantiateViewController(withIdentifier: "browseNavigationController") as? UINavigationController {
+                nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
+                nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
+                nav.navigationBar.prefersLargeTitles = true
+                if let featured = nav.viewControllers.first as? FeaturedViewController {
+                    configureFeaturedBrowseActions(featured)
+                } else {
+                    let featured = main.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
+                    featured.navigationItem.largeTitleDisplayMode = .always
+                    configureFeaturedBrowseActions(featured)
+                    nav.setViewControllers([featured], animated: false)
+                }
+                return nav
+            }
+
+            let featured = main.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
+            featured.navigationItem.largeTitleDisplayMode = .always
+            configureFeaturedBrowseActions(featured)
+            let nav = UINavigationController(rootViewController: featured)
             nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
             nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
             nav.navigationBar.prefersLargeTitles = true
-            if let featured = nav.viewControllers.first as? FeaturedViewController {
-                configureFeaturedBrowseActions(featured)
-            } else {
-                let featured = main.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
-                featured.navigationItem.largeTitleDisplayMode = .always
-                configureFeaturedBrowseActions(featured)
-                nav.setViewControllers([featured], animated: false)
-            }
+            return nav
+        } catch {
+            print("❌ TabBarController: Failed to instantiate browse navigation controller: \(error)")
+            // Create fallback
+            let fallbackVC = UIViewController()
+            fallbackVC.title = NSLocalizedString("Browse", comment: "")
+            fallbackVC.view.backgroundColor = .systemBackground
+            let nav = UINavigationController(rootViewController: fallbackVC)
+            nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
+            nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
             return nav
         }
-
-        let featured = main.instantiateViewController(withIdentifier: "featuredViewController") as! FeaturedViewController
-        featured.navigationItem.largeTitleDisplayMode = .always
-        configureFeaturedBrowseActions(featured)
-        let nav = UINavigationController(rootViewController: featured)
-        nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
-        nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
-        nav.navigationBar.prefersLargeTitles = true
-        return nav
     }
 
     private static func instantiateMyAppsNavigationController(main: UIStoryboard) -> UINavigationController
     {
-        if let nav = main.instantiateViewController(withIdentifier: "myAppsNavigationController") as? UINavigationController {
+        do {
+            if let nav = main.instantiateViewController(withIdentifier: "myAppsNavigationController") as? UINavigationController {
+                nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
+                nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+                nav.navigationBar.prefersLargeTitles = true
+                return nav
+            }
+
+            if let myApps = main.instantiateViewController(withIdentifier: "myAppsViewController") as? MyAppsViewController {
+                let nav = UINavigationController(rootViewController: myApps)
+                nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
+                nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+                nav.navigationBar.prefersLargeTitles = true
+                return nav
+            }
+
+            print("❌ TabBarController: My Apps storyboard identifiers missing; using placeholder")
+            let placeholder = UIViewController()
+            placeholder.view.backgroundColor = .systemBackground
+            placeholder.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
+            placeholder.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+            return UINavigationController(rootViewController: placeholder)
+        } catch {
+            print("❌ TabBarController: Failed to instantiate My Apps navigation controller: \(error)")
+            // Create fallback
+            let fallbackVC = UIViewController()
+            fallbackVC.title = NSLocalizedString("My Apps", comment: "")
+            fallbackVC.view.backgroundColor = .systemBackground
+            let nav = UINavigationController(rootViewController: fallbackVC)
             nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
             nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
-            nav.navigationBar.prefersLargeTitles = true
             return nav
         }
-
-        if let myApps = main.instantiateViewController(withIdentifier: "myAppsViewController") as? MyAppsViewController {
-            let nav = UINavigationController(rootViewController: myApps)
-            nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-            nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
-            nav.navigationBar.prefersLargeTitles = true
-            return nav
-        }
-
-        print("❌ TabBarController: My Apps storyboard identifiers missing; using placeholder")
-        let placeholder = UIViewController()
-        placeholder.view.backgroundColor = .systemBackground
-        placeholder.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-        placeholder.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
-        return UINavigationController(rootViewController: placeholder)
     }
 
     private static func configureFeaturedBrowseActions(_ featured: FeaturedViewController)
