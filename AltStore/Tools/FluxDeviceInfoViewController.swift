@@ -1,9 +1,9 @@
 //
 //  FluxDeviceInfoViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
-//  Copyright © 2024 FluxStore. All rights reserved.
+//  Created by aerostore Team on 5/12/2024.
+//  Copyright © 2024 aerostore. All rights reserved.
 //
 
 import UIKit
@@ -57,7 +57,7 @@ class FluxDeviceInfoViewController: UIViewController {
             DeviceInfoItem(title: "Storage Available", value: getAvailableStorage()),
             DeviceInfoItem(title: "Battery Level", value: getBatteryLevel()),
             DeviceInfoItem(title: "Jailbreak Status", value: isJailbroken() ? "Jailbroken" : "Not Jailbroken"),
-            DeviceInfoItem(title: "FluxStore ID", value: getFluxStoreID()),
+            DeviceInfoItem(title: "aerostore ID", value: getaerostoreID()),
             DeviceInfoItem(title: "Network Status", value: getNetworkStatus())
         ]
     }
@@ -224,7 +224,7 @@ extension FluxDeviceInfoViewController {
                FileManager.default.fileExists(atPath: "/private/var/lib/apt")
     }
     
-    private func getFluxStoreID() -> String {
+    private func getaerostoreID() -> String {
         return UIDevice.current.identifierForVendor?.uuidString ?? "Unknown"
     }
     

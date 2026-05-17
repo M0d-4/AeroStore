@@ -1,9 +1,9 @@
 //
 //  FluxModernUI.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team
-//  Copyright © 2026 FluxStore. All rights reserved.
+//  Created by aerostore Team
+//  Copyright © 2026 aerostore. All rights reserved.
 //
 
 import UIKit

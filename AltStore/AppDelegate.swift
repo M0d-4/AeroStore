@@ -92,7 +92,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         // Recreate Database if requested
-        // NOTE: Userdefaults are local to the FluxStore.app sandbox and are not shared
+        // NOTE: Userdefaults are local to the aerostore.app sandbox and are not shared
         do {
             if UserDefaults.standard.recreateDatabaseOnNextStart{
                 print("⏳ Recreating database as requested...")
@@ -473,7 +473,7 @@ extension AppDelegate
             
             let content = UNMutableNotificationContent()
             content.title = NSLocalizedString("App Refresh Tip", comment: "")
-            content.body = NSLocalizedString("The more you open FluxStore, the more chances it's given to refresh apps in the background.", comment: "")
+            content.body = NSLocalizedString("The more you open AeroStore, the more chances it's given to refresh apps in the background.", comment: "")
             
             let request = UNNotificationRequest(identifier: "background-refresh-reminder5", content: content, trigger: trigger)
             UNUserNotificationCenter.current().add(request)
@@ -616,7 +616,7 @@ private extension AppDelegate
                     }
                     else
                     {
-                        content.title = NSLocalizedString("FluxStore News", comment: "")
+                        content.title = NSLocalizedString("AeroStore News", comment: "")
                     }
                     
                     content.body = newsItem.title

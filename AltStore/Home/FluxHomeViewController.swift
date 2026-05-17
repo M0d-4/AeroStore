@@ -6,7 +6,7 @@
 import UIKit
 import AltStoreCore
 
-/// Home tab: FluxStore update, quick navigation, embedded Browse preview (same catalog as Featured), and app update summary.
+/// Home tab: aerostore update, quick navigation, embedded Browse preview (same catalog as Featured), and app update summary.
 final class FluxHomeViewController: UIViewController
 {
     private let scrollView: UIScrollView = {
@@ -32,7 +32,7 @@ final class FluxHomeViewController: UIViewController
     private var embeddedFeatured: FeaturedViewController?
     private var featuredHeightConstraint: NSLayoutConstraint?
 
-    private var fluxUpdate: FluxStoreGitHubRelease.UpdateInfo?
+    private var fluxUpdate: AeroStoreGitHubRelease.UpdateInfo?
     private var pendingAppUpdatesCount = 0
     private var isFetchingRelease = false
 
@@ -135,7 +135,7 @@ final class FluxHomeViewController: UIViewController
         isFetchingRelease = true
         Task { @MainActor in
             defer { self.isFetchingRelease = false }
-            self.fluxUpdate = await FluxStoreGitHubRelease.fetchNewerReleaseIfAvailable()
+            self.fluxUpdate = await AeroStoreGitHubRelease.fetchNewerReleaseIfAvailable()
             self.rebuildUpdateBanner()
         }
     }
@@ -158,7 +158,7 @@ final class FluxHomeViewController: UIViewController
         card.layer.cornerCurve = .continuous
         card.layer.borderWidth = 1
         card.layer.borderColor = UIColor.fluxCardBorder.cgColor
-        card.addAction(UIAction { _ in FluxStoreGitHubRelease.openUpdate(info) }, for: .touchUpInside)
+        card.addAction(UIAction { _ in AeroStoreGitHubRelease.openUpdate(info) }, for: .touchUpInside)
 
         let icon = UIImageView(image: UIImage(systemName: "arrow.down.circle.fill"))
         icon.translatesAutoresizingMaskIntoConstraints = false

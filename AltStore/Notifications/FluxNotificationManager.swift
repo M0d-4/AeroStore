@@ -1,8 +1,8 @@
 //
 //  FluxNotificationManager.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
+//  Created by aerostore Team on 5/12/2024.
 //  Copyright © 2024. All rights reserved.
 //
 
@@ -105,7 +105,7 @@ class FluxNotificationManager: NSObject {
     static let shared = FluxNotificationManager()
     
     private let notificationCenter = UNUserNotificationCenter.current()
-    private let refreshReminderKey = "FluxStore.refreshReminder"
+    private let refreshReminderKey = "aerostore.refreshReminder"
     
     private override init() {
         super.init()
@@ -143,7 +143,7 @@ class FluxNotificationManager: NSObject {
             // Only schedule if reminder date is in the future
             if reminderDate > Date() {
                 let content = UNMutableNotificationContent()
-                content.title = NSLocalizedString("FluxStore Refresh Needed", comment: "")
+                content.title = NSLocalizedString("aerostore Refresh Needed", comment: "")
                 content.body = String(format: NSLocalizedString("%@ will expire in %d day(s). Please refresh it to prevent expiration.", comment: ""), app.name, days)
                 content.sound = .default
                 content.badge = 1
@@ -188,7 +188,7 @@ class FluxNotificationManager: NSObject {
     
     func scheduleUpdateNotification(for app: InstalledApp, newVersion: String, updateType: UpdateType) {
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("FluxStore Update Available", comment: "")
+        content.title = NSLocalizedString("aerostore Update Available", comment: "")
         
         switch updateType {
         case .standard:
@@ -225,7 +225,7 @@ class FluxNotificationManager: NSObject {
     func updateNotificationSettings() {
         let settings = UserDefaults.standard
         
-        if settings.bool(forKey: "FluxStore.refreshNotificationsEnabled") {
+        if settings.bool(forKey: "aerostore.refreshNotificationsEnabled") {
             scheduleAllRefreshReminders()
         } else {
             cancelAllRefreshReminders()

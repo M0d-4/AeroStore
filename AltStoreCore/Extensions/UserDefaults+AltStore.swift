@@ -168,7 +168,7 @@ public extension UserDefaults
 
     /// Maps **source app bundle ID** → **full bundle ID** to use when installing (with “App ID customization” on).
     /// Always read/writes `UserDefaults.standard` regardless of the receiver.
-    private static let sideloadBundleIdentifierOverridesKey = "FluxStore.sideloadBundleIdentifierOverrides"
+    private static let sideloadBundleIdentifierOverridesKey = "AeroStore.sideloadBundleIdentifierOverrides"
 
     @nonobjc
     var sideloadBundleIdentifierOverrides: [String: String] {

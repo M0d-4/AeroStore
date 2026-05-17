@@ -116,10 +116,10 @@
       "tagline": "Companion catalog for Mona."
     },
     {
-      "identifier": "com.flux.fluxstore.source",
-      "sourceURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/FluxStore.source.json",
-      "displayName": "FluxStore",
-      "tagline": "Official FluxStore source."
+      "identifier": "com.aero.aerostore.source",
+      "sourceURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AeroStore.source.json",
+      "displayName": "AeroStore",
+      "tagline": "Official AeroStore source."
     }
   ],
   "trusted": [

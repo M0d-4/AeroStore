@@ -559,7 +559,7 @@ private extension BrowseViewController
         }
 
         if !isMinimuxerReady {
-            let isPreviewMode = UserDefaults.standard.bool(forKey: "FluxStore.previewWithoutDevicePairing")
+            let isPreviewMode = UserDefaults.standard.bool(forKey: "aerostore.previewWithoutDevicePairing")
             let toastView: ToastView
             if isPreviewMode {
                 toastView = ToastView(

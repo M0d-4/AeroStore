@@ -273,7 +273,7 @@ private extension AppDetailCollectionViewController
     
     func showUnknownEntitlementsAlert()
     {
-        let alertController = UIAlertController(title: NSLocalizedString("Other Entitlements", comment: ""), message: NSLocalizedString("FluxStore does not have detailed information for these entitlements.", comment: ""), preferredStyle: .alert)
+        let alertController = UIAlertController(title: NSLocalizedString("Other Entitlements", comment: ""), message: NSLocalizedString("aerostore does not have detailed information for these entitlements.", comment: ""), preferredStyle: .alert)
         alertController.addAction(.ok)
         self.present(alertController, animated: true)
     }

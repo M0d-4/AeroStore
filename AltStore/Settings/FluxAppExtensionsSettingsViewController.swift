@@ -1,8 +1,8 @@
 //
 //  FluxAppExtensionsSettingsViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
+//  Created by aerostore Team on 5/12/2024.
 //  Copyright © 2024. All rights reserved.
 //
 
@@ -15,14 +15,14 @@ class FluxAppExtensionsSettingsViewController: UITableViewController {
         SettingItem(
             title: NSLocalizedString("Show App Extensions Prompt", comment: ""),
             subtitle: NSLocalizedString("Show prompt when installing apps with extensions", comment: ""),
-            key: "FluxStore.showAppExtensionsPrompt",
+            key: "aerostore.showAppExtensionsPrompt",
             type: .toggle,
             defaultValue: true
         ),
         SettingItem(
             title: NSLocalizedString("Keep App Extensions by Default", comment: ""),
             subtitle: NSLocalizedString("Automatically keep app extensions when prompted", comment: ""),
-            key: "FluxStore.keepAppExtensionsByDefault",
+            key: "aerostore.keepAppExtensionsByDefault",
             type: .toggle,
             defaultValue: false
         )
@@ -80,7 +80,7 @@ extension FluxAppExtensionsSettingsViewController {
             let cell = tableView.dequeueReusableCell(withIdentifier: "InfoCell", for: indexPath) as! SettingsInfoCell
             cell.configure(
                 title: NSLocalizedString("About App Extensions", comment: ""),
-                message: NSLocalizedString("App extensions provide additional functionality but may require additional permissions. You can control how FluxStore handles app extensions here.", comment: "")
+                message: NSLocalizedString("App extensions provide additional functionality but may require additional permissions. You can control how aerostore handles app extensions here.", comment: "")
             )
             return cell
             
@@ -115,7 +115,7 @@ extension FluxAppExtensionsSettingsViewController {
     private func showAppExtensionsInfo() {
         let alert = UIAlertController(
             title: NSLocalizedString("App Extensions", comment: ""),
-            message: NSLocalizedString("App extensions are small programs that extend the functionality of your apps. They can provide features like:\n\n• Share sheets\n• Widgets\n• Custom keyboards\n• Photo editing tools\n\nFluxStore can automatically handle these extensions or prompt you for each installation.", comment: ""),
+            message: NSLocalizedString("App extensions are small programs that extend the functionality of your apps. They can provide features like:\n\n• Share sheets\n• Widgets\n• Custom keyboards\n• Photo editing tools\n\naerostore can automatically handle these extensions or prompt you for each installation.", comment: ""),
             preferredStyle: .alert
         )
         
@@ -131,7 +131,7 @@ extension FluxAppExtensionsSettingsViewController: SettingsToggleCellDelegate {
         UserDefaults.standard.set(value, forKey: key)
         
         // Special handling for app extensions prompt
-        if key == "FluxStore.showAppExtensionsPrompt" {
+        if key == "aerostore.showAppExtensionsPrompt" {
             NotificationCenter.default.post(name: .fluxAppExtensionsSettingsChanged, object: nil)
         }
     }

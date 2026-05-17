@@ -1125,7 +1125,7 @@ class InstalledAppsViewModel: ObservableObject {
     @Published var lastError: String? = nil
 
     private let workQueue = DispatchQueue(label: "com.stik.installedApps", qos: .userInitiated)
-    private let cache = UserDefaults(suiteName: "group.com.flux.fluxstore") ?? .standard
+    private let cache = UserDefaults(suiteName: "group.com.aero.aerostore") ?? .standard
     private let cacheKeyDebuggable = "cachedDebuggableApps"
     private let cacheKeyNonDebuggable = "cachedNonDebuggableApps"
     private let cacheKeySystem = "cachedSystemApps"

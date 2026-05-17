@@ -62,10 +62,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>FluxStore General</string>
+			<string>aerostore General</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fluxstore</string>
+				<string>aerostore</string>
 				<string>sidestore</string>
 			</array>
 		</dict>
@@ -73,10 +73,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>FluxStore Backup</string>
+			<string>aerostore Backup</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fluxstore-com.flux.fluxstore</string>
+				<string>aerostore-com.aero.aerostore</string>
 				<string>sidestore-com.SideStore.SideStore</string>
 			</array>
 		</dict>
@@ -84,7 +84,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.flux.FluxStore.enableJIT</string>
+			<string>com.aero.aerostore.enableJIT</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>stikjit</string>
@@ -100,7 +100,7 @@
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>fluxstore-com.flux.fluxstore</string>
+		<string>aerostore-com.aero.aerostore</string>
 		<string>sidestore-com.SideStore.SideStore</string>
 		<string>sidestore-com.SideStore.SideStore.Beta</string>
 	</array>
@@ -120,11 +120,11 @@
 		<string>_stikdebug._udp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>FluxStore uses the local network to find and communicate with your device.</string>
+	<string>aerostore uses the local network to find and communicate with your device.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>FluxStore uses location sparingly in the background to help keep the on-device JIT tunnel alive while you debug apps.</string>
+	<string>aerostore uses location sparingly in the background to help keep the on-device JIT tunnel alive while you debug apps.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>FluxStore uses location to keep the JIT debugging session active when the app is in use.</string>
+	<string>aerostore uses location to keep the JIT debugging session active when the app is in use.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>RefreshAllIntent</string>
@@ -132,7 +132,7 @@
 	</array>
 	<key>OSLogPreferences</key>
 	<dict>
-		<key>com.flux.fluxstore</key>
+		<key>com.aero.aerostore</key>
 		<dict>
 			<key>AltJIT</key>
 			<dict>

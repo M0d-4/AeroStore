@@ -457,17 +457,17 @@ private extension SettingsViewController
                 version.isEmpty  ? "" : " (\(version))"
             } ?? installedApp.localizedVersion
         
-            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "FluxStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "AeroStore Version")
         }
         else if let version = buildInfo.marketing_version
         {
-            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "FluxStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "AeroStore Version")
         }
         else
         {
             var version = "\(Bundle.main.altAppDisplayName)\t"
             version += "\n\(Bundle.Info.appbundleIdentifier)"
-            versionLabel = NSLocalizedString(version, comment: "FluxStore Version")
+            versionLabel = NSLocalizedString(version, comment: "AeroStore Version")
         }
         
         // add xcode build version for local builds
@@ -563,7 +563,7 @@ private extension SettingsViewController
         case .signIn:
             if isHeader
             {
-                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("FluxStore Account", comment: "")
+                settingsHeaderFooterView.primaryLabel.text = NSLocalizedString("AeroStore Account", comment: "")
             }
             else
             {
@@ -577,7 +577,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the FluxStore project by following our socials or becoming a patron!", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the AeroStore project by following our socials or becoming a patron!", comment: "")
             }
 
         case .account:
@@ -594,7 +594,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow FluxStore to keep your device awake during a refresh or install of any apps.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow AeroStore to keep your device awake during a refresh or install of any apps.", comment: "")
             }
             
         case .display:
@@ -867,7 +867,7 @@ private extension SettingsViewController
     
     func clearCache()
     {
-        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to clear FluxStore's cache?", comment: ""),
+        let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to clear AeroStore's cache?", comment: ""),
                                                 message: NSLocalizedString("This will remove all temporary files as well as backups for uninstalled apps.", comment: ""),
                                                 preferredStyle: .actionSheet)
         alertController.addAction(UIAlertAction(title: UIAlertAction.cancel.title, style: UIAlertAction.cancel.style) { [weak self] _ in
@@ -1365,9 +1365,9 @@ extension SettingsViewController
 
                         // TODO: MARKETING_VERSION is going to be set anyways so this needs to be fixed for beta
                         if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                            mailViewController.setSubject("FluxStore Beta \(version) Feedback")
+                            mailViewController.setSubject("AeroStore Beta \(version) Feedback")
                         } else {
-                            mailViewController.setSubject("FluxStore Beta Feedback")
+                            mailViewController.setSubject("AeroStore Beta Feedback")
                         }
 
                        self.present(mailViewController, animated: true, completion: nil)
@@ -1489,7 +1489,7 @@ extension SettingsViewController
                 let documentsPath = fm.documentsDirectory.appendingPathComponent("/\(filename)")
                 let alertController = UIAlertController(
                     title: NSLocalizedString("Are you sure to reset the pairing file?", comment: ""),
-                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart FluxStore.", comment: ""),
+                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart AeroStore.", comment: ""),
                     preferredStyle: UIAlertController.Style.actionSheet)
                 
                 alertController.addAction(UIAlertAction(title: NSLocalizedString("Delete and Reset", comment: ""), style: .destructive){ _ in
@@ -1499,7 +1499,7 @@ extension SettingsViewController
                         NSLog("Pairing File Reseted")
                     }
                     self.tableView.deselectRow(at: indexPath, animated: true)
-                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart FluxStore", comment: ""), preferredStyle: .alert)
+                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart AeroStore", comment: ""), preferredStyle: .alert)
                     self.present(dialogMessage, animated: true, completion: nil)
                 })
                 alertController.addAction(.cancel)
@@ -1533,7 +1533,7 @@ extension SettingsViewController
                 
                 // Instantiate SwiftUI View inside UIHostingController
                 let anisetteServersView = AnisetteServersView(selected: UserDefaults.standard.menuAnisetteURL, errorCallback: {
-                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in FluxStore.")
+                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in AeroStore.")
                         .show(in: self)
                 }, refreshCallback: {result in
                     handleRefreshResult(result)
@@ -1697,7 +1697,7 @@ extension SettingsViewController
                         return
                     }
                     
-                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("FluxStoreSigningCertificate.p12")
+                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("AeroStoreSigningCertificate.p12")
                     do {
                         try newCertData.write(to: newCertTmpPath)
                     } catch {

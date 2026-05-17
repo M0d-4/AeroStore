@@ -1,8 +1,8 @@
 //
 //  FluxVersionManager.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
+//  Created by aerostore Team on 5/12/2024.
 //  Copyright © 2024. All rights reserved.
 //
 
@@ -88,7 +88,7 @@ class FluxVersionManager {
     
     // MARK: - Ignored Updates
     
-    private let ignoredUpdatesKey = "FluxStore.ignoredUpdates"
+    private let ignoredUpdatesKey = "aerostore.ignoredUpdates"
     
     func ignoreUpdate(for appID: String, version: String) {
         var ignoredUpdates = getIgnoredUpdates()

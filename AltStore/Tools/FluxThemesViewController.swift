@@ -1,9 +1,9 @@
 //
 //  FluxThemesViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
-//  Copyright © 2024 FluxStore. All rights reserved.
+//  Created by aerostore Team on 5/12/2024.
+//  Copyright © 2024 aerostore. All rights reserved.
 //
 
 import UIKit
@@ -86,7 +86,7 @@ class FluxThemesViewController: UIViewController {
     }
     
     private func loadCurrentTheme() {
-        let savedThemeName = UserDefaults.standard.string(forKey: "FluxStore.selectedTheme") ?? "Flux Blue"
+        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Flux Blue"
         currentThemeLabel.text = NSLocalizedString("Current Theme: \(savedThemeName)", comment: "")
     }
     
@@ -132,7 +132,7 @@ extension FluxThemesViewController: UICollectionViewDelegateFlowLayout {
 extension FluxThemesViewController {
     private func applyTheme(_ theme: Theme) {
         // Save theme preference
-        UserDefaults.standard.set(theme.name, forKey: "FluxStore.selectedTheme")
+        UserDefaults.standard.set(theme.name, forKey: "aerostore.selectedTheme")
         
         // Apply colors globally
         UIColor.altPrimary = UIColor(hex: theme.primaryColor)
@@ -187,7 +187,7 @@ extension FluxThemesViewController {
     }
     
     private func updateCurrentThemeLabel() {
-        let savedThemeName = UserDefaults.standard.string(forKey: "FluxStore.selectedTheme") ?? "Flux Blue"
+        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Flux Blue"
         currentThemeLabel.text = NSLocalizedString("Current Theme: \(savedThemeName)", comment: "")
     }
 }

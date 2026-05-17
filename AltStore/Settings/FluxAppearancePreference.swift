@@ -11,7 +11,7 @@ enum FluxAppearancePreference: Int, CaseIterable
     case light = 1
     case dark = 2
 
-    static let storageKey = "FluxStore.appearancePreference"
+    static let storageKey = "aerostore.appearancePreference"
 
     static var current: FluxAppearancePreference
     {
@@ -58,5 +58,5 @@ enum FluxAppearancePreference: Int, CaseIterable
 
 extension Notification.Name
 {
-    static let fluxAppearanceDidChange = Notification.Name("FluxStore.fluxAppearanceDidChange")
+    static let fluxAppearanceDidChange = Notification.Name("aerostore.fluxAppearanceDidChange")
 }

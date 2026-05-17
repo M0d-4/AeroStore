@@ -104,7 +104,7 @@ final class NoUpdatesCollectionViewCell: UICollectionViewCell
     }
 }
 
-final class FluxStoreSelfUpdateCell: UICollectionViewCell
+final class AeroStoreSelfUpdateCell: UICollectionViewCell
 {
     private let cardView = UIView()
     private let titleLabel = UILabel()
@@ -171,9 +171,9 @@ final class FluxStoreSelfUpdateCell: UICollectionViewCell
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with info: FluxStoreGitHubRelease.UpdateInfo)
+    func configure(with info: AeroStoreGitHubRelease.UpdateInfo)
     {
-        titleLabel.text = String(format: NSLocalizedString("FluxStore %@ is available", comment: ""), info.versionString)
+        titleLabel.text = String(format: NSLocalizedString("aerostore %@ is available", comment: ""), info.versionString)
         subtitleLabel.text = NSLocalizedString("Tap to download the latest IPA from GitHub", comment: "")
     }
 }

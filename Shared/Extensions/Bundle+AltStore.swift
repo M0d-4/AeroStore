@@ -20,10 +20,10 @@ public extension Bundle
         public static let altBundleID = "ALTBundleIdentifier"
 
         /// Historical SideStore identifier segment; prefer `Bundle.main.bundleIdentifier` via `appbundleIdentifier`.
-        public static let orgbundleIdentifier = "com.flux"
-        /// Main app bundle id from the running app (FluxStore uses `com.flux.fluxstore`, not hardcoded SideStore IDs).
+        public static let orgbundleIdentifier = "com.aero"
+        /// Main app bundle id from the running app (aerostore uses `com.aero.aerostore`, not hardcoded SideStore IDs).
         public static var appbundleIdentifier: String {
-            Bundle.main.bundleIdentifier ?? "com.flux.fluxstore"
+            Bundle.main.bundleIdentifier ?? "com.aero.aerostore"
         }
         public static let devicePairingString = "ALTPairingFile"
         public static let urlTypes = "CFBundleURLTypes"
@@ -62,7 +62,7 @@ public extension Bundle
 
 public extension Bundle
 {
-    /// App group prefix must match `group.<GROUP_ID>` in Info.plist (same as bundle id for FluxStore).
+    /// App group prefix must match `group.<GROUP_ID>` in Info.plist (same as bundle id for aerostore).
     static var baseAltStoreAppGroupID: String {
         "group." + Bundle.Info.appbundleIdentifier
     }
@@ -90,7 +90,7 @@ public extension Bundle
     public var altAppDisplayName: String {
         if let n = object(forInfoDictionaryKey: "CFBundleDisplayName") as? String, !n.isEmpty { return n }
         if let n = object(forInfoDictionaryKey: "CFBundleName") as? String, !n.isEmpty { return n }
-        return "FluxStore"
+        return "AeroStore"
     }
     
     var completeInfoDictionary: [String : Any]? {

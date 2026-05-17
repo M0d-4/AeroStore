@@ -190,7 +190,7 @@ COMMON_BUILD_SETTINGS += BUNDLE_ID_SUFFIX=$(BUNDLE_ID_SUFFIX)
 endif
 
 # Matches PRODUCT_NAME in Build.xcconfig (bundle folder + Mach-O inside SideStore.xcarchive).
-ARCHIVE_APP_DIR := FluxStore.app
+ARCHIVE_APP_DIR := AeroStore.app
 ARCHIVE_EXECUTABLE := FluxStore
 
 patch-altsign-spm:

@@ -445,7 +445,7 @@ extension AppManager
     {
         let (sourceName, sourceID) = await $source.perform { ($0.name, $0.identifier) }
         guard sourceID != Source.altStoreIdentifier else {
-            throw OperationError.forbidden(failureReason: NSLocalizedString("The default FluxStore source cannot be removed.", comment: ""))
+            throw OperationError.forbidden(failureReason: NSLocalizedString("The default aerostore source cannot be removed.", comment: ""))
         }
         
         let title = String(format: NSLocalizedString("Are you sure you want to remove the source “%@”?", comment: ""), sourceName)
@@ -2088,8 +2088,8 @@ private extension AppManager
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeIntervalUntilNotification, repeats: false)
         
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("FluxStore Expiring Soon", comment: "")
-        content.body = NSLocalizedString("FluxStore will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
+        content.title = NSLocalizedString("aerostore Expiring Soon", comment: "")
+        content.body = NSLocalizedString("aerostore will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
         content.sound = .default
         
         let request = UNNotificationRequest(identifier: AppManager.expirationWarningNotificationID, content: content, trigger: trigger)

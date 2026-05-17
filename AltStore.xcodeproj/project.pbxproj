@@ -543,7 +543,7 @@
 		FLUXUSER2 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		BF66EE7E2501AE50007EE018 /* AltStoreCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AltStoreCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BF989167250AABF3002ACF50 /* AltWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AltWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		BFD2476A2284B9A500981D42 /* FluxStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FluxStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFD2476A2284B9A500981D42 /* AeroStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AeroStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFD247862284BB3B00981D42 /* Roxas.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Roxas.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -1241,7 +1241,7 @@
 			children = (
 				A8037A0D2F54664300097AF1 /* libem_proxy_swift.a */,
 				A8036EA72F54642D00097AF1 /* libimobiledevice.a */,
-				BFD2476A2284B9A500981D42 /* FluxStore.app */,
+				BFD2476A2284B9A500981D42 /* AeroStore.app */,
 				BF58047B246A28F7008AE704 /* AltBackup.app */,
 				BF66EE7E2501AE50007EE018 /* AltStoreCore.framework */,
 				BF989167250AABF3002ACF50 /* AltWidgetExtension.appex */,
@@ -1481,7 +1481,7 @@
 				A8EB89CF2F5451C20094BC01 /* KeychainAccess */,
 			);
 			productName = AltStore;
-			productReference = BFD2476A2284B9A500981D42 /* FluxStore.app */;
+			productReference = BFD2476A2284B9A500981D42 /* AeroStore.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

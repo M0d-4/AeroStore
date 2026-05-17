@@ -27,7 +27,7 @@ final class RefreshAltStoreViewController: UIViewController
         
         self.placeholderView.detailTextLabel.textAlignment = .left
         self.placeholderView.detailTextLabel.textColor = UIColor.white.withAlphaComponent(0.6)
-        self.placeholderView.detailTextLabel.text = NSLocalizedString("FluxStore was unable to use an existing signing certificate, so it had to create a new one. This will cause any apps installed with an existing certificate to expire — including FluxStore.\n\nTo prevent FluxStore from expiring early, please refresh the app now. FluxStore will quit once refreshing is complete.", comment: "")
+        self.placeholderView.detailTextLabel.text = NSLocalizedString("aerostore was unable to use an existing signing certificate, so it had to create a new one. This will cause any apps installed with an existing certificate to expire — including aerostore.\n\nTo prevent aerostore from expiring early, please refresh the app now. aerostore will quit once refreshing is complete.", comment: "")
     }
 }
 
@@ -57,7 +57,7 @@ private extension RefreshAltStoreViewController
                         sender.progress = nil
                         sender.isIndicatingActivity = false
                         
-                        let alertController = UIAlertController(title: NSLocalizedString("Failed to Refresh FluxStore", comment: ""), message: error.localizedFailureReason ?? error.localizedDescription, preferredStyle: .alert)
+                        let alertController = UIAlertController(title: NSLocalizedString("Failed to Refresh aerostore", comment: ""), message: error.localizedFailureReason ?? error.localizedDescription, preferredStyle: .alert)
                         alertController.addAction(UIAlertAction(title: NSLocalizedString("Try Again", comment: ""), style: .default, handler: { (action) in
                             refresh()
                         }))

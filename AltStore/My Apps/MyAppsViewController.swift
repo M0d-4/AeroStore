@@ -42,7 +42,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     private let coordinator = NSFileCoordinator()
     private let operationQueue = OperationQueue()
     
-    private lazy var fluxStoreSelfUpdateDataSource = self.makeFluxStoreSelfUpdateDataSource()
+    private lazy var aeroStoreSelfUpdateDataSource = self.makeAeroStoreSelfUpdateDataSource()
     private lazy var dataSource = self.makeDataSource()
     private lazy var noUpdatesDataSource = self.makeNoUpdatesDataSource()
     private lazy var updatesDataSource = self.makeUpdatesDataSource()
@@ -66,7 +66,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     private var _imagePickerInstalledApp: InstalledApp?
     private var _viewDidAppear = false
 
-    private var fluxSelfUpdateInfo: FluxStoreGitHubRelease.UpdateInfo?
+    private var fluxSelfUpdateInfo: AeroStoreGitHubRelease.UpdateInfo?
     
     private lazy var sideloadBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(MyAppsViewController.sideloadApp(_:)))
     private lazy var appsSearchController: UISearchController = {
@@ -111,7 +111,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         self.prototypeUpdateCell = UpdateCollectionViewCell.instantiate(with: UpdateCollectionViewCell.nib!)
         self.prototypeUpdateCell.contentView.translatesAutoresizingMaskIntoConstraints = false
         
-        self.collectionView.register(FluxStoreSelfUpdateCell.self, forCellWithReuseIdentifier: "FluxSelfUpdate")
+        self.collectionView.register(AeroStoreSelfUpdateCell.self, forCellWithReuseIdentifier: "FluxSelfUpdate")
         self.collectionView.register(UpdateCollectionViewCell.nib, forCellWithReuseIdentifier: "UpdateCell")
         self.collectionView.register(UpdatesCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "UpdatesHeader")
         self.collectionView.register(InstalledAppsCollectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "ActiveAppsHeader")
@@ -333,12 +333,12 @@ private extension MyAppsViewController
 {
     func makeDataSource() -> RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>
     {
-        let dataSource = RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>(dataSources: [self.fluxStoreSelfUpdateDataSource, self.noUpdatesDataSource, self.updatesDataSource, self.activeAppsDataSource, self.inactiveAppsDataSource])
+        let dataSource = RSTCompositeCollectionViewPrefetchingDataSource<InstalledApp, UIImage>(dataSources: [self.aeroStoreSelfUpdateDataSource, self.noUpdatesDataSource, self.updatesDataSource, self.activeAppsDataSource, self.inactiveAppsDataSource])
         dataSource.proxy = self
         return dataSource
     }
 
-    func makeFluxStoreSelfUpdateDataSource() -> RSTDynamicCollectionViewDataSource<InstalledApp>
+    func makeAeroStoreSelfUpdateDataSource() -> RSTDynamicCollectionViewDataSource<InstalledApp>
     {
         let dataSource = RSTDynamicCollectionViewDataSource<InstalledApp>()
         /// Always one composite section so `Section.rawValue` matches layout/delegate indexing (fixes wrong section headers when the flux row is hidden).
@@ -347,7 +347,7 @@ private extension MyAppsViewController
         dataSource.cellIdentifierHandler = { _ in "FluxSelfUpdate" }
         dataSource.cellConfigurationHandler = { [weak self] (cell, _, _) in
             guard let self, let info = self.fluxSelfUpdateInfo else { return }
-            let cell = cell as! FluxStoreSelfUpdateCell
+            let cell = cell as! AeroStoreSelfUpdateCell
             cell.configure(with: info)
             cell.contentView.layoutMargins.left = self.view.layoutMargins.left
             cell.contentView.layoutMargins.right = self.view.layoutMargins.right
@@ -423,7 +423,7 @@ private extension MyAppsViewController
             
             var versionText = latestSupportedVersion.localizedVersion
 
-            // If the app is FluxStore itself, remove the build number to save space
+            // If the app is AeroStore itself, remove the build number to save space
             if app.bundleIdentifier == Bundle.main.bundleIdentifier,
                let version = SemanticVersion(latestSupportedVersion.version)
             {
@@ -766,7 +766,7 @@ private extension MyAppsViewController
     func refreshFluxSelfUpdateIfNeeded()
     {
         Task { @MainActor in
-            let next = await FluxStoreGitHubRelease.fetchNewerReleaseIfAvailable()
+            let next = await AeroStoreGitHubRelease.fetchNewerReleaseIfAvailable()
             self.fluxSelfUpdateInfo = next
             guard self.isViewLoaded, self.view.window != nil else { return }
             // Always reload the whole collection: partial `reloadSections` can abort when the composite
@@ -1485,7 +1485,7 @@ private extension MyAppsViewController
     
     func remove(_ installedApp: InstalledApp)
     {
-        let title = String(format: NSLocalizedString("Remove “%@” from FluxStore?", comment: ""), installedApp.name)
+        let title = String(format: NSLocalizedString("Remove “%@” from AeroStore?", comment: ""), installedApp.name)
         let message: String
         
         if UserDefaults.standard.isLegacyDeactivationSupported
@@ -1520,7 +1520,7 @@ private extension MyAppsViewController
         guard minimuxerStatus else { return }
 
         let title = NSLocalizedString("Start Backup?", comment: "")
-        let message = NSLocalizedString("This will replace any previous backups. Please leave FluxStore open until the backup is complete.", comment: "")
+        let message = NSLocalizedString("This will replace any previous backups. Please leave AeroStore open until the backup is complete.", comment: "")
 
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)
@@ -2001,7 +2001,7 @@ extension MyAppsViewController
         case .fluxSelfUpdate:
             if let info = self.fluxSelfUpdateInfo
             {
-                FluxStoreGitHubRelease.openUpdate(info)
+                AeroStoreGitHubRelease.openUpdate(info)
             }
         case .updates:
             guard let cell = collectionView.cellForItem(at: indexPath) else { break }

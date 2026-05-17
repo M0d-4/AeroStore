@@ -6,7 +6,7 @@ CURRENT_PROJECT_VERSION = 107
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
 DEVELOPMENT_TEAM = S32Z3HMYVQ
-ORG_IDENTIFIER = com.flux
+ORG_IDENTIFIER = com.aero
 
 // Default is free for CI builds, override it using CodeSigning.xcconfig if required
 CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
@@ -16,19 +16,20 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 
 ORG_PREFIX = $(ORG_IDENTIFIER)
 
-PRODUCT_NAME = FluxStore
+PRODUCT_NAME = AeroStore
+INFOPLIST_KEY_CFBundleDisplayName = AeroStore
 //PRODUCT_NAME[configuration=Debug] = Prov Debug
 
 
 //PRODUCT_BUNDLE_IDENTIFIER[config=Debug]   =  $(ORG_PREFIX).SideStore$(BUNDLE_ID_SUFFIX)
 //PRODUCT_BUNDLE_IDENTIFIER[config=Release] =  $(ORG_PREFIX).SideStore
 // Single logical app ID; extensions append segments (e.g. .AltWidget).
-HOST_BUNDLE_IDENTIFIER[config=Debug] = com.flux.fluxstore.$(DEVELOPMENT_TEAM)
-HOST_BUNDLE_IDENTIFIER[config=Release] = com.flux.fluxstore
+HOST_BUNDLE_IDENTIFIER[config=Debug] = com.aero.aerostore.$(DEVELOPMENT_TEAM)
+HOST_BUNDLE_IDENTIFIER[config=Release] = com.aero.aerostore
 PRODUCT_BUNDLE_IDENTIFIER[config=Debug] = $(HOST_BUNDLE_IDENTIFIER)
 PRODUCT_BUNDLE_IDENTIFIER[config=Release] = $(HOST_BUNDLE_IDENTIFIER)
-GROUP_ID = com.flux.fluxstore
-GROUP_ID[config=Debug] = com.flux.fluxstore.$(DEVELOPMENT_TEAM)
+GROUP_ID = com.aero.aerostore
+GROUP_ID[config=Debug] = com.aero.aerostore.$(DEVELOPMENT_TEAM)
 
 EXTENSION_PREFIX            = $(PRODUCT_BUNDLE_IDENTIFIER)
 APP_GROUP_IDENTIFIER        = $(GROUP_ID)

@@ -181,8 +181,8 @@ jobs:
           BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Info.plist")
           echo "app=$APP" >> "$GITHUB_OUTPUT"
           echo "bundle_id=$BUNDLE_ID" >> "$GITHUB_OUTPUT"
-          ditto -c -k --keepParent "$APP" "${ROOT}/build/FluxStore-simulator.app.zip"
-          ls -lh "${ROOT}/build/FluxStore-simulator.app.zip"
+          ditto -c -k --keepParent "$APP" "${ROOT}/build/AeroStore-simulator.app.zip"
+          ls -lh "${ROOT}/build/AeroStore-simulator.app.zip"
 
       - name: Install and launch simulator app
         if: ${{ inputs.launch_app == 'true' }}
@@ -200,7 +200,7 @@ jobs:
           xcrun simctl launch --console "$SIMULATOR_UDID" "$BUNDLE_ID" 2>&1 | tee "${ROOT}/build/sim-logs/launch.log"
           STATUS="${PIPESTATUS[0]}"
           set -e
-          xcrun simctl spawn "$SIMULATOR_UDID" log show --last 2m --predicate 'process == "FluxStore"' > "${ROOT}/build/sim-logs/device.log" || true
+          xcrun simctl spawn "$SIMULATOR_UDID" log show --last 2m --predicate 'process == "AeroStore"' > "${ROOT}/build/sim-logs/device.log" || true
           exit "$STATUS"
 
       - uses: actions/upload-artifact@v4
@@ -208,7 +208,7 @@ jobs:
         with:
           name: simulator-build
           path: |
-            build/FluxStore-simulator.app.zip
+            build/AeroStore-simulator.app.zip
             build/xcode-simulator-build.log
             build/sim-logs
           retention-days: 30

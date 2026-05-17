@@ -64,7 +64,7 @@ final class FluxAddCatalogViewController: UIViewController {
 
         let intro = UILabel()
         intro.translatesAutoresizingMaskIntoConstraints = false
-        intro.text = NSLocalizedString("Paste an AltStore-compatible catalog URL. FluxStore shows a live preview—nothing is saved until you confirm.", comment: "")
+        intro.text = NSLocalizedString("Paste an AltStore-compatible catalog URL. aerostore shows a live preview—nothing is saved until you confirm.", comment: "")
         intro.font = .preferredFont(forTextStyle: .body)
         intro.textColor = UIColor.fluxSecondaryText
         intro.numberOfLines = 0
@@ -128,7 +128,7 @@ final class FluxAddCatalogViewController: UIViewController {
         previewSubtitle.numberOfLines = 0
 
         addButton.translatesAutoresizingMaskIntoConstraints = false
-        addButton.setTitle(NSLocalizedString("Add to FluxStore", comment: ""), for: .normal)
+        addButton.setTitle(NSLocalizedString("Add to aerostore", comment: ""), for: .normal)
         addButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         addButton.backgroundColor = UIColor.refreshGreen
         addButton.setTitleColor(.white, for: .normal)
@@ -208,7 +208,7 @@ final class FluxAddCatalogViewController: UIViewController {
         }
 
         guard let url = urlToTry else {
-            presentSimpleAlert(title: NSLocalizedString("Invalid URL", comment: ""), message: NSLocalizedString("FluxStore couldn’t parse that address.", comment: ""))
+            presentSimpleAlert(title: NSLocalizedString("Invalid URL", comment: ""), message: NSLocalizedString("aerostore couldn’t parse that address.", comment: ""))
             return
         }
 

@@ -1,5 +1,5 @@
 //
-//  FluxStoreGitHubRelease.swift
+//  AeroStoreGitHubRelease.swift
 //  AltStore
 //
 
@@ -8,7 +8,7 @@ import UIKit
 import SemanticVersion
 
 /// Checks GitHub Releases for a build newer than the running app (`CFBundleShortVersionString`).
-enum FluxStoreGitHubRelease
+enum AeroStoreGitHubRelease
 {
     private static let latestReleaseAPIURL = URL(string: "https://api.github.com/repos/FluxStore-App/FluxStore/releases/latest")!
 
@@ -37,7 +37,7 @@ enum FluxStoreGitHubRelease
     static func fetchNewerReleaseIfAvailable() async -> UpdateInfo?
     {
         var request = URLRequest(url: latestReleaseAPIURL)
-        request.setValue("FluxStore-iOS/\(marketingVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("AeroStore-iOS/\(marketingVersion)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
 
         let data: Data

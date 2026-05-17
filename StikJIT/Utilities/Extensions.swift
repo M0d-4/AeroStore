@@ -91,7 +91,7 @@ struct ScriptResource {
 enum ScriptStore {
     static let directoryName = "scripts"
     static let assignmentKey = UserDefaults.Keys.bundleScriptMap
-    static let favoriteAppNamesSuiteName = "group.com.flux.fluxstore"
+    static let favoriteAppNamesSuiteName = "group.com.aero.aerostore"
     static let favoriteAppNamesKey = "favoriteAppNames"
     static let defaultScriptName = UserDefaults.Keys.defaultScriptNameValue
     static let bundledResources: [ScriptResource] = [

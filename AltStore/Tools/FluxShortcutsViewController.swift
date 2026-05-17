@@ -1,9 +1,9 @@
 //
 //  FluxShortcutsViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
-//  Copyright © 2024 FluxStore. All rights reserved.
+//  Created by aerostore Team on 5/12/2024.
+//  Copyright © 2024 aerostore. All rights reserved.
 //
 
 import UIKit
@@ -27,10 +27,10 @@ class FluxShortcutsViewController: UIViewController {
             intent: RefreshAppsIntent()
         ),
         ShortcutItem(
-            title: "Open FluxStore",
-            description: "Open FluxStore app",
+            title: "Open AeroStore",
+            description: "Open AeroStore app",
             icon: "app.fill",
-            intent: OpenFluxStoreIntent()
+            intent: OpenAeroStoreIntent()
         ),
         ShortcutItem(
             title: "Check Updates",
@@ -72,7 +72,7 @@ class FluxShortcutsViewController: UIViewController {
         label.textColor = .fluxSecondaryText
         label.numberOfLines = 0
         label.textAlignment = .center
-        label.text = NSLocalizedString("Create Siri shortcuts for common FluxStore actions. Tap any shortcut below to add it to Siri.", comment: "")
+        label.text = NSLocalizedString("Create Siri shortcuts for common aerostore actions. Tap any shortcut below to add it to Siri.", comment: "")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -310,7 +310,7 @@ class ShortcutCell: UICollectionViewCell {
 // MARK: - Intent Definitions (simplified for example)
 class InstallAppIntent: INIntent {}
 class RefreshAppsIntent: INIntent {}
-class OpenFluxStoreIntent: INIntent {}
+class OpenAeroStoreIntent: INIntent {}
 class CheckUpdatesIntent: INIntent {}
 class ClearCacheIntent: INIntent {}
 class ToggleThemeIntent: INIntent {}

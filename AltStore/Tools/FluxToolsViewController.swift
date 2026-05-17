@@ -1,9 +1,9 @@
 //
 //  FluxToolsViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
-//  Copyright © 2024 FluxStore. All rights reserved.
+//  Created by aerostore Team on 5/12/2024.
+//  Copyright © 2024 aerostore. All rights reserved.
 //
 
 import UIKit

@@ -118,7 +118,7 @@ class DNSChecker: ObservableObject {
     }
 }
 
-// MARK: - FluxStore host integration (SideStore is @UIApplicationMain)
+// MARK: - aerostore host integration (SideStore is @UIApplicationMain)
 
 // Global state variable for the tunnel connection.
 var pubTunnelConnected = false

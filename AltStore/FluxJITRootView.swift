@@ -1,6 +1,6 @@
 //
 //  FluxJITRootView.swift
-//  FluxStore
+//  aerostore
 //
 
 import SwiftUI
@@ -74,7 +74,7 @@ private final class FluxDebugKeepAliveLease {
         runOnMain {
             BackgroundAudioManager.shared.requestStart()
             BackgroundLocationManager.shared.requestStart()
-            self.backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "FluxStoreJITSession") { [weak self] in
+            self.backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "AeroStoreJITSession") { [weak self] in
                 LogManager.shared.addWarningLog("JIT session background task expired")
                 self?.invalidate()
             }

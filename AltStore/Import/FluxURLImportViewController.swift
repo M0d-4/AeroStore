@@ -1,8 +1,8 @@
 //
 //  FluxURLImportViewController.swift
-//  FluxStore
+//  aerostore
 //
-//  Created by FluxStore Team on 5/12/2024.
+//  Created by aerostore Team on 5/12/2024.
 //  Copyright © 2024. All rights reserved.
 //
 

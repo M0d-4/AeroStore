@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 let pairingFileName = "ALTPairingFile.mobiledevicepairing"
 
 /// Set when the user continues without a device pairing file (browse/install blocked until pairing is added).
-private let fluxPreviewWithoutPairingKey = "FluxStore.previewWithoutDevicePairing"
+private let aeroPreviewWithoutPairingKey = "AeroStore.previewWithoutDevicePairing"
 
 final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
     private var didFinishLaunching = false
@@ -30,22 +30,11 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        do {
-            print("⏳ LaunchViewController viewDidLoad: Creating SplashView...")
-            splashView = SplashView(frame: view.bounds, appName: Bundle.main.altAppDisplayName)
-            print("✅ SplashView created")
-            
-            print("⏳ LaunchViewController viewDidLoad: Instantiating TabBarController...")
-            destinationViewController = storyboard!.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
-            print("✅ TabBarController instantiated")
-            
-            print("⏳ LaunchViewController viewDidLoad: Adding splash view to view hierarchy...")
-            view.addSubview(splashView)
-            print("✅ Splash view added to hierarchy")
-        } catch {
-            print("❌ Error in viewDidLoad: \(error)")
-            handleFatalError(error)
-        }
+        view.backgroundColor = .systemBackground
+
+        splashView = SplashView(frame: view.bounds, appName: Bundle.main.altAppDisplayName)
+        destinationViewController = storyboard?.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
+        view.addSubview(splashView)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -59,32 +48,30 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
     }
 
     private func runLaunchSequence() async {
-        guard retries < maxRetries else {
-            print("❌ Launch sequence failed after \(maxRetries) retries")
+        if retries >= maxRetries {
+            print("⚠️ Launch sequence exceeded \(maxRetries) retries; showing UI anyway")
+            await finishLaunching()
             return
         }
         retries += 1
 
-        await Task.detached {
-            print("⏳ Launch sequence running (attempt \(self.retries) of \(self.maxRetries))...")
-            if !DatabaseManager.shared.isStarted {
-                await withCheckedContinuation { continuation in
-                    DatabaseManager.shared.start { error in
-                        if let error {
-                            print("❌ DatabaseManager failed to start: \(error)")
-                            Task { await self.handleLaunchError(error, retryCallback: self.runLaunchSequence) }
-                        } else {
-                            print("✅ DatabaseManager started successfully")
-                            Task { await self.finishLaunching() }
-                        }
-                        continuation.resume(returning: ())
+        if DatabaseManager.shared.isStarted {
+            await finishLaunching()
+            return
+        }
+
+        await withCheckedContinuation { continuation in
+            DatabaseManager.shared.start { error in
+                Task { @MainActor in
+                    if let error {
+                        await self.handleLaunchError(error, retryCallback: self.runLaunchSequence)
+                    } else {
+                        await self.finishLaunching()
                     }
+                    continuation.resume()
                 }
-            } else {
-                print("✅ DatabaseManager already started")
-                await self.finishLaunching()
             }
-        }.value
+        }
     }
 
     private func doPostLaunch() {
@@ -108,7 +95,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
             }
             if let pf = fetchPairingFile() {
                 print("⏳ Pairing file found, starting minimuxer threads...")
-                UserDefaults.standard.set(false, forKey: fluxPreviewWithoutPairingKey)
+                UserDefaults.standard.set(false, forKey: aeroPreviewWithoutPairingKey)
                 start_minimuxer_threads(pf)
             }
             // No pairing yet: first-run alert + document picker is already shown by PairingFileManager.
@@ -172,7 +159,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
                 return
             }
             try pairingString.write(to: FileManager.default.documentsDirectory.appendingPathComponent(pairingFileName), atomically: true, encoding: .utf8)
-            UserDefaults.standard.set(false, forKey: fluxPreviewWithoutPairingKey)
+            UserDefaults.standard.set(false, forKey: aeroPreviewWithoutPairingKey)
             start_minimuxer_threads(pairingString)
         } catch {
             displayError("Unable to read pairing file")
@@ -182,7 +169,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
     }
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        UserDefaults.standard.set(true, forKey: fluxPreviewWithoutPairingKey)
+        UserDefaults.standard.set(true, forKey: aeroPreviewWithoutPairingKey)
         let host = destinationViewController ?? self
         let toast = ToastView(
             text: NSLocalizedString("Browsing without pairing", comment: ""),
@@ -258,9 +245,18 @@ extension LaunchViewController {
         guard !didFinishLaunching else { return }
         didFinishLaunching = true
 
+        if destinationViewController == nil {
+            destinationViewController = storyboard?.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
+        }
+        guard let destinationVC = destinationViewController else {
+            displayError(NSLocalizedString("Could not load the main interface.", comment: ""))
+            return
+        }
+
+        if startTime == nil { startTime = Date() }
+
         do {
             print("⏳ finishLaunching: Getting destination view controller...")
-            let destinationVC = destinationViewController!
             
             print("⏳ finishLaunching: Calculating animation duration...")
             let elapsed = abs(startTime.timeIntervalSinceNow)
@@ -459,7 +455,7 @@ final class PairingFileManager {
             sleep(2); exit(0)
         })
         alert.addAction(UIAlertAction(title: NSLocalizedString("Browse without pairing", comment: ""), style: .cancel) { _ in
-            UserDefaults.standard.set(true, forKey: fluxPreviewWithoutPairingKey)
+            UserDefaults.standard.set(true, forKey: aeroPreviewWithoutPairingKey)
             let host = (vc as? LaunchViewController)?.destinationViewController ?? vc
             let toast = ToastView(
                 text: NSLocalizedString("Preview mode", comment: ""),
