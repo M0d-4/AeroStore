@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png" width="128" height="128" alt="AeroStore app icon" />
+  <img src="icon.png" width="128" height="128" alt="AeroStore app icon" />
 </p>
 
 # AeroStore

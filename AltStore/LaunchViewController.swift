@@ -25,7 +25,7 @@ final class LaunchViewController: UIViewController {
     private var retries = 0
     private var maxRetries = 3
     private var splashView: SplashView!
-    private var tabBarController: TabBarController?
+    private var mainTabBarController: TabBarController?
     private var startTime: Date!
 
     override func viewDidLoad() {
@@ -77,7 +77,7 @@ final class LaunchViewController: UIViewController {
     private func doPostLaunch() {
         do {
             print("⏳ Running post-launch tasks...")
-            let presenter = self.tabBarController ?? self
+            let presenter = self.mainTabBarController ?? self
             SideJITManager.shared.checkAndPromptIfNeeded(presentingVC: presenter)
             if #available(iOS 17, *), UserDefaults.standard.sidejitenable {
                 DispatchQueue.global().async { SideJITManager.shared.askForNetwork() }
@@ -97,7 +97,7 @@ final class LaunchViewController: UIViewController {
             if let pf = fetchPairingFile() {
                 print("⏳ Pairing file found, starting minimuxer threads...")
                 UserDefaults.standard.set(false, forKey: aeroPreviewWithoutPairingKey)
-                PairingFileManager.shared.startMinimuxerIfPossible(pf, presenter: tabBarController)
+                PairingFileManager.shared.startMinimuxerIfPossible(pf, presenter: mainTabBarController)
             }
             #endif
             print("✅ Post-launch tasks completed")
@@ -107,7 +107,7 @@ final class LaunchViewController: UIViewController {
     }
 
     func fetchPairingFile() -> String? {
-        PairingFileManager.shared.fetchPairingFile(presentingVC: tabBarController ?? self)
+        PairingFileManager.shared.fetchPairingFile(presentingVC: mainTabBarController ?? self)
     }
 
     func displayError(_ msg: String) {
@@ -118,7 +118,7 @@ final class LaunchViewController: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
-        (self.tabBarController ?? self).present(alert, animated: true)
+        (self.mainTabBarController ?? self).present(alert, animated: true)
     }
 
     func importAccountAtFile(_ file: URL, remove: Bool = false) {
@@ -142,10 +142,10 @@ final class LaunchViewController: UIViewController {
             Keychain.shared.signingCertificate = altCert.encryptedP12Data(withPassword: "")!
             Keychain.shared.signingCertificatePassword = account.certpass
             let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: String(format: NSLocalizedString("%@ should be fully operational now.", comment: ""), Bundle.main.altAppDisplayName))
-            return toastView.show(in: self.tabBarController ?? self)
+            return toastView.show(in: self.mainTabBarController ?? self)
         } else {
             let toastView = ToastView(text: NSLocalizedString("Failed to import account certificate!", comment: ""), detailText: NSLocalizedString("Failed to create ALTCertificate. Check if the password is correct.", comment: ""))
-            return toastView.show(in: self.tabBarController ?? self)
+            return toastView.show(in: self.mainTabBarController ?? self)
         }
     }
     
@@ -179,18 +179,18 @@ extension LaunchViewController {
             alert.addAction(UIAlertAction(title: NSLocalizedString("Retry", comment: ""), style: .default) { _ in
                 Task { await retryCallback?() }
             })
-            (tabBarController ?? self).present(alert, animated: true)
+            (mainTabBarController ?? self).present(alert, animated: true)
         }
     }
 
     @MainActor
     private func makeTabBarController() -> TabBarController? {
-        if let tabBarController {
-            return tabBarController
+        if let mainTabBarController {
+            return mainTabBarController
         }
         let storyboard = storyboard ?? UIStoryboard(name: "Main", bundle: nil)
         let controller = storyboard.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
-        tabBarController = controller
+        mainTabBarController = controller
         return controller
     }
 
