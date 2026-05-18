@@ -153,9 +153,17 @@ def validate_pre_build():
             (errors if critical else warnings).append(msg)
 
     # ── Required CLI tools ──────────────────────────────────────────────────
-    for tool in ("xcodebuild", "make", "zip", "ldid", "xcbeautify"):
+    # Critical for all build paths
+    for tool in ("xcodebuild", "make", "zip"):
         check(shutil.which(tool) is not None,
               f"Required tool not found on PATH: {tool}")
+
+    # Only required for signed builds (make build / Makefile path)
+    for tool in ("ldid", "xcbeautify"):
+        if shutil.which(tool) is None:
+            warnings.append(
+                f"Signing/formatting tool '{tool}' not on PATH "
+                f"(only needed for signed make-build, not unsigned archive)")
 
     for tool in ("wget", "curl"):
         if shutil.which(tool) is None:
