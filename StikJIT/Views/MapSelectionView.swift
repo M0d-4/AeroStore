@@ -1337,7 +1337,7 @@ struct BookmarksView: View {
     let onDelete: (IndexSet) -> Void
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             Group {
                 if bookmarks.isEmpty {
                     ContentUnavailableView(

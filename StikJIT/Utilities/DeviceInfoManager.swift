@@ -176,7 +176,7 @@ struct DeviceInfoView: View {
     
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 if !isPaired {
                     Section {
@@ -289,7 +289,7 @@ struct DeviceInfoView: View {
             }
             .onAppear { if isPaired { mgr.initAndLoad() } }
             .onDisappear { mgr.cleanup() }
-            .onChange(of: mgr.error?.message) { _, _ in
+            .onChange(of: mgr.error?.message) { _ in
                 if let err = mgr.error {
                     fail(err.title, err.message)
                     mgr.error = nil

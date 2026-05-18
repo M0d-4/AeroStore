@@ -13,7 +13,7 @@ struct ProcessInspectorView: View {
     @State private var killConfirmTask: Task<Void, Never>?
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             content
                 .navigationTitle("Process Inspector")
                 .toolbar {

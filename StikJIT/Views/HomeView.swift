@@ -118,7 +118,7 @@ struct HomeView: View {
             }
         }
         .onOpenURL { url in
-            guard let host = url.host() else { return }
+            guard let host = url.host else { return }
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             switch host {
             case "enable-jit":
@@ -201,7 +201,7 @@ struct HomeView: View {
             }
         }
         .sheet(isPresented: $isShowingConsole) {
-            NavigationStack {
+            NavigationView {
                 ConsoleLogsView()
                     .toolbar {
                         SwiftUI.ToolbarItem(placement: .cancellationAction) {
@@ -213,7 +213,7 @@ struct HomeView: View {
             }
         }
         .sheet(isPresented: $scriptViewShow) {
-            NavigationStack {
+            NavigationView {
                 if let jsModel {
                     RunJSView(model: jsModel)
                         .toolbar {

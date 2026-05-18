@@ -34,7 +34,7 @@ struct ToolsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List(tools) { tool in
                 NavigationLink {
                     tool.destination

@@ -58,7 +58,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             SwiftUI.Form {
                 // 1) App Header
                 Section {
@@ -104,7 +104,7 @@ struct SettingsView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    .onChange(of: keepAliveAudio) { _, enabled in
+                    .onChange(of: keepAliveAudio) { enabled in
                         if enabled { BackgroundAudioManager.shared.start() }
                         else { BackgroundAudioManager.shared.stop() }
                     }
@@ -116,7 +116,7 @@ struct SettingsView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    .onChange(of: keepAliveLocation) { _, enabled in
+                    .onChange(of: keepAliveLocation) { enabled in
                         if !enabled { BackgroundLocationManager.shared.stop() }
                     }
 

@@ -23,7 +23,7 @@ struct ScriptEditorView: View {
                 TextEditor(text: $scriptContent)
                     .font(.system(.footnote, design: .monospaced))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .scrollContentBackground(.hidden)
+                    .hideScrollBackground()
                     .background(Color(UIColor.systemBackground))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -40,7 +40,7 @@ struct ScriptEditorView: View {
             }
         })
         .tint(colorScheme == .dark ? .white : .black)
-        .toolbar(.hidden, for: .tabBar)
+        .hideTabBar()
     }
 
     private func loadScript() {

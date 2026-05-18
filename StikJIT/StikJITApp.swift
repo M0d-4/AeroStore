@@ -143,7 +143,7 @@ enum FluxStikJITHostBootstrap {
         Task {
             let fileManager = FileManager.default
             for item in ddiDownloadItems {
-                let destinationURL = URL.documentsDirectory.appendingPathComponent(item.relativePath)
+                let destinationURL = URL.documentsDir.appendingPathComponent(item.relativePath)
                 if fileManager.fileExists(atPath: destinationURL.path) { continue }
                 do {
                     try await downloadFile(from: item.urlString, to: destinationURL)
@@ -224,9 +224,9 @@ class MountingProgress: ObservableObject {
             let thread = Thread { [weak self] in
                 guard let self = self else { return }
                 let mountError = mountPersonalDDI(
-                    imagePath: URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg").path,
-                    trustcachePath: URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg.trustcache").path,
-                    manifestPath: URL.documentsDirectory.appendingPathComponent("DDI/BuildManifest.plist").path,
+                    imagePath: URL.documentsDir.appendingPathComponent("DDI/Image.dmg").path,
+                    trustcachePath: URL.documentsDir.appendingPathComponent("DDI/Image.dmg.trustcache").path,
+                    manifestPath: URL.documentsDir.appendingPathComponent("DDI/BuildManifest.plist").path,
                 )
 
                 DispatchQueue.main.async {
@@ -292,7 +292,7 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
             pubTunnelConnected = true
 
             DispatchQueue.main.async {
-                let trustcachePath = URL.documentsDirectory.appendingPathComponent("DDI/Image.dmg.trustcache").path
+                let trustcachePath = URL.documentsDir.appendingPathComponent("DDI/Image.dmg.trustcache").path
                 guard FileManager.default.fileExists(atPath: trustcachePath),
                       !MountingProgress.shared.coolisMounted,
                       MountingProgress.shared.mountingThread == nil else { return }
@@ -477,7 +477,7 @@ func redownloadDDI(progressHandler: ((Double, String) -> Void)? = nil) async thr
     
     progressHandler?(0.0, "Removing existing DDI files…")
     for item in ddiDownloadItems {
-        let fileURL = URL.documentsDirectory.appendingPathComponent(item.relativePath)
+        let fileURL = URL.documentsDir.appendingPathComponent(item.relativePath)
         if fileManager.fileExists(atPath: fileURL.path) {
             try fileManager.removeItem(at: fileURL)
         }
@@ -487,7 +487,7 @@ func redownloadDDI(progressHandler: ((Double, String) -> Void)? = nil) async thr
     
     for item in ddiDownloadItems {
         progressHandler?(completedStages / totalStages, "Downloading \(item.name)…")
-        let destinationURL = URL.documentsDirectory.appendingPathComponent(item.relativePath)
+        let destinationURL = URL.documentsDir.appendingPathComponent(item.relativePath)
         try await downloadFile(from: item.urlString, to: destinationURL)
         completedStages += 1.0
         progressHandler?(completedStages / totalStages, "\(item.name) ready")

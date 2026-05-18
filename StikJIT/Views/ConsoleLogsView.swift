@@ -40,7 +40,7 @@ struct ConsoleLogsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             Group {
                 if selectedConsoleTab == .idevice {
                     jitLogsPane
@@ -110,7 +110,7 @@ struct ConsoleLogsView: View {
                 .onDisappear {
             systemLogStream.stop()
         }
-        .onChange(of: systemLogStream.lastError) { _, newError in
+        .onChange(of: systemLogStream.lastError) { newError in
             if let error = newError {
                 presentAlert(title: "Syslog Error", message: error)
                 systemLogStream.lastError = nil
@@ -173,7 +173,7 @@ struct ConsoleLogsView: View {
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
                 jitIsAtBottom = offset > -20
             }
-            .onChange(of: logManager.logs.count) { _, _ in
+            .onChange(of: logManager.logs.count) { _ in
                 guard jitIsAtBottom, let lastLog = logManager.logs.last else { return }
                 withAnimation {
                     proxy.scrollTo(lastLog.id, anchor: .bottom)
@@ -242,7 +242,7 @@ struct ConsoleLogsView: View {
                 .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
                     syslogIsAtBottom = offset > -20
                 }
-                .onChange(of: systemLogStream.entries.count) { _, _ in
+                .onChange(of: systemLogStream.entries.count) { _ in
                     guard syslogIsAtBottom, syslogSearchText.isEmpty,
                           let lastLog = systemLogStream.entries.last else { return }
                     withAnimation {
@@ -277,13 +277,25 @@ struct ConsoleLogsView: View {
 
     @ViewBuilder
     private var exportMenuOption: some View {
-        let logURL: URL = URL.documentsDirectory.appendingPathComponent("idevice_log.txt")
+        let logURL: URL = URL.documentsDir.appendingPathComponent("idevice_log.txt")
         if FileManager.default.fileExists(atPath: logURL.path) {
-            ShareLink(
-                item: logURL,
-                preview: SharePreview("idevice_log.txt", image: Image(systemName: "doc.text"))
-            ) {
-                Label("Export Logs", systemImage: "square.and.arrow.up")
+            if #available(iOS 16.0, *) {
+                ShareLink(
+                    item: logURL,
+                    preview: SharePreview("idevice_log.txt", image: Image(systemName: "doc.text"))
+                ) {
+                    Label("Export Logs", systemImage: "square.and.arrow.up")
+                }
+            } else {
+                SwiftUI.Button("Export Logs", systemImage: "square.and.arrow.up") {
+                    let ac = UIActivityViewController(activityItems: [logURL], applicationActivities: nil)
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let root = windowScene.windows.first?.rootViewController {
+                        var top = root
+                        while let presented = top.presentedViewController { top = presented }
+                        top.present(ac, animated: true)
+                    }
+                }
             }
         } else {
             SwiftUI.Button("Export Logs", systemImage: "square.and.arrow.up") {
@@ -394,7 +406,7 @@ struct ConsoleLogsView: View {
         guard !isLoadingLogs else { return }
         isLoadingLogs = true
 
-        let logPath = URL.documentsDirectory.appendingPathComponent("idevice_log.txt").path
+        let logPath = URL.documentsDir.appendingPathComponent("idevice_log.txt").path
 
         guard FileManager.default.fileExists(atPath: logPath) else {
             await MainActor.run {
@@ -453,7 +465,7 @@ struct ConsoleLogsView: View {
         guard !isLoadingLogs else { return }
         isLoadingLogs = true
 
-        let logPath = URL.documentsDirectory.appendingPathComponent("idevice_log.txt").path
+        let logPath = URL.documentsDir.appendingPathComponent("idevice_log.txt").path
         let previousCount = lastProcessedLineCount
 
         guard FileManager.default.fileExists(atPath: logPath) else {

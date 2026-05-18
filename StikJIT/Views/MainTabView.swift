@@ -114,11 +114,11 @@ struct MainTabView: View {
                     switchObserver = nil
                 }
             }
-            .onChange(of: enabledTabIdentifiers) { _, _ in
+            .onChange(of: enabledTabIdentifiers) { _ in
                 ensureSelectionIsValid()
             }
             .sheet(item: $detachedTab) { descriptor in
-                NavigationStack {
+                NavigationView {
                     descriptor.builder()
                         .toolbar {
                             SwiftUI.ToolbarItem(placement: .cancellationAction) {

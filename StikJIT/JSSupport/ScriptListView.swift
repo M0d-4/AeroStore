@@ -38,7 +38,7 @@ struct ScriptListView: View {
 
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 if isPickerMode {
                     Section {
@@ -178,13 +178,15 @@ struct ScriptListView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        if !isPickerMode {
-            SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+            if !isPickerMode {
                 SwiftUI.Button(action: { showImporter = true }) {
                     SwiftUI.Text("Import")
                 }
             }
-            SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+        }
+        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+            if !isPickerMode {
                 SwiftUI.Button(action: { showNewFileAlert = true }) {
                     SwiftUI.Text("New")
                 }

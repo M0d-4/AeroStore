@@ -162,7 +162,7 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             tabContent(for: selectedTab)
                 .transition(.opacity)
                 .transaction { t in t.disablesAnimations = true }
@@ -228,9 +228,9 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
             prefetchedBundleIDs.removeAll()
             prefetchPriorityIcons()
         }
-        .onChange(of: favoriteApps) { _, _ in prefetchPriorityIcons() }
-        .onChange(of: recentApps) { _, _ in prefetchPriorityIcons() }
-        .onChange(of: viewModel.isLoading) { _, newValue in
+        .onChange(of: favoriteApps) { _ in prefetchPriorityIcons() }
+        .onChange(of: recentApps) { _ in prefetchPriorityIcons() }
+        .onChange(of: viewModel.isLoading) { newValue in
             if newValue {
                 prefetchedBundleIDs.removeAll()
             } else {
@@ -239,8 +239,8 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                 persistIfChanged()
             }
         }
-        .onChange(of: selectedTab) { _, _ in prefetchPriorityIcons() }
-        .onChange(of: pinnedSystemApps) { _, _ in prefetchPriorityIcons() }
+        .onChange(of: selectedTab) { _ in prefetchPriorityIcons() }
+        .onChange(of: pinnedSystemApps) { _ in prefetchPriorityIcons() }
         .onReceive(NotificationCenter.default.publisher(for: .pairingFileImported)) { _ in
             viewModel.refreshAppLists()
         }
@@ -631,7 +631,7 @@ struct AppButton: View {
                 iconLoader.beginLoading()
             }
         }
-        .onChange(of: loadAppIconsOnJIT) { _, newValue in
+        .onChange(of: loadAppIconsOnJIT) { newValue in
             if newValue {
                 iconLoader.beginLoading()
             }
@@ -799,7 +799,7 @@ struct LaunchAppRow: View {
                 iconLoader.beginLoading()
             }
         }
-        .onChange(of: loadAppIconsOnJIT) { _, newValue in
+        .onChange(of: loadAppIconsOnJIT) { newValue in
             if newValue {
                 iconLoader.beginLoading()
             }

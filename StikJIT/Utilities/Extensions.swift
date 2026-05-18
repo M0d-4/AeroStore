@@ -18,11 +18,11 @@ enum PairingFileStore {
     ]
 
     static var url: URL {
-        URL.documentsDirectory.appendingPathComponent(fileName)
+        URL.documentsDir.appendingPathComponent(fileName)
     }
 
     private static var legacyURL: URL {
-        URL.documentsDirectory.appendingPathComponent(legacyFileName)
+        URL.documentsDir.appendingPathComponent(legacyFileName)
     }
 
     @discardableResult
@@ -104,7 +104,7 @@ enum ScriptStore {
     ]
 
     static var directoryURL: URL {
-        URL.documentsDirectory.appendingPathComponent(directoryName)
+        URL.documentsDir.appendingPathComponent(directoryName)
     }
 
     @discardableResult
@@ -218,6 +218,35 @@ enum ScriptStore {
 
     private static func assignedScriptMap(defaults: UserDefaults) -> [String: String] {
         defaults.dictionary(forKey: assignmentKey) as? [String: String] ?? [:]
+    }
+}
+
+extension URL {
+    /// Back-deployment shim for `URL.documentsDirectory`, which requires iOS 16+.
+    static var documentsDir: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+}
+
+extension View {
+    /// Hides the tab bar — uses the iOS 16+ API when available, no-ops on iOS 15.
+    @ViewBuilder
+    func hideTabBar() -> some View {
+        if #available(iOS 16.0, *) {
+            self.toolbar(.hidden, for: .tabBar)
+        } else {
+            self
+        }
+    }
+
+    /// Hides TextEditor's scroll background — uses iOS 16+ API when available, no-ops on iOS 15.
+    @ViewBuilder
+    func hideScrollBackground() -> some View {
+        if #available(iOS 16.0, *) {
+            self.scrollContentBackground(.hidden)
+        } else {
+            self
+        }
     }
 }
 

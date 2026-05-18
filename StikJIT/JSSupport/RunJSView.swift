@@ -152,7 +152,7 @@ final class RunJSViewModel: ObservableObject, @unchecked Sendable {
     }
     
     private func screenshotFileURL(preferredName: String?) throws -> URL {
-        let directory = URL.documentsDirectory.appendingPathComponent("screenshots", isDirectory: true)
+        let directory = URL.documentsDir.appendingPathComponent("screenshots", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileManager = FileManager.default
         let initialName = sanitizedScreenshotName(from: preferredName)
@@ -225,7 +225,7 @@ struct RunJSView: View {
                 }
             }
             .navigationTitle("Running \(model.scriptName)")
-            .onChange(of: model.logs.count) { _, newCount in
+            .onChange(of: model.logs.count) { newCount in
                 guard newCount > 0 else { return }
                 withAnimation {
                     proxy.scrollTo(newCount - 1, anchor: .bottom)

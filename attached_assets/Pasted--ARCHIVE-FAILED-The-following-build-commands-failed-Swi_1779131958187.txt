@@ -1,0 +1,46 @@
+** ARCHIVE FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/RunJSView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptEditorView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptListView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/DeviceInfoManager.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Extensions.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/HomeView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 Compiling\ BackgroundRefreshAppsOperation.swift,\ JSDebugSupport.swift,\ RunJSView.swift,\ ScriptEditorView.swift,\ ScriptListView.swift,\ AppStoreIconFetcher.swift,\ BackgroundAudioManager.swift,\ BackgroundLocationManager.swift,\ DeviceConnectionContext.swift,\ DeviceInfoManager.swift,\ Extensions.swift,\ HapticFeedbackHelper.swift,\ IdeviceFFIBridge.swift,\ Intents.swift,\ JITEnableContext.swift,\ Localization.swift,\ LogManager.swift,\ LogManagerBridge.swift,\ mountDDI.swift,\ Security.swift,\ SystemLogStream.swift,\ TabConfiguration.swift,\ ConsoleLogsView.swift,\ HomeView.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/BackgroundRefreshAppsOperation.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/JSDebugSupport.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/RunJSView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptEditorView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptListView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/AppStoreIconFetcher.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/BackgroundAudioManager.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/BackgroundLocationManager.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/DeviceConnectionContext.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/DeviceInfoManager.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Extensions.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/HapticFeedbackHelper.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/IdeviceFFIBridge.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Intents.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/JITEnableContext.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Localization.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/LogManager.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/LogManagerBridge.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/mountDDI.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Security.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/SystemLogStream.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/TabConfiguration.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/HomeView.swift (in target 'SideStore' from project 'AltStore')
+	Archiving project AltStore with scheme SideStore
+(9 failures)
+---- Errors / failures in log ----
+PhaseScriptExecution Fetch\ prebuilt\ binaries /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/em_proxy.build/Debug-iphoneos/em_proxy-staticlib.build/Script-9987603529A4610700818586.sh (in target 'em_proxy-staticlib' from project 'em_proxy')
+PhaseScriptExecution Build\ Minimuxer\ Rust\ Bridge /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/AltStore.build/Debug-iphoneos/SideStore.build/Script-A8D768282F52F0D4002356C4.sh (in target 'SideStore' from project 'AltStore')
+class IntentError: NSError, CustomLocalizedStringResourceConvertible
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/RunJSView.swift:155:29: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/RunJSView.swift:228:14: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptEditorView.swift:26:22: error: 'scrollContentBackground' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptEditorView.swift:43:10: error: 'toolbar(_:for:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptListView.swift:41:9: error: 'NavigationStack' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptListView.swift:181:26: error: 'buildIf' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/JSSupport/ScriptListView.swift:192:9: error: 'buildIf' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/DeviceInfoManager.swift:179:9: error: 'NavigationStack' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/DeviceInfoManager.swift:292:14: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Extensions.swift:21:13: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Extensions.swift:25:13: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Utilities/Extensions.swift:107:13: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:43:9: error: 'NavigationStack' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:113:10: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:176:14: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:245:18: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:280:31: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:282:13: error: 'ShareLink' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:282:13: error: 'init(item:subject:message:preview:label:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:284:26: error: 'SharePreview' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:284:26: error: 'init(_:image:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:397:27: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ConsoleLogsView.swift:456:27: error: 'documentsDirectory' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/HomeView.swift:121:34: error: 'host(percentEncoded:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/HomeView.swift:204:13: error: 'NavigationStack' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/HomeView.swift:216:13: error: 'NavigationStack' is only available in iOS 16.0 or newer
+The following build commands failed:
+Error: Process completed with exit code 65.
