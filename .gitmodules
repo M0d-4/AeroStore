@@ -51,8 +51,8 @@
     url = https://github.com/SideStore/minimuxer
     branch = master
 [submodule "Dependencies/em_proxy"]
-	path = Dependencies/em_proxy
-	url = https://github.com/SideStore/em_proxy
+        path = Dependencies/em_proxy
+        url = https://github.com/SideStore/em_proxy
     branch = master
 [submodule "Dependencies/apps-v2.json"]
     path = Dependencies/apps-v2.json
@@ -62,3 +62,6 @@
     path = Dependencies/AltSign
     url = https://github.com/SideStore/AltSign
     branch = master
+[submodule "LiveContainer"]
+    path = LiveContainer
+    url = https://github.com/LiveContainer/LiveContainer

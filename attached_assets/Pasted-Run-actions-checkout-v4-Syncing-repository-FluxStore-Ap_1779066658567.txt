@@ -1,0 +1,32 @@
+Run actions/checkout@v4
+Syncing repository: FluxStore-App/FluxStore
+Getting Git version info
+Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/d5d2492c-ee73-4e5d-8a63-a797f8f8d77d/.gitconfig'
+Temporarily overriding HOME='/Users/runner/work/_temp/d5d2492c-ee73-4e5d-8a63-a797f8f8d77d' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/FluxStore/FluxStore
+Deleting the contents of '/Users/runner/work/FluxStore/FluxStore'
+Initializing the repository
+Disabling automatic garbage collection
+Setting up auth
+Fetching the repository
+Determining the checkout info
+/opt/homebrew/bin/git sparse-checkout disable
+/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+Checking out the ref
+Setting up auth for fetching submodules
+Fetching submodules
+  /opt/homebrew/bin/git submodule sync --recursive
+  /opt/homebrew/bin/git -c protocol.version=2 submodule update --init --force --recursive
+  Submodule 'Dependencies/AltSign' (https://github.com/SideStore/AltSign) registered for path 'Dependencies/AltSign'
+  Submodule 'Dependencies/MarkdownAttributedString' (https://github.com/chockenberry/MarkdownAttributedString.git) registered for path 'Dependencies/MarkdownAttributedString'
+  Submodule 'Dependencies/Roxas' (https://github.com/rileytestut/Roxas.git) registered for path 'Dependencies/Roxas'
+  Submodule 'Dependencies/apps-v2.json' (https://github.com/SideStore/apps-v2.json) registered for path 'Dependencies/apps-v2.json'
+  Submodule 'Dependencies/em_proxy' (https://github.com/SideStore/em_proxy) registered for path 'Dependencies/em_proxy'
+  Submodule 'Dependencies/libimobiledevice' (https://github.com/SideStore/libimobiledevice) registered for path 'Dependencies/libimobiledevice'
+  Submodule 'Dependencies/libimobiledevice-glue' (https://github.com/libimobiledevice/libimobiledevice-glue) registered for path 'Dependencies/libimobiledevice-glue'
+  Submodule 'Dependencies/libplist' (https://github.com/SideStore/libplist.git) registered for path 'Dependencies/libplist'
+  Submodule 'Dependencies/libusbmuxd' (https://github.com/libimobiledevice/libusbmuxd.git) registered for path 'Dependencies/libusbmuxd'
+  Submodule 'Dependencies/minimuxer' (https://github.com/SideStore/minimuxer) registered for path 'Dependencies/minimuxer'
+  Error: fatal: No url found for submodule path 'LiveContainer' in .gitmodules
+  Error: The process '/opt/homebrew/bin/git' failed with exit code 128
