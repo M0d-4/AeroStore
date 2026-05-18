@@ -10,23 +10,17 @@ import AppIntents
 import WidgetKit
 import AltStoreCore
 
-// Shouldn't conform types we don't own to protocols we don't own, so make custom
-// NSError subclass that conforms to CustomLocalizedStringResourceConvertible instead.
-//
-// Would prefer to just conform ALTLocalizedError to CustomLocalizedStringResourceConvertible,
-// but that can't be done without raising minimum version for ALTLocalizedError to iOS 16 :/
+// Simple struct wrapper so we own both the type and the protocol conformance,
+// avoiding any conflict with NSError's own CustomLocalizedStringResourceConvertible
+// conformance introduced in newer SDK versions.
 @available(iOS 16, *)
-class IntentError: NSError
+private struct IntentError: Error, CustomLocalizedStringResourceConvertible
 {
+    let localizedStringResource: LocalizedStringResource
+
     init(_ error: some Error)
     {
-        let serializedError = (error as NSError).sanitizedForSerialization()
-        super.init(domain: serializedError.domain, code: serializedError.code, userInfo: serializedError.userInfo)
-    }
-    
-    required init?(coder: NSCoder)
-    {
-        super.init(coder: coder)
+        self.localizedStringResource = "\(error.localizedDescription)"
     }
 }
 
