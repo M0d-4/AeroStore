@@ -2108,6 +2108,18 @@ extension MyAppsViewController
             self.changeIcon(for: installedApp, to: nil)
         }
         
+        let refreshScheduleTitle: String
+        if AppRefreshScheduleManager.shared.hasCustomInterval(for: installedApp.bundleIdentifier) {
+            let hours = AppRefreshScheduleManager.shared.refreshIntervalHours(for: installedApp.bundleIdentifier)
+            refreshScheduleTitle = String(format: NSLocalizedString("Refresh Schedule: %dh", comment: ""), hours)
+        } else {
+            refreshScheduleTitle = NSLocalizedString("Set Refresh Schedule", comment: "")
+        }
+
+        let refreshScheduleAction = UIAction(title: refreshScheduleTitle, image: UIImage(systemName: "clock.arrow.2.circlepath")) { [weak self] _ in
+            self?.showRefreshSchedulePicker(for: installedApp)
+        }
+        
         var changeIconActions = [chooseIconAction]
         if installedApp.hasAlternateIcon
         {
@@ -2223,18 +2235,6 @@ extension MyAppsViewController
             #endif
         }
         
-        let refreshScheduleTitle: String
-        if AppRefreshScheduleManager.shared.hasCustomInterval(for: installedApp.bundleIdentifier) {
-            let hours = AppRefreshScheduleManager.shared.refreshIntervalHours(for: installedApp.bundleIdentifier)
-            refreshScheduleTitle = String(format: NSLocalizedString("Refresh Schedule: %dh", comment: ""), hours)
-        } else {
-            refreshScheduleTitle = NSLocalizedString("Set Refresh Schedule", comment: "")
-        }
-
-        let refreshScheduleAction = UIAction(title: refreshScheduleTitle, image: UIImage(systemName: "clock.arrow.2.circlepath")) { [weak self] _ in
-            self?.showRefreshSchedulePicker(for: installedApp)
-        }
-
         // Change the order of entries to make changes to how the context menu is displayed
         let orderedActions = [
             openMenu,
