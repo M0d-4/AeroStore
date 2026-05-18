@@ -47,3 +47,30 @@ chmod +x ./fetch-prebuilt.sh
 ./fetch-prebuilt.sh em_proxy
 test -f libem_proxy-ios.a && test -f libem_proxy-sim.a && test -f em_proxy.h
 echo "em_proxy prebuilts OK."
+
+# Patch fetch-prebuilt.sh to be idempotent when called again from the Xcode build phase.
+# The Xcode build phase runs fetch-prebuilt.sh with a restricted PATH (no Homebrew),
+# so wget may not be available. Since we already fetched the prebuilts above, we replace
+# fetch-prebuilt.sh with a wrapper that exits 0 immediately when files exist.
+FETCH_ORIG="${EM}/fetch-prebuilt.sh.orig"
+if [[ ! -f "${FETCH_ORIG}" ]]; then
+  cp "${EM}/fetch-prebuilt.sh" "${FETCH_ORIG}"
+  cat > "${EM}/fetch-prebuilt.sh" << 'WRAPPER_EOF'
+#!/usr/bin/env bash
+# Idempotent wrapper: skip download if prebuilts are already present.
+# The CI pre-build step (scripts/ci/fetch_em_proxy_prebuilt.sh) fetches these
+# before xcodebuild runs, so the Xcode build phase just needs to verify they exist.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ -f "${SCRIPT_DIR}/libem_proxy-ios.a" && \
+      -f "${SCRIPT_DIR}/libem_proxy-sim.a" && \
+      -f "${SCRIPT_DIR}/em_proxy.h" ]]; then
+    echo "em_proxy prebuilts already present – skipping download."
+    exit 0
+fi
+# Files missing: add Homebrew to PATH and delegate to original script.
+export PATH="/usr/local/bin:/opt/homebrew/bin:${PATH}"
+exec "${SCRIPT_DIR}/fetch-prebuilt.sh.orig" "$@"
+WRAPPER_EOF
+  chmod +x "${EM}/fetch-prebuilt.sh"
+  echo "Patched em_proxy/fetch-prebuilt.sh to be idempotent in Xcode build phase."
+fi
