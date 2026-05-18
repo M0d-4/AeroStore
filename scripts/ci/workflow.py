@@ -139,6 +139,98 @@ def clean_spm_cache():
     run("rm -rf ~/Library/Caches/org.swift.swiftpm/*", check=False)
 
 # ----------------------------------------------------------
+# PRE-BUILD VALIDATION
+# ----------------------------------------------------------
+
+def validate_pre_build():
+    import shutil
+
+    errors   = []
+    warnings = []
+
+    def check(condition, msg, critical=True):
+        if not condition:
+            (errors if critical else warnings).append(msg)
+
+    # ── Required CLI tools ──────────────────────────────────────────────────
+    for tool in ("xcodebuild", "make", "zip", "ldid", "xcbeautify"):
+        check(shutil.which(tool) is not None,
+              f"Required tool not found on PATH: {tool}")
+
+    for tool in ("wget", "curl"):
+        if shutil.which(tool) is None:
+            warnings.append(f"Download tool '{tool}' not on PATH (one of wget/curl is needed for em_proxy prebuilts)")
+
+    # ── Required source files ───────────────────────────────────────────────
+    required_files = [
+        "AltStore.xcodeproj/project.pbxproj",
+        "Build.xcconfig",
+        "Makefile",
+        "AltBackup/Info.plist",
+        "AltBackup/AltBackup.entitlements",
+        "AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
+        "xcconfigs/AltStore.xcconfig",
+        "scripts/ci/ensure_fluxstore_dependencies.sh",
+        "scripts/ci/fetch_em_proxy_prebuilt.sh",
+        "scripts/ci/patch_altsign_package_swift.py",
+    ]
+    for rel in required_files:
+        check((ROOT / rel).exists(), f"Required file missing: {rel}")
+
+    # ── Required dependency directories ────────────────────────────────────
+    # These are populated by ensure_fluxstore_dependencies.sh before the build.
+    # Warn rather than error so the build can still attempt (the dep script may fix it).
+    dep_markers = {
+        "Dependencies/minimuxer/Package.swift"       : "minimuxer SPM package",
+        "Dependencies/em_proxy/fetch-prebuilt.sh"    : "em_proxy prebuilt fetcher",
+        "Dependencies/Roxas/Roxas.xcodeproj"         : "Roxas framework",
+        "Dependencies/libplist/src/Uid.cpp"          : "libplist sources",
+        "Dependencies/libimobiledevice/src/idevice.c": "libimobiledevice sources",
+    }
+    for rel, label in dep_markers.items():
+        check((ROOT / rel).exists(),
+              f"Dependency not yet populated ({label}): {rel}",
+              critical=False)
+
+    # ── em_proxy prebuilt binaries ──────────────────────────────────────────
+    em = ROOT / "Dependencies/em_proxy"
+    for lib in ("libem_proxy-ios.a", "libem_proxy-sim.a", "em_proxy.h"):
+        check((em / lib).exists(),
+              f"em_proxy prebuilt missing (run fetch_em_proxy_prebuilt.sh first): Dependencies/em_proxy/{lib}")
+
+    # ── AltBackup entitlements reference ───────────────────────────────────
+    release_ents = ROOT / "AltBackup/Resources/ReleaseEntitlements.plist"
+    check(release_ents.exists(),
+          f"AltBackup release entitlements missing: {release_ents.relative_to(ROOT)}")
+
+    # ── Build.xcconfig has a non-empty MARKETING_VERSION ──────────────────
+    xcconfig = (ROOT / "Build.xcconfig").read_text()
+    import re
+    m = re.search(r"^MARKETING_VERSION\s*=\s*(.+)$", xcconfig, re.MULTILINE)
+    check(m is not None and m.group(1).strip() != "",
+          "Build.xcconfig is missing a valid MARKETING_VERSION")
+
+    # ── Report ──────────────────────────────────────────────────────────────
+    print("", file=sys.stderr)
+    print("=== Pre-Build Validation ===", file=sys.stderr)
+
+    if warnings:
+        print(f"\n  Warnings ({len(warnings)}):", file=sys.stderr)
+        for w in warnings:
+            print(f"    ⚠  {w}", file=sys.stderr)
+
+    if errors:
+        print(f"\n  Errors ({len(errors)}):", file=sys.stderr)
+        for e in errors:
+            print(f"    ✗  {e}", file=sys.stderr)
+        print("\nPre-build validation FAILED — fix the errors above before archiving.\n",
+              file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\n  All critical checks passed ({len(warnings)} warning(s)).\n", file=sys.stderr)
+
+
+# ----------------------------------------------------------
 # BUILD
 # ----------------------------------------------------------
 
@@ -161,6 +253,7 @@ def build():
     ensure_fluxstore_dependencies()
     patch_altsign_spm_manifest()
     fetch_em_proxy_prebuilt()
+    validate_pre_build()
     run("mkdir -p build/logs")
     run(
         "set -o pipefail && "
@@ -528,6 +621,7 @@ COMMANDS = {
     # ----------------------------------------------------------
     # BUILD
     # ----------------------------------------------------------
+    "validate-pre-build"      : (validate_pre_build,        0, ""),
     "build"                   : (build,                     0, ""),
 
     # ----------------------------------------------------------
