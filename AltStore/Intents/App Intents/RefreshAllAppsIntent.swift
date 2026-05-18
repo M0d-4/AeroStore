@@ -18,10 +18,6 @@ import AltStoreCore
 @available(iOS 16, *)
 class IntentError: NSError
 {
-    var localizedStringResource: LocalizedStringResource {
-        return "\(self.localizedDescription)"
-    }
-    
     init(_ error: some Error)
     {
         let serializedError = (error as NSError).sanitizedForSerialization()
