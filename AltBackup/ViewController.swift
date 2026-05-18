@@ -78,7 +78,7 @@ class ViewController: UIViewController
         self.detailTextLabel.textAlignment = .center
         self.detailTextLabel.numberOfLines = 0
         
-        self.activityIndicatorView = UIActivityIndicatorView(style: .whiteLarge)
+        self.activityIndicatorView = UIActivityIndicatorView(style: .large)
         self.activityIndicatorView.color = .altstoreText
         self.activityIndicatorView.startAnimating()
         

@@ -33,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let viewController = ViewController()
         
-        self.window = UIWindow(frame: UIScreen.main.bounds)
+        self.window = UIWindow()
         self.window?.rootViewController = viewController
         self.window?.makeKeyAndVisible()
         
