@@ -1,0 +1,71 @@
+3m 37s
+Run set -euo pipefail
+Command line invocation:
+    /Applications/Xcode_26.4.1.app/Contents/Developer/usr/bin/xcodebuild archive -project /Users/runner/work/FluxStore/FluxStore/./AltStore.xcodeproj -scheme SideStore -configuration Debug -archivePath /Users/runner/work/FluxStore/FluxStore/build/App.xcarchive -sdk iphoneos -destination generic/platform=iOS -derivedDataPath /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData -clonedSourcePackagesDirPath /Users/runner/work/FluxStore/FluxStore/build/ci-SourcePackages ONLY_ACTIVE_ARCH=NO CODE_SIGN_IDENTITY= CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO SWIFT_OPTIMIZATION_LEVEL=-Onone
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = 
+    CODE_SIGNING_ALLOWED = NO
+    CODE_SIGNING_REQUIRED = NO
+    ONLY_ACTIVE_ARCH = NO
+    SDKROOT = iphoneos26.4
+    SWIFT_OPTIMIZATION_LEVEL = -Onone
+
+    builtin-precompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/_Builtin_stdint-CLLOA3GMCKG9VR77AFUXPSI6M.scan
+
+PrecompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/_DarwinFoundation3-COH9Q6BXT7VL00J3YJUSO404N.scan
+    cd /
+    builtin-precompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/_DarwinFoundation3-COH9Q6BXT7VL00J3YJUSO404N.scan
+
+PrecompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/_Builtin_inttypes-7X3A3BMX7HRLCOJPO6QOH45I6.scan
+    cd /
+    builtin-precompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/_Builtin_inttypes-7X3A3BMX7HRLCOJPO6QOH45I6.scan
+
+PrecompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/Darwin-71HDLCPLN6V1HQ3VKTNEZOIL2.scan
+    cd /
+    builtin-precompileModule /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/ExplicitPrecompiledModules/Darwin-71HDLCPLN6V1HQ3VKTNEZOIL2.scan
+
+/Users/runner/work/FluxStore/FluxStore/AltStore.xcodeproj: warning: Multiple targets match implicit dependency for product reference 'Roxas.framework'. Consider adding an explicit dependency on the intended target to resolve this ambiguity. (in target 'SideStore' from project 'AltStore')
+    note: Target 'Roxas' (in project 'Roxas')
+    note: Target 'RoxasTV' (in project 'Roxas')
+warning: Run script build phase 'Build Minimuxer Rust Bridge' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'SideStore' from project 'AltStore')
+warning: Run script build phase 'Build AltBackup.ipa' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'SideStore' from project 'AltStore')
+/Users/runner/work/FluxStore/FluxStore/AltStore.xcodeproj: warning: The Copy Bundle Resources build phase contains this target's entitlements file '/Users/runner/work/FluxStore/FluxStore/AltStore/AltStoreFree.entitlements'. (in target 'SideStore' from project 'AltStore')
+/Users/runner/work/FluxStore/FluxStore/AltStore.xcodeproj: warning: Multiple targets match implicit dependency for product reference 'Roxas.framework'. Consider adding an explicit dependency on the intended target to resolve this ambiguity. (in target 'AltStoreCore' from project 'AltStore')
+    note: Target 'Roxas' (in project 'Roxas')
+    note: Target 'RoxasTV' (in project 'Roxas')
+** ARCHIVE FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift (in target 'SideStore' from project 'AltStore')
+	SwiftCompile normal arm64 Compiling\ InstalledAppsListView.swift,\ MainTabView.swift,\ MapSelectionView.swift,\ ProcessInspectorView.swift,\ ProfileView.swift,\ SettingsView.swift,\ ToolsView.swift,\ StikJITApp.swift,\ BackupAppOperation.swift,\ ClearAppCacheOperation.swift,\ DeactivateAppOperation.swift,\ DownloadAppOperation.swift,\ EnableJITOperation.swift,\ FetchAnisetteDataOperation.swift,\ FetchAppIDsOperation.swift,\ FetchProvisioningProfilesOperation.swift,\ FetchSourceOperation.swift,\ InstallAppOperation.swift,\ Operation.swift,\ OperationContexts.swift,\ RefreshAppOperation.swift,\ RefreshGroup.swift,\ RemoveAppBackupOperation.swift,\ AbstractClassError.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MainTabView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProfileView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/SettingsView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ToolsView.swift /Users/runner/work/FluxStore/FluxStore/StikJIT/StikJITApp.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/BackupAppOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/ClearAppCacheOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/DeactivateAppOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/DownloadAppOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/EnableJITOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/FetchAnisetteDataOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/FetchAppIDsOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/FetchProvisioningProfilesOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/FetchSourceOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/InstallAppOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/Operation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/OperationContexts.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/RefreshAppOperation.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/RefreshGroup.swift /Users/runner/work/FluxStore/FluxStore/AltStore/Operations/RemoveAppBackupOperation.swift /Users/runner/work/FluxStore/FluxStore/SideStore/Utils/common/AbstractClassError.swift (in target 'SideStore' from project 'AltStore')
+	Archiving project AltStore with scheme SideStore
+(5 failures)
+---- Errors / failures in log ----
+PhaseScriptExecution Fetch\ prebuilt\ binaries /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/em_proxy.build/Debug-iphoneos/em_proxy-staticlib.build/Script-9987603529A4610700818586.sh (in target 'em_proxy-staticlib' from project 'em_proxy')
+PhaseScriptExecution Build\ Minimuxer\ Rust\ Bridge /Users/runner/work/FluxStore/FluxStore/build/ci-DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/SideStore/IntermediateBuildFilesPath/AltStore.build/Debug-iphoneos/SideStore.build/Script-A8D768282F52F0D4002356C4.sh (in target 'SideStore' from project 'AltStore')
+class IntentError: NSError, CustomLocalizedStringResourceConvertible
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift:186:48: error: 'buildIf' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift:192:21: error: 'buildIf' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift:195:66: error: 'fontWeight' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift:193:39: error: 'buildEither(first:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/InstalledAppsListView.swift:197:28: error: 'buildEither(second:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift:1138:9: error: 'NavigationStack' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift:1226:10: error: 'presentationDetents' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift:1258:22: error: 'onChange(of:initial:_:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift:1343:21: error: 'ContentUnavailableView' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/MapSelectionView.swift:1343:21: error: 'init(_:systemImage:description:)' is only available in iOS 17.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:52:17: error: 'LabeledContent' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:52:17: error: 'init(_:content:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:93:33: error: 'sleep(for:tolerance:clock:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:93:45: error: 'seconds' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:347:33: error: 'sleep(for:tolerance:clock:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:347:45: error: 'seconds' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:410:29: error: 'sleep(for:tolerance:clock:)' is only available in iOS 16.0 or newer
+/Users/runner/work/FluxStore/FluxStore/StikJIT/Views/ProcessInspectorView.swift:410:41: error: 'seconds' is only available in iOS 16.0 or newer
+class IntentError: NSError, CustomLocalizedStringResourceConvertible
+The following build commands failed:
+Error: Process completed with exit code 65.

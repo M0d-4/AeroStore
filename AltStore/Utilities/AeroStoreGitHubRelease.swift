@@ -87,6 +87,29 @@ enum AeroStoreGitHubRelease
         UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
 
+    /// Downloads the IPA from the release, saves it to a temp file, and returns its local URL.
+    /// Throws if there is no IPA asset, if the network fails, or if the file cannot be moved.
+    static func downloadIPA(from info: UpdateInfo) async throws -> URL
+    {
+        guard let ipaURL = info.ipaDownloadURL else
+        {
+            throw URLError(.fileDoesNotExist)
+        }
+
+        let (tempURL, response) = try await URLSession.shared.download(from: ipaURL)
+
+        guard let http = response as? HTTPURLResponse, (200 ... 299).contains(http.statusCode) else
+        {
+            throw URLError(.badServerResponse)
+        }
+
+        let destURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AeroStore-\(info.versionString).ipa")
+        try? FileManager.default.removeItem(at: destURL)
+        try FileManager.default.moveItem(at: tempURL, to: destURL)
+        return destURL
+    }
+
     private static var marketingVersion: String
     {
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "0"

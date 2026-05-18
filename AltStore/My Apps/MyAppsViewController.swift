@@ -67,6 +67,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     private var _viewDidAppear = false
 
     private var fluxSelfUpdateInfo: AeroStoreGitHubRelease.UpdateInfo?
+    private var documentInteractionController: UIDocumentInteractionController?
     
     private lazy var sideloadBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(MyAppsViewController.sideloadApp(_:)))
     private lazy var appsSearchController: UISearchController = {
@@ -2035,9 +2036,53 @@ extension MyAppsViewController
         switch section
         {
         case .fluxSelfUpdate:
-            if let info = self.fluxSelfUpdateInfo
-            {
-                AeroStoreGitHubRelease.openUpdate(info)
+            guard let info = self.fluxSelfUpdateInfo else { break }
+            let cell = collectionView.cellForItem(at: indexPath) as? AeroStoreSelfUpdateCell
+            cell?.setDownloading(true)
+
+            Task {
+                do
+                {
+                    let ipaURL = try await AeroStoreGitHubRelease.downloadIPA(from: info)
+
+                    await MainActor.run {
+                        cell?.setDownloading(false)
+
+                        let dic = UIDocumentInteractionController(url: ipaURL)
+                        dic.uti = "com.apple.itunes.ipa"
+                        self.documentInteractionController = dic
+
+                        let presented = dic.presentOpenInMenu(
+                            from: self.collectionView.layoutAttributesForItem(at: indexPath)?.frame ?? .zero,
+                            in: self.view,
+                            animated: true
+                        )
+                        if !presented
+                        {
+                            let alert = UIAlertController(
+                                title: NSLocalizedString("Open in AltStore", comment: ""),
+                                message: NSLocalizedString("The IPA was downloaded successfully. You can find it in Files under 'On My iPhone' → tmp.", comment: ""),
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+                            self.present(alert, animated: true)
+                        }
+                    }
+                }
+                catch
+                {
+                    await MainActor.run {
+                        cell?.setDownloading(false)
+
+                        let alert = UIAlertController(
+                            title: NSLocalizedString("Download Failed", comment: ""),
+                            message: error.localizedDescription,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+                        self.present(alert, animated: true)
+                    }
+                }
             }
         case .updates:
             guard let cell = collectionView.cellForItem(at: indexPath) else { break }

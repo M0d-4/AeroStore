@@ -1135,7 +1135,7 @@ private struct RouteSearchSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(alignment: .leading, spacing: 16) {
                 routeField(
                     title: "Start",
@@ -1223,7 +1223,7 @@ private struct RouteSearchSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationMediumToLargeDetents()
         .onAppear {
             if startSelection == nil {
                 focusedField = .start
@@ -1255,7 +1255,7 @@ private struct RouteSearchSheet: View {
                     .autocorrectionDisabled()
                     .focused($focusedField, equals: field)
                     .submitLabel(field == .start ? .next : .done)
-                    .onChange(of: text.wrappedValue) { _, newValue in
+                    .onChange(of: text.wrappedValue) { newValue in
                         errorMessage = nil
                         update(query: newValue, for: field)
                     }
@@ -1340,11 +1340,19 @@ struct BookmarksView: View {
         NavigationView {
             Group {
                 if bookmarks.isEmpty {
-                    ContentUnavailableView(
-                        "No Bookmarks",
-                        systemImage: "bookmark.slash",
-                        description: Text("Drop a pin on the map and tap the bookmark icon to save a location.")
-                    )
+                    VStack(spacing: 12) {
+                        Image(systemName: "bookmark.slash")
+                            .font(.system(size: 44))
+                            .foregroundStyle(.secondary)
+                        Text("No Bookmarks")
+                            .font(.headline)
+                        Text("Drop a pin on the map and tap the bookmark icon to save a location.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         ForEach(bookmarks) { bookmark in

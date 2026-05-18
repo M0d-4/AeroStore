@@ -249,6 +249,16 @@ extension View {
             self
         }
     }
+
+    /// Applies .medium and .large presentation detents — iOS 16+ only, no-ops on iOS 15.
+    @ViewBuilder
+    func presentationMediumToLargeDetents() -> some View {
+        if #available(iOS 16.0, *) {
+            self.presentationDetents([.medium, .large])
+        } else {
+            self
+        }
+    }
 }
 
 extension FileManager {

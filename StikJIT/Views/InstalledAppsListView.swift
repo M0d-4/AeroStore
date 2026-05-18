@@ -183,19 +183,19 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                         .pickerStyle(.segmented)
                         .frame(width: 220)
                     }
-                    if let onImportPairingFile {
-                        SwiftUI.ToolbarItem(placement: .navigationBarLeading) {
+                    SwiftUI.ToolbarItem(placement: .navigationBarLeading) {
+                        if let onImportPairingFile {
                             SwiftUI.Button(action: onImportPairingFile) {
                                 Image(systemName: "doc.badge.plus")
                             }
                         }
                     }
-                    if showDoneButton {
-                        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
-                            SwiftUI.Button("Done") { dismiss() }.fontWeight(.semibold)
-                        }
-                    } else {
-                        SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+                    SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
+                        if showDoneButton {
+                            SwiftUI.Button { dismiss() } label: {
+                                Text("Done").fontWeight(.semibold)
+                            }
+                        } else {
                             SwiftUI.Button {
                                 viewModel.refreshAppLists()
                             } label: {

@@ -49,7 +49,9 @@ struct ProcessInspectorView: View {
     private var content: some View {
         List {
             Section("Overview") {
-                LabeledContent("Total Processes") {
+                HStack {
+                    Text("Total Processes")
+                    Spacer()
                     Text("\(viewModel.processes.count)")
                         .font(.title2.bold())
                 }
@@ -90,7 +92,7 @@ private extension ProcessInspectorView {
             killCandidate = process
             killConfirmTask?.cancel()
             killConfirmTask = Task {
-                try? await Task.sleep(for: .seconds(3))
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
                 await MainActor.run {
                     if killCandidate?.pid == process.pid {
                         killCandidate = nil
@@ -344,7 +346,7 @@ final class ProcessInspectorViewModel: ObservableObject {
         refresh()
         refreshTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(10))
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
                 guard let self else { break }
                 await MainActor.run {
                     self.refresh()
@@ -407,7 +409,7 @@ final class ProcessInspectorViewModel: ObservableObject {
         controlTimeoutTask?.cancel()
         controlTimeoutTask = Task { [weak self] in
             guard let self else { return }
-            try? await Task.sleep(for: .seconds(8))
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
             if self.activeControlState?.pid == targetPID && self.activeControlState?.action == action {
                 self.activeControlState = nil
                 self.actionAlertTitle = action.timeoutTitle

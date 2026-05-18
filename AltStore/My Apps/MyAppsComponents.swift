@@ -110,6 +110,9 @@ final class AeroStoreSelfUpdateCell: UICollectionViewCell
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let iconView = UIImageView()
+    private let activityIndicator = UIActivityIndicatorView(style: .medium)
+
+    private var cachedVersionString: String = ""
 
     override init(frame: CGRect)
     {
@@ -127,6 +130,10 @@ final class AeroStoreSelfUpdateCell: UICollectionViewCell
         iconView.tintColor = .altPrimary
         iconView.contentMode = .scaleAspectFit
 
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.tintColor = .altPrimary
+
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.font = .preferredFont(forTextStyle: .headline)
         titleLabel.textColor = .label
@@ -139,6 +146,7 @@ final class AeroStoreSelfUpdateCell: UICollectionViewCell
 
         contentView.addSubview(cardView)
         cardView.addSubview(iconView)
+        cardView.addSubview(activityIndicator)
         cardView.addSubview(titleLabel)
         cardView.addSubview(subtitleLabel)
 
@@ -152,6 +160,9 @@ final class AeroStoreSelfUpdateCell: UICollectionViewCell
             iconView.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 36),
             iconView.heightAnchor.constraint(equalToConstant: 36),
+
+            activityIndicator.centerXAnchor.constraint(equalTo: iconView.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: iconView.centerYAnchor),
 
             titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -14),
@@ -173,8 +184,28 @@ final class AeroStoreSelfUpdateCell: UICollectionViewCell
 
     func configure(with info: AeroStoreGitHubRelease.UpdateInfo)
     {
+        cachedVersionString = info.versionString
         titleLabel.text = String(format: NSLocalizedString("aerostore %@ is available", comment: ""), info.versionString)
-        subtitleLabel.text = NSLocalizedString("Tap to download the latest IPA from GitHub", comment: "")
+        subtitleLabel.text = NSLocalizedString("Tap to download and install", comment: "")
+        setDownloading(false)
+    }
+
+    func setDownloading(_ isDownloading: Bool)
+    {
+        isUserInteractionEnabled = !isDownloading
+        if isDownloading
+        {
+            activityIndicator.startAnimating()
+            iconView.isHidden = true
+            titleLabel.text = String(format: NSLocalizedString("aerostore %@ is available", comment: ""), cachedVersionString)
+            subtitleLabel.text = NSLocalizedString("Downloading…", comment: "")
+        }
+        else
+        {
+            activityIndicator.stopAnimating()
+            iconView.isHidden = false
+            subtitleLabel.text = NSLocalizedString("Tap to download and install", comment: "")
+        }
     }
 }
 
