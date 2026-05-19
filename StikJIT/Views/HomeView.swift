@@ -369,7 +369,7 @@ struct RePairBanner: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button {
+        SwiftUI.Button {
             onTap()
         } label: {
             HStack(spacing: 12) {
