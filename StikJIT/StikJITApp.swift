@@ -295,14 +295,20 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
         } catch {
             LogManager.shared.addErrorLog("Crash-loop guard: could not remove pairing file: \(error.localizedDescription)")
         }
-        showAlert(
-            title: "Connection Issue Detected",
-            message: "AeroStore ran into a problem connecting to your device on the previous launch. Your pairing file has been cleared. Please import it again to reconnect.",
-            showOk: true,
-            showTryAgain: false,
-            primaryButtonText: "Select Pairing File"
-        ) { _ in
-            NotificationCenter.default.post(name: NSNotification.Name("ShowPairingFilePicker"), object: nil)
+        // Delay slightly so the window hierarchy is fully installed before we
+        // try to present the alert.  applicationDidBecomeActive fires before
+        // DatabaseManager finishes and the main interface is set up, so a 0.6 s
+        // wait ensures there is a real root view controller to present on.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            showAlert(
+                title: "Connection Issue Detected",
+                message: "AeroStore ran into a problem connecting to your device on the previous launch. Your pairing file has been cleared. Please import it again to reconnect.",
+                showOk: true,
+                showTryAgain: false,
+                primaryButtonText: "Select Pairing File"
+            ) { _ in
+                NotificationCenter.default.post(name: NSNotification.Name("ShowPairingFilePicker"), object: nil)
+            }
         }
         return
     }
