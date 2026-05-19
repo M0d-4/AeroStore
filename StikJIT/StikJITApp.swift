@@ -126,6 +126,13 @@ private var tunnelStartPending = false
 private var tunnelStartInProgress = false
 private var tunnelPendingShowUI = true
 
+// UserDefaults key for the tunnel-start crash-loop sentinel.
+// Written to disk immediately before entering libidevice_ffi.a and cleared
+// in the defer block when we exit gracefully. If the process is killed by a
+// Rust panic (abort) inside the native library, the flag survives the relaunch
+// and the guard in startTunnelInBackground() can detect the previous crash.
+private let kTunnelCrashSentinel = "io.aerostore.tunnelCrashSentinel"
+
 enum FluxStikJITHostBootstrap {
     static func prepareIntegrations() {
         registerAdvancedOptionsDefault()
@@ -264,6 +271,36 @@ func isPairing() -> Bool {
 
 func startTunnelInBackground(showErrorUI: Bool = true) {
     assert(Thread.isMainThread, "startTunnelInBackground must be called on the main thread")
+
+    // ── Crash-loop guard ──────────────────────────────────────────────────────
+    // libidevice_ffi.a (older builds) panics with abort() when the sandbox
+    // blocks sysctlbyname("kern.bootargs"). If that happened last launch, the
+    // sentinel set below was never cleared. Detect it, wipe the bad pairing
+    // file, and show a re-pair prompt so the user is never stuck silently
+    // crashing on every launch.
+    if UserDefaults.standard.bool(forKey: kTunnelCrashSentinel) {
+        UserDefaults.standard.set(false, forKey: kTunnelCrashSentinel)
+        UserDefaults.standard.synchronize()
+        LogManager.shared.addWarningLog("Crash-loop guard: previous tunnel start crashed the app. Clearing stale pairing file.")
+        do {
+            try PairingFileStore.remove()
+            LogManager.shared.addInfoLog("Stale pairing file removed by crash-loop guard.")
+        } catch {
+            LogManager.shared.addErrorLog("Crash-loop guard: could not remove pairing file: \(error.localizedDescription)")
+        }
+        showAlert(
+            title: "Connection Issue Detected",
+            message: "AeroStore ran into a problem while connecting to your device on the previous launch and had to restart. Your pairing file has been cleared. Please import it again to reconnect.",
+            showOk: true,
+            showTryAgain: false,
+            primaryButtonText: "Select Pairing File"
+        ) { _ in
+            NotificationCenter.default.post(name: NSNotification.Name("ShowPairingFilePicker"), object: nil)
+        }
+        return
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     let pairingFileURL = PairingFileStore.prepareURL()
 
     guard FileManager.default.fileExists(atPath: pairingFileURL.path) else {
@@ -282,10 +319,19 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
 
     DispatchQueue.global(qos: .userInteractive).async {
         defer {
+            // Graceful exit — disarm the crash sentinel and release the in-progress flag.
+            UserDefaults.standard.set(false, forKey: kTunnelCrashSentinel)
             DispatchQueue.main.async {
                 tunnelStartInProgress = false
             }
         }
+
+        // Arm the crash sentinel RIGHT before entering the native library.
+        // If libidevice_ffi.a calls abort(), the defer above never runs and
+        // the flag persists to the next launch, where the guard above fires.
+        UserDefaults.standard.set(true, forKey: kTunnelCrashSentinel)
+        UserDefaults.standard.synchronize()
+
         do {
             try JITEnableContext.shared.startTunnel()
             LogManager.shared.addInfoLog("Tunnel connected successfully")
