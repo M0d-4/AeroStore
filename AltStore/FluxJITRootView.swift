@@ -7,6 +7,9 @@ import SwiftUI
 import UIKit
 
 struct FluxJITRootView: View {
+    @ObservedObject private var crashState = CrashRecoveryState.shared
+    @State private var isShowingPairingFilePicker = false
+
     var body: some View {
         InstalledAppsListView(
             onSelectApp: { bundleID in
@@ -23,12 +26,41 @@ struct FluxJITRootView: View {
                 }
             },
             showDoneButton: true,
-            onImportPairingFile: nil
+            onImportPairingFile: { isShowingPairingFilePicker = true }
         )
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if crashState.needsRepair {
+                RePairBanner { isShowingPairingFilePicker = true }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: crashState.needsRepair)
         .onAppear {
             startTunnelInBackground()
             MountingProgress.shared.checkforMounted()
             FluxStikJITHostBootstrap.ensureDeveloperDiskImagesPresent()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ShowPairingFilePicker"))) { _ in
+            isShowingPairingFilePicker = true
+        }
+        .fileImporter(
+            isPresented: $isShowingPairingFilePicker,
+            allowedContentTypes: PairingFileStore.supportedContentTypes
+        ) { result in
+            switch result {
+            case .success(let url):
+                do {
+                    try PairingFileStore.importFromPicker(url, fileManager: FileManager.default)
+                    CrashRecoveryState.shared.needsRepair = false
+                    pubTunnelConnected = false
+                    startTunnelInBackground()
+                    NotificationCenter.default.post(name: .pairingFileImported, object: nil)
+                } catch {
+                    LogManager.shared.addErrorLog("Failed to import pairing file: \(error.localizedDescription)")
+                }
+            case .failure(let error):
+                LogManager.shared.addErrorLog("Pairing file picker error: \(error.localizedDescription)")
+            }
         }
     }
 }
@@ -82,10 +114,6 @@ private final class FluxDebugKeepAliveLease {
     }
 
     private func runOnMain(_ work: @escaping () -> Void) {
-        if Thread.isMainThread {
-            work()
-        } else {
-            DispatchQueue.main.sync(execute: work)
-        }
+        if Thread.isMainThread { work() } else { DispatchQueue.main.sync(execute: work) }
     }
 }

@@ -193,6 +193,17 @@ actor FunctionGuard<T> {
     }
 }
 
+// MARK: - Crash Recovery State
+
+/// Tracks whether the tunnel crash-loop guard fired on this launch.
+/// Views observe this to show a persistent re-pair banner until the user
+/// successfully imports a pairing file.
+final class CrashRecoveryState: ObservableObject {
+    static let shared = CrashRecoveryState()
+    @Published var needsRepair: Bool = false
+    private init() {}
+}
+
 class MountingProgress: ObservableObject {
     static var shared = MountingProgress()
     @Published var mountProgress: Double = 0.0
@@ -295,6 +306,9 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
         } catch {
             LogManager.shared.addErrorLog("Crash-loop guard: could not remove pairing file: \(error.localizedDescription)")
         }
+        // Raise the persistent banner immediately so the user sees it even if
+        // they dismiss the alert without acting on it.
+        CrashRecoveryState.shared.needsRepair = true
         // Delay slightly so the window hierarchy is fully installed before we
         // try to present the alert.  applicationDidBecomeActive fires before
         // DatabaseManager finishes and the main interface is set up, so a 0.6 s

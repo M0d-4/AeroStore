@@ -86,6 +86,7 @@ struct HomeView: View {
     @AppStorage(UserDefaults.Keys.defaultScriptName) var selectedScript = UserDefaults.Keys.defaultScriptNameValue
     @State var jsModel: RunJSViewModel?
     @ObservedObject private var mounting = MountingProgress.shared
+    @ObservedObject private var crashState = CrashRecoveryState.shared
 
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -95,6 +96,13 @@ struct HomeView: View {
             HapticFeedbackHelper.trigger()
             startJITInBackground(bundleID: selectedBundle)
         }, showDoneButton: false, onImportPairingFile: { isShowingPairingFilePicker = true })
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if crashState.needsRepair {
+                RePairBanner { isShowingPairingFilePicker = true }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: crashState.needsRepair)
         .onAppear {
             startTunnelInBackground()
             MountingProgress.shared.checkforMounted()
@@ -111,6 +119,9 @@ struct HomeView: View {
                 selectedScript = name
             }
             scriptViewShow = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ShowPairingFilePicker"))) { _ in
+            isShowingPairingFilePicker = true
         }
         .onReceive(timer) { _ in
             if mounting.mountingThread == nil && !mounting.coolisMounted {
@@ -183,6 +194,7 @@ struct HomeView: View {
                 let fileManager = FileManager.default
                 do {
                     try PairingFileStore.importFromPicker(url, fileManager: fileManager)
+                    CrashRecoveryState.shared.needsRepair = false
                     pubTunnelConnected = false
                     startTunnelInBackground()
                     NotificationCenter.default.post(name: .pairingFileImported, object: nil)
@@ -345,5 +357,43 @@ public extension ProcessInfo {
                 access("\($0)/usr/standalone/firmware/FUD/Ap,TrustedExecutionMonitor.img4", F_OK) == 0
             }) ?? false
         }
+    }
+}
+
+// MARK: - Re-pair Banner
+
+/// Persistent amber banner shown when the crash-loop guard has cleared a bad
+/// pairing file.  Tapping it opens the pairing file picker.  Disappears once
+/// the user successfully imports a new pairing file.
+struct RePairBanner: View {
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("JIT connection unavailable")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.white)
+                    Text("Tap to import a new pairing file")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.85))
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.orange)
+        }
+        .buttonStyle(.plain)
     }
 }
