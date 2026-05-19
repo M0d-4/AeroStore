@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import SwiftUI
 import Roxas
 import WidgetKit
 import AltSign
@@ -50,9 +51,35 @@ final class LaunchViewController: UIViewController {
         super.viewDidAppear(animated)
         guard !didFinishLaunching else { return }
         startTime = Date()
+
+        // If a crash report was saved during AppDelegate startup, show the
+        // diagnostics screen instead of the normal launch sequence.
+        // The user can dismiss it to continue anyway.
+        if let report = CrashReportStore.load() {
+            presentCrashDiagnostics(report: report)
+            return
+        }
+
         Task { @MainActor in
             await runLaunchSequence()
         }
+    }
+
+    private func presentCrashDiagnostics(report: CrashReport) {
+        let diagnosticsView = CrashDiagnosticsView(report: report) { [weak self] in
+            guard let self else { return }
+            CrashReportStore.clear()
+            // Dismiss the diagnostics host and proceed with normal launch.
+            self.dismiss(animated: true) {
+                Task { @MainActor in
+                    await self.runLaunchSequence()
+                }
+            }
+        }
+        let host = UIHostingController(rootView: diagnosticsView)
+        host.modalPresentationStyle = .overFullScreen
+        host.isModalInPresentation = true
+        present(host, animated: false)
     }
 
     private func runLaunchSequence() async {

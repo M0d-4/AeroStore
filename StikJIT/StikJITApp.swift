@@ -126,23 +126,10 @@ private var tunnelStartPending = false
 private var tunnelStartInProgress = false
 private var tunnelPendingShowUI = true
 
-// File-based sentinel for tunnel crash-loop detection.
-// Written synchronously on the MAIN THREAD before the background queue is armed,
-// so it is guaranteed to be in the kernel's page cache — and therefore survives
-// an abort() in the background thread — before startTunnel() is ever called.
-// UserDefaults.synchronize() is a documented no-op on iOS 12+ and cannot be
-// relied upon to flush data before a hard abort().
-private var tunnelCrashSentinelURL: URL {
-    URL.documentsDir.appendingPathComponent(".aerostore_tunnel_starting", isDirectory: false)
-}
-
-// Sentinel written before any call into the idevice Rust bridge for mount
-// checking. If the process aborts() inside Rust (unrecoverable panic that
-// bypasses Swift do/catch), the file persists to the next launch and we skip
-// the check to break the crash loop.
-private var mountCheckSentinelURL: URL {
-    URL.documentsDir.appendingPathComponent(".aerostore_mount_checking", isDirectory: false)
-}
+// Local aliases that forward to the canonical URLs in CrashReportStore,
+// keeping all sentinel definitions in one place for crash diagnostics.
+private var tunnelCrashSentinelURL: URL { CrashReportStore.tunnelSentinelURL }
+private var mountCheckSentinelURL: URL  { CrashReportStore.mountSentinelURL }
 
 enum FluxStikJITHostBootstrap {
     static func prepareIntegrations() {
