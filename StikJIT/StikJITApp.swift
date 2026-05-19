@@ -126,12 +126,15 @@ private var tunnelStartPending = false
 private var tunnelStartInProgress = false
 private var tunnelPendingShowUI = true
 
-// UserDefaults key for the tunnel-start crash-loop sentinel.
-// Written to disk immediately before entering libidevice_ffi.a and cleared
-// in the defer block when we exit gracefully. If the process is killed by a
-// Rust panic (abort) inside the native library, the flag survives the relaunch
-// and the guard in startTunnelInBackground() can detect the previous crash.
-private let kTunnelCrashSentinel = "io.aerostore.tunnelCrashSentinel"
+// File-based sentinel for tunnel crash-loop detection.
+// Written synchronously on the MAIN THREAD before the background queue is armed,
+// so it is guaranteed to be in the kernel's page cache — and therefore survives
+// an abort() in the background thread — before startTunnel() is ever called.
+// UserDefaults.synchronize() is a documented no-op on iOS 12+ and cannot be
+// relied upon to flush data before a hard abort().
+private var tunnelCrashSentinelURL: URL {
+    URL.documentsDir.appendingPathComponent(".aerostore_tunnel_starting", isDirectory: false)
+}
 
 enum FluxStikJITHostBootstrap {
     static func prepareIntegrations() {
@@ -272,16 +275,20 @@ func isPairing() -> Bool {
 func startTunnelInBackground(showErrorUI: Bool = true) {
     assert(Thread.isMainThread, "startTunnelInBackground must be called on the main thread")
 
+    let sentinel = tunnelCrashSentinelURL
+    let fm = FileManager.default
+
     // ── Crash-loop guard ──────────────────────────────────────────────────────
-    // libidevice_ffi.a (older builds) panics with abort() when the sandbox
-    // blocks sysctlbyname("kern.bootargs"). If that happened last launch, the
-    // sentinel set below was never cleared. Detect it, wipe the bad pairing
-    // file, and show a re-pair prompt so the user is never stuck silently
-    // crashing on every launch.
-    if UserDefaults.standard.bool(forKey: kTunnelCrashSentinel) {
-        UserDefaults.standard.set(false, forKey: kTunnelCrashSentinel)
-        UserDefaults.standard.synchronize()
-        LogManager.shared.addWarningLog("Crash-loop guard: previous tunnel start crashed the app. Clearing stale pairing file.")
+    // The sentinel file is written on the main thread (below) before the async
+    // queue is armed, and removed in the defer block on any graceful exit.
+    // If libidevice_ffi.a calls abort() — a Rust panic on the sandboxed
+    // kern.bootargs sysctl — the process dies, defer never runs, and the file
+    // persists to the next launch.  We detect it here, clear the bad pairing
+    // file, and show a re-pair prompt.  Works from the very first crash because
+    // the sentinel is already on disk before startTunnel() is ever called.
+    if fm.fileExists(atPath: sentinel.path) {
+        try? fm.removeItem(at: sentinel)
+        LogManager.shared.addWarningLog("Crash-loop guard: sentinel found — previous tunnel start crashed. Clearing pairing file.")
         do {
             try PairingFileStore.remove()
             LogManager.shared.addInfoLog("Stale pairing file removed by crash-loop guard.")
@@ -290,7 +297,7 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
         }
         showAlert(
             title: "Connection Issue Detected",
-            message: "AeroStore ran into a problem while connecting to your device on the previous launch and had to restart. Your pairing file has been cleared. Please import it again to reconnect.",
+            message: "AeroStore ran into a problem connecting to your device on the previous launch. Your pairing file has been cleared. Please import it again to reconnect.",
             showOk: true,
             showTryAgain: false,
             primaryButtonText: "Select Pairing File"
@@ -303,7 +310,7 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
 
     let pairingFileURL = PairingFileStore.prepareURL()
 
-    guard FileManager.default.fileExists(atPath: pairingFileURL.path) else {
+    guard fm.fileExists(atPath: pairingFileURL.path) else {
         tunnelStartPending = false
         tunnelPendingShowUI = true
         return
@@ -317,20 +324,23 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
     tunnelPendingShowUI = true
     tunnelStartInProgress = true
 
+    // Write the sentinel on the MAIN THREAD before arming the background queue.
+    // A file write (atomically:true uses write-to-temp + rename) is immediately
+    // visible in the kernel's page cache.  Even if the background thread calls
+    // abort() a millisecond later, this file is already on disk and will be
+    // found on the next launch.  This is the key difference from UserDefaults,
+    // whose synchronize() is a documented no-op on iOS 12+ and does not
+    // guarantee a flush before a hard abort().
+    try? "1".write(to: sentinel, atomically: true, encoding: .utf8)
+
     DispatchQueue.global(qos: .userInteractive).async {
         defer {
-            // Graceful exit — disarm the crash sentinel and release the in-progress flag.
-            UserDefaults.standard.set(false, forKey: kTunnelCrashSentinel)
+            // Graceful exit (success or thrown error) — remove sentinel and flag.
+            try? FileManager.default.removeItem(at: sentinel)
             DispatchQueue.main.async {
                 tunnelStartInProgress = false
             }
         }
-
-        // Arm the crash sentinel RIGHT before entering the native library.
-        // If libidevice_ffi.a calls abort(), the defer above never runs and
-        // the flag persists to the next launch, where the guard above fires.
-        UserDefaults.standard.set(true, forKey: kTunnelCrashSentinel)
-        UserDefaults.standard.synchronize()
 
         do {
             try JITEnableContext.shared.startTunnel()
