@@ -136,6 +136,14 @@ private var tunnelCrashSentinelURL: URL {
     URL.documentsDir.appendingPathComponent(".aerostore_tunnel_starting", isDirectory: false)
 }
 
+// Sentinel written before any call into the idevice Rust bridge for mount
+// checking. If the process aborts() inside Rust (unrecoverable panic that
+// bypasses Swift do/catch), the file persists to the next launch and we skip
+// the check to break the crash loop.
+private var mountCheckSentinelURL: URL {
+    URL.documentsDir.appendingPathComponent(".aerostore_mount_checking", isDirectory: false)
+}
+
 enum FluxStikJITHostBootstrap {
     static func prepareIntegrations() {
         registerAdvancedOptionsDefault()
@@ -211,7 +219,22 @@ class MountingProgress: ObservableObject {
     @Published var coolisMounted: Bool = false
     
     func checkforMounted() {
+        let sentinel = mountCheckSentinelURL
+        let fm = FileManager.default
+
+        // If the sentinel is on disk the previous call into the Rust idevice
+        // bridge aborted the process.  Skip to avoid a crash loop.
+        if fm.fileExists(atPath: sentinel.path) {
+            try? fm.removeItem(at: sentinel)
+            LogManager.shared.addWarningLog("Mount-check sentinel found — previous isMounted() call crashed. Skipping.")
+            return
+        }
+
         DispatchQueue.global(qos: .utility).async {
+            // Write sentinel synchronously before crossing into Rust.
+            try? "1".write(to: sentinel, atomically: true, encoding: .utf8)
+            defer { try? FileManager.default.removeItem(at: sentinel) }
+
             let mounted = isMounted()
             DispatchQueue.main.async {
                 self.coolisMounted = mounted
@@ -231,12 +254,27 @@ class MountingProgress: ObservableObject {
     }
     
     private func mount() {
+        let sentinel = mountCheckSentinelURL
+        let fm = FileManager.default
+
+        // Guard: if the previous mount-check crashed, skip the Rust call.
+        if fm.fileExists(atPath: sentinel.path) {
+            try? fm.removeItem(at: sentinel)
+            LogManager.shared.addWarningLog("Mount sentinel found on mount() entry — skipping isMounted() to avoid crash loop.")
+            return
+        }
+
+        // Write sentinel before the first Rust call (isMounted / isPairing).
+        try? "1".write(to: sentinel, atomically: true, encoding: .utf8)
         let currentlyMounted = isMounted()
+        let pairing = isPairing()
+        try? fm.removeItem(at: sentinel)
+
         DispatchQueue.main.async {
             self.coolisMounted = currentlyMounted
         }
 
-        if isPairing(), !currentlyMounted {
+        if pairing, !currentlyMounted {
             if let mountingThread = mountingThread {
                 mountingThread.cancel()
                 self.mountingThread = nil

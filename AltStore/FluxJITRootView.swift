@@ -36,7 +36,7 @@ struct FluxJITRootView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: crashState.needsRepair)
         .onAppear {
-            startTunnelInBackground()
+            startTunnelInBackground(showErrorUI: false)
             MountingProgress.shared.checkforMounted()
             FluxStikJITHostBootstrap.ensureDeveloperDiskImagesPresent()
         }
