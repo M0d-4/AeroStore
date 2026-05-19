@@ -287,7 +287,9 @@ struct ProfileView: View {
     }
     
     private func profileActionButton(icon: String, color: Color, action: @escaping () -> Void) -> some View {
-        SwiftUI.Button(action: action) {
+        SwiftUI.Button {
+            action()
+        } label: {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(color)

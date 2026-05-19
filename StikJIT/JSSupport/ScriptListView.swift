@@ -42,9 +42,9 @@ struct ScriptListView: View {
             List {
                 if isPickerMode {
                     Section {
-                        SwiftUI.Button(action: {
+                        SwiftUI.Button {
                             onSelectScript?(nil)
-                        }) {
+                        } label: {
                             SwiftUI.Label("No Script", systemImage: "nosign")
                         }
                     }
@@ -160,9 +160,9 @@ struct ScriptListView: View {
     private func scriptRow(_ script: URL) -> AnyView {
         let isDefault = defaultScriptName == script.lastPathComponent
         if isPickerMode {
-            let button = SwiftUI.Button(action: {
+            let button = SwiftUI.Button {
                 onSelectScript?(script)
-            }) {
+            } label: {
                 rowLabel(script, isDefault: isDefault)
             }
             return AnyView(button)
@@ -180,14 +180,18 @@ struct ScriptListView: View {
     private var toolbarContent: some ToolbarContent {
         SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
             if !isPickerMode {
-                SwiftUI.Button(action: { showImporter = true }) {
+                SwiftUI.Button {
+                    showImporter = true
+                } label: {
                     SwiftUI.Text("Import")
                 }
             }
         }
         SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
             if !isPickerMode {
-                SwiftUI.Button(action: { showNewFileAlert = true }) {
+                SwiftUI.Button {
+                    showNewFileAlert = true
+                } label: {
                     SwiftUI.Text("New")
                 }
             }

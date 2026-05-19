@@ -34,7 +34,9 @@ struct ScriptEditorView: View {
         .onAppear(perform: loadScript)
         .toolbar(content: {
             SwiftUI.ToolbarItem(placement: .confirmationAction) {
-                SwiftUI.Button(action: saveAndDismiss) {
+                SwiftUI.Button {
+                    saveAndDismiss()
+                } label: {
                     SwiftUI.Text("Save")
                 }
             }

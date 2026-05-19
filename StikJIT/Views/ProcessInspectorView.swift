@@ -18,7 +18,9 @@ struct ProcessInspectorView: View {
                 .navigationTitle("Process Inspector")
                 .toolbar {
                     SwiftUI.ToolbarItem(placement: .navigationBarTrailing) {
-                        SwiftUI.Button(action: viewModel.refresh) {
+                        SwiftUI.Button {
+                            viewModel.refresh()
+                        } label: {
                             Label("Refresh", systemImage: "arrow.clockwise")
                         }
                         .disabled(viewModel.isRefreshing)

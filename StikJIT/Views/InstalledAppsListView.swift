@@ -185,7 +185,9 @@ private enum AppListTab: Int, CaseIterable, Identifiable {
                     }
                     SwiftUI.ToolbarItem(placement: .navigationBarLeading) {
                         if let onImportPairingFile {
-                            SwiftUI.Button(action: onImportPairingFile) {
+                            SwiftUI.Button {
+                                onImportPairingFile()
+                            } label: {
                                 Image(systemName: "doc.badge.plus")
                             }
                         }
@@ -549,7 +551,9 @@ struct AppButton: View {
     }
 
     var body: some View {
-        SwiftUI.Button(action: selectApp) {
+        SwiftUI.Button {
+            selectApp()
+        } label: {
             HStack(spacing: loadAppIconsOnJIT ? 16 : 12) {
                 iconView
 
@@ -579,7 +583,9 @@ struct AppButton: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            SwiftUI.Button(action: toggleFavorite) {
+            SwiftUI.Button {
+                toggleFavorite()
+            } label: {
                 Label(
                     favoriteApps.contains(bundleID) ? "Remove Favorite" : "Add to Favorites",
                     systemImage: favoriteApps.contains(bundleID) ? "star.slash" : "star"
