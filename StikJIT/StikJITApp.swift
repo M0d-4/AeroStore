@@ -314,6 +314,17 @@ func startTunnelInBackground(showErrorUI: Bool = true) {
     let sentinel = tunnelCrashSentinelURL
     let fm = FileManager.default
 
+    // ── Unacknowledged crash report guard ─────────────────────────────────────
+    // detectPreviousCrash() removes the tunnel sentinel when it saves the crash
+    // report, which defeats the sentinel-based crash-loop guard below.
+    // If a crash report is still on disk the user hasn't dismissed it yet, so
+    // defer the tunnel start and let LaunchViewController show the diagnostics.
+    if CrashReportStore.load() != nil {
+        LogManager.shared.addWarningLog("Crash report pending — deferring tunnel start.")
+        return
+    }
+    // ───────────────────────────────────────────────────────────────────────────
+
     // ── Crash-loop guard ──────────────────────────────────────────────────────
     // The sentinel file is written on the main thread (below) before the async
     // queue is armed, and removed in the defer block on any graceful exit.
