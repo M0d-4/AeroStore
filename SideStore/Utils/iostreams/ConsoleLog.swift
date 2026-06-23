@@ -14,19 +14,33 @@ class ConsoleLog {
     private static let CONSOLE_LOG_NAME_PREFIX = "console"
     private static let CONSOLE_LOG_EXTN = ".log"
     
-    private lazy var consoleLogger: ConsoleLogger = {
-        let logFileHandle = createLogFileHandle()
+    private lazy var consoleLogger: ConsoleLogger? = {
+        guard let logFileHandle = createLogFileHandle() else {
+            print("ConsoleLog: Failed to create log file handle")
+            return nil
+        }
         let fileOutputStream = FileOutputStream(logFileHandle)
         
         return UnBufferedConsoleLogger(stream: fileOutputStream)
     }()
     
+    func startCapturing() {
+        consoleLogger?.startCapturing()
+    }
+    
+    func stopCapturing() {
+        consoleLogger?.stopCapturing()
+    }
+    
     private lazy var consoleLogsDir: URL = {
-        // create a directory for console logs
         let docsDir = FileManager.default.documentsDirectory
         let consoleLogsDir = docsDir.appendingPathComponent(ConsoleLog.CONSOLE_LOGS_DIRECTORY)
         if !FileManager.default.fileExists(atPath: consoleLogsDir.path) {
-            try! FileManager.default.createDirectory(at: consoleLogsDir, withIntermediateDirectories: true, attributes: nil)
+            do {
+                try FileManager.default.createDirectory(at: consoleLogsDir, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("ConsoleLog: Failed to create logs directory: \(error)")
+            }
         }
         return consoleLogsDir
     }()
@@ -36,11 +50,9 @@ class ConsoleLog {
     }()
     
     public lazy var logFileURL: URL = {
-        // get current timestamp
         let currentTime = Date()
         let dateTimeStamp = DateTimeUtil.getDateInTimeStamp(date: currentTime)
         
-        // create a log file with the current timestamp
         let logName = DateTimeUtil.getTimeStampSuffixedFileName(
             fileName: ConsoleLog.CONSOLE_LOG_NAME_PREFIX,
             timestamp: dateTimeStamp,
@@ -51,21 +63,13 @@ class ConsoleLog {
     }()
     
     
-    private func createLogFileHandle() -> FileHandle {
+    private func createLogFileHandle() -> FileHandle? {
         if !FileManager.default.fileExists(atPath: logFileURL.path) {
             FileManager.default.createFile(atPath: logFileURL.path, contents: nil, attributes: nil)
         }
         
-        // return the file handle
-        return try! FileHandle(forWritingTo: logFileURL)
+        return try? FileHandle(forWritingTo: logFileURL)
     }
-    
-    func startCapturing() {
-        consoleLogger.startCapturing()
-    }
-    
-    func stopCapturing() {
-        consoleLogger.stopCapturing()
-    }
+
 }
 

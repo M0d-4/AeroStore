@@ -46,18 +46,27 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
-        // ── Crash detection (must be FIRST — before any other code runs) ────────
-        // Check whether a sentinel file from a previous launch is still on disk.
-        // If so, a prior run aborted (via Rust abort() or another hard crash) and
-        // we save a CrashReport so LaunchViewController can show the diagnostics
-        // screen instead of the normal UI.
+        // ── Crash detection ────────────────────────────────────────────────────
+        // Detect previous crash via sentinel file, but break the loop after 3
+        // consecutive crash-report cycles so the app can attempt a normal launch.
+        let loopSentinelURL = CrashReportStore.launchSentinelURL.deletingLastPathComponent().appendingPathComponent(".aerostore_crash_loop")
+        let fm = FileManager.default
+        if CrashReportStore.load() != nil {
+            let count = (try? Int(String(contentsOf: loopSentinelURL, encoding: .utf8))) ?? 0
+            if count >= 3 {
+                print("⚠️ Crash loop detected (\(count) crashes) — clearing sentinel and trying normal launch.")
+                CrashReportStore.clear()
+                try? fm.removeItem(at: loopSentinelURL)
+            } else {
+                try? "\(count + 1)".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
+            }
+        } else {
+            try? fm.removeItem(at: loopSentinelURL)
+        }
         if let report = CrashReportStore.detectPreviousCrash() {
             CrashReportStore.save(report)
             print("⚠️ Previous launch crashed — component: \(report.crashedComponent)")
         }
-        // Write the launch sentinel BEFORE doing any setup. If the process aborts
-        // anywhere below before clearLaunchSentinel() is called, this file will be
-        // found on the next launch and reported as a crash in launch setup.
         CrashReportStore.writeLaunchSentinel()
         // ────────────────────────────────────────────────────────────────────────
 
