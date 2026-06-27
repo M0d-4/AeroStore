@@ -133,10 +133,8 @@ extension FluxThemesViewController {
     private func applyTheme(_ theme: Theme) {
         // Save theme preference
         UserDefaults.standard.set(theme.name, forKey: "aerostore.selectedTheme")
-        
-        // Apply colors globally
-        UIColor.altPrimary = UIColor(hex: theme.primaryColor)
-        UIColor.altSecondary = UIColor(hex: theme.secondaryColor)
+        UserDefaults.standard.set(theme.primaryColor, forKey: "aerostore.themePrimaryColor")
+        UserDefaults.standard.set(theme.secondaryColor, forKey: "aerostore.themeSecondaryColor")
         
         // Update UI
         updateCurrentThemeLabel()
@@ -294,9 +292,6 @@ class ThemeCell: UICollectionViewCell {
 
 // MARK: - UIColor Extension
 extension UIColor {
-    static var altPrimary: UIColor = UIColor(hex: "#007AFF")
-    static var altSecondary: UIColor = UIColor(hex: "#5856D6")
-    
     convenience init(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
@@ -306,7 +301,8 @@ extension UIColor {
         
         let length = hexSanitized.count
         
-        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else {
+        let scanner = Scanner(string: hexSanitized)
+        guard scanner.scanHexInt64(&rgb) else {
             self.init(red: 0, green: 0, blue: 0, alpha: 1)
             return
         }
@@ -323,11 +319,5 @@ extension UIColor {
         }
         
         self.init(red: r, green: g, blue: b, alpha: a)
-    }
-}
-
-extension Scanner {
-    func scanHexInt64(_ result: inout UInt64) -> Bool {
-        return scanHexInt64(&result)
     }
 }

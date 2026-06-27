@@ -12,11 +12,9 @@ extension UIColor
 {
     static let altBackground = UIColor(named: "Background")!
     static let fluxCardBackground = UIColor { traits in
-        // Prefer platform-consistent surfaces in light mode.
-        // (Our custom dark surface is kept for Flux's look.)
         traits.userInterfaceStyle == .dark
             ? UIColor(red: 0.13, green: 0.14, blue: 0.17, alpha: 1.0)
-            : UIColor.white
+            : UIColor.secondarySystemGroupedBackground
     }
     static let fluxCardBorder = UIColor { traits in
         // Match iOS separators while keeping a subtle Flux border.
