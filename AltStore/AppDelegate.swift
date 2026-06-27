@@ -80,9 +80,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // ────────────────────────────────────────────────────────────────────────
 
         // Set up exception handler to log crashes
+        // Must use print() — NSSetUncaughtExceptionHandler requires @convention(c) block,
+        // which cannot capture os_log handles from the enclosing scope.
         NSSetUncaughtExceptionHandler { exception in
-            os_log(.fault, log: log, "UNCAUGHT EXCEPTION: %{public}@", exception)
-            os_log(.fault, log: log, "Call stack: %{public}@", exception.callStackSymbols.joined(separator: "\n"))
+            print("🔴 UNCAUGHT EXCEPTION: \(exception)")
+            print("Call stack: \(exception.callStackSymbols)")
         }
 
         // navigation bar buttons spacing is too much (so hack it to use minimal spacing)
