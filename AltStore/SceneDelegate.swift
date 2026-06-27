@@ -23,14 +23,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)
     {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
-        os_log(.info, log: log, "scene:willConnectTo - ENTRY")
+        os_log(.default, log: log, "scene:willConnectTo - ENTRY")
         
         guard let windowScene = (scene as? UIWindowScene) else {
             os_log(.error, log: log, "SceneDelegate: Failed to get UIWindowScene")
             return
         }
 
-        os_log(.info, log: log, "SceneDelegate: UIWindowScene obtained — windows count: %d", windowScene.windows.count)
+        os_log(.default, log: log, "SceneDelegate: UIWindowScene obtained — windows count: %d", windowScene.windows.count)
 
         self.window = windowScene.windows.first { $0.isKeyWindow } ?? windowScene.windows.first
         windowScene.windows.forEach {
@@ -43,7 +43,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
         }
 
         scheduleLaunchSafetyNet()
-        os_log(.info, log: log, "scene:willConnectTo - EXIT")
+        os_log(.default, log: log, "scene:willConnectTo - EXIT")
         
         if let context = connectionOptions.urlContexts.first
         {
@@ -53,7 +53,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
 
     func sceneDidDisconnect(_ scene: UIScene) {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
-        os_log(.info, log: log, "sceneDidDisconnect")
+        os_log(.default, log: log, "sceneDidDisconnect")
     }
 
     func sceneDidBecomeActive(_ scene: UIScene)

@@ -191,7 +191,7 @@ public extension DatabaseManager
             
             guard !self.isStarted else { return finish(nil) }
             
-            os_log(.info, log: log, "DatabaseManager.start - beginning startup")
+            os_log(.default, log: log, "DatabaseManager.start - beginning startup")
             
             // In simulator, when previews are generated, it initializes the db, in doing so this removal may be required
             #if DEBUG && targetEnvironment(simulator)
@@ -199,7 +199,7 @@ public extension DatabaseManager
             {
                 do
                 {
-                    os_log(.info, log: log, "Purging database for preview...")
+                    os_log(.default, log: log, "Purging database for preview...")
                     try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
                 }
                 catch
@@ -211,7 +211,7 @@ public extension DatabaseManager
             
             if self.persistentContainer.isMigrationRequired
             {
-                os_log(.info, log: log, "Migration required — posting Darwin notification")
+                os_log(.default, log: log, "Migration required — posting Darwin notification")
                 self.ignoreWillMigrateDatabaseNotification = true
                 CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), .willMigrateDatabase, nil, nil, true)
             }
@@ -223,16 +223,16 @@ public extension DatabaseManager
                     os_log(.error, log: log, "App group migration failed: %{public}@", String(describing: error))
                     finish(error)
                 case .success:
-                    os_log(.info, log: log, "App group migration done — loading persistent stores...")
-                    os_log(.info, log: log, "Store URL: %{public}@", PersistentContainer.defaultDirectoryURL().appendingPathComponent("AltStore.sqlite").path)
-                    os_log(.info, log: log, "Migration options: shouldMigrate=%@ shouldInfer=%@",
+                    os_log(.default, log: log, "App group migration done — loading persistent stores...")
+                    os_log(.default, log: log, "Store URL: %{public}@", PersistentContainer.defaultDirectoryURL().appendingPathComponent("AltStore.sqlite").path)
+                    os_log(.default, log: log, "Migration options: shouldMigrate=%@ shouldInfer=%@",
                            String(describing: self.persistentContainer.persistentStoreDescriptions.first?.shouldMigrateStoreAutomatically),
                            String(describing: self.persistentContainer.persistentStoreDescriptions.first?.shouldInferMappingModelAutomatically))
                     self.persistentContainer.loadPersistentStores { (description, error) in
                         if let error = error {
                             os_log(.error, log: log, "loadPersistentStores FAILED: %{public}@ (code: %d)", String(describing: error), (error as NSError).code)
                         } else {
-                            os_log(.info, log: log, "loadPersistentStores succeeded — store URL: %{public}@", description.url?.path ?? "nil")
+                            os_log(.default, log: log, "loadPersistentStores succeeded — store URL: %{public}@", description.url?.path ?? "nil")
                         }
                         guard error == nil else { return finish(error!) }
                         
@@ -243,7 +243,7 @@ public extension DatabaseManager
                                 os_log(.error, log: log, "prepareDatabase FAILED: %{public}@", String(describing: error))
                                 finish(error)
                             case .success:
-                                os_log(.info, log: log, "prepareDatabase succeeded")
+                                os_log(.default, log: log, "prepareDatabase succeeded")
                                 finish(nil)
                             }
                         }
@@ -391,13 +391,13 @@ private extension DatabaseManager
     func prepareDatabase(completionHandler: @escaping (Result<Void, Error>) -> Void)
     {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "database")
-        os_log(.info, log: log, "prepareDatabase - ENTRY")
+        os_log(.default, log: log, "prepareDatabase - ENTRY")
         guard !Bundle.isAppExtension() else {
-            os_log(.info, log: log, "prepareDatabase - app extension, skipping")
+            os_log(.default, log: log, "prepareDatabase - app extension, skipping")
             return completionHandler(.success(()))
         }
         
-        os_log(.info, log: log, "prepareDatabase - creating ALTApplication...")
+        os_log(.default, log: log, "prepareDatabase - creating ALTApplication...")
         let context = self.persistentContainer.newBackgroundContext()
         context.performAndWait {
             guard let localApp = ALTApplication(fileURL: Bundle.main.bundleURL)
@@ -409,7 +409,7 @@ private extension DatabaseManager
                 completionHandler(.failure(PrepareError()))
                 return
             }
-            os_log(.info, log: log, "prepareDatabase - ALTApplication created: %{public}@", localApp.bundleIdentifier)
+            os_log(.default, log: log, "prepareDatabase - ALTApplication created: %{public}@", localApp.bundleIdentifier)
             
             let altStoreSource: Source
             
@@ -583,9 +583,9 @@ private extension DatabaseManager
             
             do
             {
-                os_log(.info, log: log, "prepareDatabase - saving context...")
+                os_log(.default, log: log, "prepareDatabase - saving context...")
                 try context.save()
-                os_log(.info, log: log, "prepareDatabase - context saved")
+                os_log(.default, log: log, "prepareDatabase - context saved")
                 
                 Task(priority: .high) {
                     await self.updateFeaturedSortIDs()
@@ -597,7 +597,7 @@ private extension DatabaseManager
                 os_log(.error, log: log, "prepareDatabase - context save FAILED: %{public}@", String(describing: error))
                 completionHandler(.failure(error))
             }
-            os_log(.info, log: log, "prepareDatabase - EXIT")
+            os_log(.default, log: log, "prepareDatabase - EXIT")
         }
     }
     

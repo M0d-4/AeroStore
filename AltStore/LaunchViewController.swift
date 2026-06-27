@@ -27,13 +27,13 @@ final class LaunchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
-        os_log(.info, log: log, "LaunchViewController: viewDidLoad")
+        os_log(.default, log: log, "LaunchViewController: viewDidLoad")
         view.backgroundColor = .systemBackground
         do {
             splashView = SplashView(frame: view.bounds, appName: Bundle.main.altAppDisplayName)
             splashView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             view.addSubview(splashView)
-            os_log(.info, log: log, "SplashView created")
+            os_log(.default, log: log, "SplashView created")
         } catch {
             os_log(.error, log: log, "Failed to create SplashView: %{public}@", String(describing: error))
             let label = UILabel()
@@ -52,20 +52,20 @@ final class LaunchViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
-        os_log(.info, log: log, "LaunchViewController: viewDidAppear")
+        os_log(.default, log: log, "LaunchViewController: viewDidAppear")
         guard !didFinishLaunching else {
-            os_log(.info, log: log, "viewDidAppear: already finished launching, skipping")
+            os_log(.default, log: log, "viewDidAppear: already finished launching, skipping")
             return
         }
         startTime = Date()
 
         if let report = CrashReportStore.load() {
-            os_log(.info, log: log, "Crash report found — showing diagnostics")
+            os_log(.default, log: log, "Crash report found — showing diagnostics")
             presentCrashDiagnostics(report: report)
             return
         }
 
-        os_log(.info, log: log, "viewDidAppear: starting launch sequence")
+        os_log(.default, log: log, "viewDidAppear: starting launch sequence")
         Task { @MainActor in
             await runLaunchSequence()
         }
@@ -93,28 +93,28 @@ final class LaunchViewController: UIViewController {
 
     private func runLaunchSequence(skipPostLaunchWork: Bool = false) async {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
-        os_log(.info, log: log, "runLaunchSequence (retry #%d, skipPostLaunch=%@)", retries, String(describing: skipPostLaunchWork))
+        os_log(.default, log: log, "runLaunchSequence (retry #%d, skipPostLaunch=%@)", retries, String(describing: skipPostLaunchWork))
         if retries >= maxRetries {
-            os_log(.info, log: log, "Max retries reached, finishing")
+            os_log(.default, log: log, "Max retries reached, finishing")
             await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
         retries += 1
 
         if DatabaseManager.shared.isStarted {
-            os_log(.info, log: log, "DatabaseManager already started, finishing")
+            os_log(.default, log: log, "DatabaseManager already started, finishing")
             await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
 
-        os_log(.info, log: log, "Waiting for DatabaseManager.start...")
+        os_log(.default, log: log, "Waiting for DatabaseManager.start...")
         await withCheckedContinuation { continuation in
             DatabaseManager.shared.start { error in
                 Task { @MainActor in
                     if let error {
                         let nsError = error as NSError
                         if nsError.code == 134020 {
-                            os_log(.info, log: log, "CoreData error 134020 — recreating database and retrying")
+                            os_log(.default, log: log, "CoreData error 134020 — recreating database and retrying")
                             DatabaseManager.recreateDatabase()
                             continuation.resume()
                             await self.runLaunchSequence(skipPostLaunchWork: skipPostLaunchWork)
@@ -125,7 +125,7 @@ final class LaunchViewController: UIViewController {
                             continuation.resume()
                         }
                     } else {
-                        os_log(.info, log: log, "DatabaseManager.start succeeded")
+                        os_log(.default, log: log, "DatabaseManager.start succeeded")
                         await self.finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
                         continuation.resume()
                     }
@@ -138,11 +138,11 @@ final class LaunchViewController: UIViewController {
     private func finishLaunching(skipPostLaunchWork: Bool = false) async {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
         guard !didFinishLaunching else {
-            os_log(.info, log: log, "finishLaunching: already done, skipping")
+            os_log(.default, log: log, "finishLaunching: already done, skipping")
             return
         }
         didFinishLaunching = true
-        os_log(.info, log: log, "finishLaunching - installing main interface")
+        os_log(.default, log: log, "finishLaunching - installing main interface")
 
         let elapsed = abs(startTime.timeIntervalSinceNow)
         let remaining = max(0, 0.25 - elapsed)
@@ -156,7 +156,7 @@ final class LaunchViewController: UIViewController {
             os_log(.error, log: log, "LaunchViewController: main interface not installed (root=%@)", String(describing: AppLaunchCoordinator.resolveKeyWindow()?.rootViewController))
             return
         }
-        os_log(.info, log: log, "Main interface installed: TabBarController with %d tabs", tabBar.viewControllers?.count ?? 0)
+        os_log(.default, log: log, "Main interface installed: TabBarController with %d tabs", tabBar.viewControllers?.count ?? 0)
 
         splashView?.removeFromSuperview()
         runDeferredLaunchWork(on: tabBar)
@@ -164,7 +164,7 @@ final class LaunchViewController: UIViewController {
         if !skipPostLaunchWork {
             schedulePostLaunchWork(on: tabBar)
         } else {
-            os_log(.info, log: log, "Skipping post-launch work (crash recovery mode)")
+            os_log(.default, log: log, "Skipping post-launch work (crash recovery mode)")
         }
     }
 

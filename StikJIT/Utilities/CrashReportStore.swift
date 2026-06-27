@@ -56,19 +56,19 @@ enum CrashReportStore {
 
         if fm.fileExists(atPath: launchSentinelURL.path) {
             components.append("App launch setup (didFinishLaunchingWithOptions)")
-            os_log(.info, log: log, "detectPreviousCrash: launch sentinel FOUND")
+            os_log(.default, log: log, "detectPreviousCrash: launch sentinel FOUND")
         }
         if fm.fileExists(atPath: tunnelSentinelURL.path) {
             components.append("JIT tunnel start (Rust startTunnel)")
-            os_log(.info, log: log, "detectPreviousCrash: tunnel sentinel FOUND")
+            os_log(.default, log: log, "detectPreviousCrash: tunnel sentinel FOUND")
         }
         if fm.fileExists(atPath: mountSentinelURL.path) {
             components.append("Device mount check (Rust isMounted / isPairing)")
-            os_log(.info, log: log, "detectPreviousCrash: mount sentinel FOUND")
+            os_log(.default, log: log, "detectPreviousCrash: mount sentinel FOUND")
         }
         if fm.fileExists(atPath: minimuxerSentinelURL.path) {
             components.append("Minimuxer start (Rust minimuxerStartWithLogger)")
-            os_log(.info, log: log, "detectPreviousCrash: minimuxer sentinel FOUND")
+            os_log(.default, log: log, "detectPreviousCrash: minimuxer sentinel FOUND")
         }
 
         try? fm.removeItem(at: launchSentinelURL)
@@ -77,11 +77,11 @@ enum CrashReportStore {
         try? fm.removeItem(at: minimuxerSentinelURL)
 
         guard !components.isEmpty else {
-            os_log(.info, log: log, "detectPreviousCrash: no sentinels found")
+            os_log(.default, log: log, "detectPreviousCrash: no sentinels found")
             return nil
         }
 
-        os_log(.info, log: log, "detectPreviousCrash: components=%@", components.joined(separator: " + "))
+        os_log(.default, log: log, "detectPreviousCrash: components=%@", components.joined(separator: " + "))
 
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         let device = UIDevice.current
@@ -106,7 +106,7 @@ enum CrashReportStore {
             return
         }
         try? data.write(to: reportURL, options: .atomic)
-        os_log(.info, log: log, "Crash report saved (component: %{public}@)", report.crashedComponent)
+        os_log(.default, log: log, "Crash report saved (component: %{public}@)", report.crashedComponent)
     }
 
     static func load() -> CrashReport? {
@@ -119,7 +119,7 @@ enum CrashReportStore {
     static func clear() {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
         try? FileManager.default.removeItem(at: reportURL)
-        os_log(.info, log: log, "Crash report cleared")
+        os_log(.default, log: log, "Crash report cleared")
     }
 
     // MARK: - Launch Sentinel

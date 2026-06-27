@@ -51,7 +51,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
-        os_log(.info, log: log, "application:didFinishLaunchingWithOptions - ENTRY")
+        os_log(.default, log: log, "application:didFinishLaunchingWithOptions - ENTRY")
 
         // ── Crash detection ────────────────────────────────────────────────────
         // Detect previous crash via sentinel file.  We ALWAYS show diagnostics
@@ -67,16 +67,16 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             } else {
                 try? "\(next)".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
             }
-            os_log(.info, log: log, "Previous crash report persists (loop #%d) — diagnostics will show", next)
+            os_log(.default, log: log, "Previous crash report persists (loop #%d) — diagnostics will show", next)
         } else {
             try? fm.removeItem(at: loopSentinelURL)
         }
         if let report = CrashReportStore.detectPreviousCrash() {
             CrashReportStore.save(report)
-            os_log(.info, log: log, "Previous launch crashed — component: %{public}@", report.crashedComponent)
+            os_log(.default, log: log, "Previous launch crashed — component: %{public}@", report.crashedComponent)
         }
         CrashReportStore.writeLaunchSentinel()
-        os_log(.info, log: log, "Crash sentinel written")
+        os_log(.default, log: log, "Crash sentinel written")
         // ────────────────────────────────────────────────────────────────────────
 
         // Set up exception handler to log crashes
@@ -92,87 +92,87 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         stackViewAppearance.spacing = -8
 
         consoleLog.startCapturing()
-        os_log(.info, log: log, "App is Starting up — ConsoleLog capturing")
+        os_log(.default, log: log, "App is Starting up — ConsoleLog capturing")
 
         // Register default settings before doing anything else.
         UserDefaults.registerDefaults()
         UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.light.rawValue])
-        os_log(.info, log: log, "UserDefaults registered")
+        os_log(.default, log: log, "UserDefaults registered")
         
         // Prepare integrations (safe — no Rust FFI here, only defaults + audio + swizzle)
-        os_log(.info, log: log, "Preparing FluxStikJIT integrations...")
+        os_log(.default, log: log, "Preparing FluxStikJIT integrations...")
         FluxStikJITHostBootstrap.prepareIntegrations()
-        os_log(.info, log: log, "FluxStikJIT integrations prepared")
+        os_log(.default, log: log, "FluxStikJIT integrations prepared")
         
         // Recreate Database if requested
         if UserDefaults.standard.recreateDatabaseOnNextStart{
-            os_log(.info, log: log, "Recreating database as requested...")
+            os_log(.default, log: log, "Recreating database as requested...")
             UserDefaults.standard.recreateDatabaseOnNextStart = false
             DatabaseManager.recreateDatabase()
-            os_log(.info, log: log, "Database recreated")
+            os_log(.default, log: log, "Database recreated")
         }
         
         // Start DatabaseManager without blocking the main thread.
-        os_log(.info, log: log, "Starting DatabaseManager (async)...")
+        os_log(.default, log: log, "Starting DatabaseManager (async)...")
         DatabaseManager.shared.start { error in
             if let error {
                 os_log(.error, log: log, "Failed to start DatabaseManager (AppDelegate observer). Error: %{public}@", String(describing: error))
             } else {
-                os_log(.info, log: log, "DatabaseManager started successfully (AppDelegate observer)")
+                os_log(.default, log: log, "DatabaseManager started successfully (AppDelegate observer)")
             }
         }
         
-        os_log(.info, log: log, "Setting tint color and image cache...")
+        os_log(.default, log: log, "Setting tint color and image cache...")
         self.setTintColor()
         self.prepareImageCache()
-        os_log(.info, log: log, "Tint color and image cache configured")
+        os_log(.default, log: log, "Tint color and image cache configured")
 
         DispatchQueue.main.async {
             FluxAppearancePreference.applyToAllWindows()
         }
 
         if UserDefaults.standard.enableEMPforWireguard {
-            os_log(.info, log: log, "Starting EM Proxy...")
+            os_log(.default, log: log, "Starting EM Proxy...")
             startEMProxy(bind_addr: AppConstants.Proxy.serverURL)
         }
 
         SecureValueTransformer.register()
-        os_log(.info, log: log, "SecureValueTransformer registered")
+        os_log(.default, log: log, "SecureValueTransformer registered")
         
         if UserDefaults.standard.firstLaunch == nil
         {
-            os_log(.info, log: log, "First launch detected, resetting keychain...")
+            os_log(.default, log: log, "First launch detected, resetting keychain...")
             Keychain.shared.reset()
             UserDefaults.standard.firstLaunch = Date()
-            os_log(.info, log: log, "Keychain reset for first launch")
+            os_log(.default, log: log, "Keychain reset for first launch")
         } else {
-            os_log(.info, log: log, "Not first launch")
+            os_log(.default, log: log, "Not first launch")
         }
         
         UserDefaults.standard.preferredServerID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.serverID) as? String
-        os_log(.info, log: log, "Preferred server ID set")
+        os_log(.default, log: log, "Preferred server ID set")
         
         #if DEBUG && targetEnvironment(simulator)
         UserDefaults.standard.isDebugModeEnabled = true
-        os_log(.info, log: log, "Debug mode enabled")
+        os_log(.default, log: log, "Debug mode enabled")
         #endif
         
         self.prepareForBackgroundFetch()
-        os_log(.info, log: log, "Background fetch prepared")
+        os_log(.default, log: log, "Background fetch prepared")
 
         // All synchronous setup completed without crashing — clear the sentinel.
         CrashReportStore.clearLaunchSentinel()
-        os_log(.info, log: log, "application:didFinishLaunchingWithOptions - EXIT (returning true)")
+        os_log(.default, log: log, "application:didFinishLaunchingWithOptions - EXIT (returning true)")
         return true
     }
     
     func applicationDidBecomeActive(_ application: UIApplication)
     {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
-        os_log(.info, log: log, "applicationDidBecomeActive")
+        os_log(.default, log: log, "applicationDidBecomeActive")
         // ── Crash guard: if a crash report is pending, do NOT start the JIT tunnel.
         if CrashReportStore.load() != nil {
-            os_log(.info, log: log, "Crash report pending — deferring JIT tunnel start")
+            os_log(.default, log: log, "Crash report pending — deferring JIT tunnel start")
         } else {
             FluxStikJITHostBootstrap.onAppDidBecomeActive()
         }

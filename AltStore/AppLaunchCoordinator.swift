@@ -18,14 +18,14 @@ enum AppLaunchCoordinator {
     static func installMainInterface(animated: Bool = true) {
         let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
         guard !didInstallMainInterface else {
-            os_log(.info, log: log, "installMainInterface: already installed, skipping")
+            os_log(.default, log: log, "installMainInterface: already installed, skipping")
             return
         }
         guard let window = resolveKeyWindow() else {
             os_log(.error, log: log, "installMainInterface: no key window yet")
             return
         }
-        os_log(.info, log: log, "installMainInterface: animated=%@, window=%@", String(describing: animated), String(describing: window))
+        os_log(.default, log: log, "installMainInterface: animated=%@, window=%@", String(describing: animated), String(describing: window))
         installMainInterface(in: window, animated: animated)
     }
 
@@ -35,9 +35,9 @@ enum AppLaunchCoordinator {
         guard !didInstallMainInterface else { return }
 
         do {
-            os_log(.info, log: log, "Creating TabBarController...")
+            os_log(.default, log: log, "Creating TabBarController...")
             let tabBar = TabBarController.makeMainInterface()
-            os_log(.info, log: log, "TabBarController created")
+            os_log(.default, log: log, "TabBarController created")
 
             tabBar.loadViewIfNeeded()
             tabBar.view.setNeedsLayout()
@@ -60,7 +60,7 @@ enum AppLaunchCoordinator {
             }
 
             didInstallMainInterface = true
-            os_log(.info, log: log, "Main interface installed (%d tabs)", tabBar.viewControllers?.count ?? 0)
+            os_log(.default, log: log, "Main interface installed (%d tabs)", tabBar.viewControllers?.count ?? 0)
         } catch {
             os_log(.error, log: log, "Failed to install main interface: %{public}@", String(describing: error))
             let fallbackVC = UIViewController()
@@ -69,7 +69,7 @@ enum AppLaunchCoordinator {
             window.rootViewController = fallbackVC
             window.makeKeyAndVisible()
             didInstallMainInterface = true
-            os_log(.info, log: log, "Using fallback interface")
+            os_log(.default, log: log, "Using fallback interface")
         }
     }
 
@@ -93,7 +93,7 @@ enum AppLaunchCoordinator {
         guard let window = resolveKeyWindow() else { return }
         let root = window.rootViewController
         if root is TabBarController { return }
-        os_log(.info, log: log, "installMainInterfaceIfNeeded (%{public}@): root=%@", reason, String(describing: type(of: root)))
+        os_log(.default, log: log, "installMainInterfaceIfNeeded (%{public}@): root=%@", reason, String(describing: type(of: root)))
         installMainInterface(in: window, animated: false)
     }
 }
