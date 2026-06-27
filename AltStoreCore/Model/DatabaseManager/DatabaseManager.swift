@@ -59,8 +59,14 @@ public class DatabaseManager
 
     private init()
     {
-        self.persistentContainer = PersistentContainer(name: "AltStore", bundle: Bundle(for: DatabaseManager.self))
-        self.persistentContainer.preferredMergePolicy = MergePolicy()
+        let bundle = Bundle(for: DatabaseManager.self)
+        guard let modelURL = bundle.url(forResource: "AltStore", withExtension: "momd"),
+              let model = NSManagedObjectModel(contentsOf: modelURL)
+        else {
+            fatalError("Core Data model 'AltStore.momd' not found in bundle \(bundle)")
+        }
+        self.persistentContainer = PersistentContainer(name: "AltStore", managedObjectModel: model)
+        self.persistentContainer.viewContext.mergePolicy = MergePolicy()
 
         let storeURL = PersistentContainer.defaultDirectoryURL().appendingPathComponent("AltStore.sqlite")
         let storeDescription = NSPersistentStoreDescription(url: storeURL)
