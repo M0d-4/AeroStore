@@ -11,6 +11,7 @@ import WidgetKit
 import AltSign
 import AltStoreCore
 import UniformTypeIdentifiers
+import OSLog
 
 let pairingFileName = "ALTPairingFile.mobiledevicepairing"
 
@@ -25,16 +26,16 @@ final class LaunchViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("⏳ LaunchViewController: viewDidLoad started")
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
+        os_log(.info, log: log, "LaunchViewController: viewDidLoad")
         view.backgroundColor = .systemBackground
         do {
             splashView = SplashView(frame: view.bounds, appName: Bundle.main.altAppDisplayName)
             splashView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             view.addSubview(splashView)
-            print("✅ LaunchViewController: SplashView created successfully")
+            os_log(.info, log: log, "SplashView created")
         } catch {
-            print("❌ LaunchViewController: Failed to create SplashView: \(error)")
-            // Fallback - just show a simple label
+            os_log(.error, log: log, "Failed to create SplashView: %{public}@", String(describing: error))
             let label = UILabel()
             label.text = Bundle.main.altAppDisplayName
             label.font = .systemFont(ofSize: 24, weight: .bold)
@@ -50,17 +51,21 @@ final class LaunchViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard !didFinishLaunching else { return }
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
+        os_log(.info, log: log, "LaunchViewController: viewDidAppear")
+        guard !didFinishLaunching else {
+            os_log(.info, log: log, "viewDidAppear: already finished launching, skipping")
+            return
+        }
         startTime = Date()
 
-        // If a crash report was saved during AppDelegate startup, show the
-        // diagnostics screen instead of the normal launch sequence.
-        // The user can dismiss it to continue anyway.
         if let report = CrashReportStore.load() {
+            os_log(.info, log: log, "Crash report found — showing diagnostics")
             presentCrashDiagnostics(report: report)
             return
         }
 
+        os_log(.info, log: log, "viewDidAppear: starting launch sequence")
         Task { @MainActor in
             await runLaunchSequence()
         }
@@ -87,38 +92,40 @@ final class LaunchViewController: UIViewController {
     }
 
     private func runLaunchSequence(skipPostLaunchWork: Bool = false) async {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
+        os_log(.info, log: log, "runLaunchSequence (retry #%d, skipPostLaunch=%@)", retries, String(describing: skipPostLaunchWork))
         if retries >= maxRetries {
+            os_log(.info, log: log, "Max retries reached, finishing")
             await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
         retries += 1
 
         if DatabaseManager.shared.isStarted {
+            os_log(.info, log: log, "DatabaseManager already started, finishing")
             await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
 
+        os_log(.info, log: log, "Waiting for DatabaseManager.start...")
         await withCheckedContinuation { continuation in
             DatabaseManager.shared.start { error in
                 Task { @MainActor in
                     if let error {
                         let nsError = error as NSError
                         if nsError.code == 134020 {
-                            // CoreData model incompatibility — the on-device store was created
-                            // with an older schema. Silently wipe it and retry the launch
-                            // sequence. We must NOT call finishLaunching() here because
-                            // installMainInterface + runDeferredLaunchWork will immediately
-                            // query CoreData, which has no open store yet and will crash.
-                            print("⚠️ CoreData model incompatibility (134020) — recreating database and retrying launch.")
+                            os_log(.info, log: log, "CoreData error 134020 — recreating database and retrying")
                             DatabaseManager.recreateDatabase()
                             continuation.resume()
                             await self.runLaunchSequence(skipPostLaunchWork: skipPostLaunchWork)
                         } else {
+                            os_log(.error, log: log, "DatabaseManager.start error (code %d): %{public}@", nsError.code, String(describing: error))
                             await self.finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
                             await self.handleLaunchError(error, retryCallback: { await self.runLaunchSequence(skipPostLaunchWork: skipPostLaunchWork) })
                             continuation.resume()
                         }
                     } else {
+                        os_log(.info, log: log, "DatabaseManager.start succeeded")
                         await self.finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
                         continuation.resume()
                     }
@@ -129,8 +136,13 @@ final class LaunchViewController: UIViewController {
 
     @MainActor
     private func finishLaunching(skipPostLaunchWork: Bool = false) async {
-        guard !didFinishLaunching else { return }
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
+        guard !didFinishLaunching else {
+            os_log(.info, log: log, "finishLaunching: already done, skipping")
+            return
+        }
         didFinishLaunching = true
+        os_log(.info, log: log, "finishLaunching - installing main interface")
 
         let elapsed = abs(startTime.timeIntervalSinceNow)
         let remaining = max(0, 0.25 - elapsed)
@@ -141,9 +153,10 @@ final class LaunchViewController: UIViewController {
         AppLaunchCoordinator.installMainInterface(animated: true)
 
         guard let tabBar = AppLaunchCoordinator.resolveKeyWindow()?.rootViewController as? TabBarController else {
-            print("❌ LaunchViewController: main interface not installed")
+            os_log(.error, log: log, "LaunchViewController: main interface not installed (root=%@)", String(describing: AppLaunchCoordinator.resolveKeyWindow()?.rootViewController))
             return
         }
+        os_log(.info, log: log, "Main interface installed: TabBarController with %d tabs", tabBar.viewControllers?.count ?? 0)
 
         splashView?.removeFromSuperview()
         runDeferredLaunchWork(on: tabBar)
@@ -151,7 +164,7 @@ final class LaunchViewController: UIViewController {
         if !skipPostLaunchWork {
             schedulePostLaunchWork(on: tabBar)
         } else {
-            print("⚠️ LaunchViewController: skipping post-launch work (crash recovery mode)")
+            os_log(.info, log: log, "Skipping post-launch work (crash recovery mode)")
         }
     }
 

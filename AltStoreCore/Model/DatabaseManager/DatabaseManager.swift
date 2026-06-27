@@ -7,6 +7,7 @@
 //
 
 import CoreData
+import OSLog
 
 import AltSign
 import Roxas
@@ -169,6 +170,7 @@ public extension DatabaseManager
 {
     func start(completionHandler: @escaping (Error?) -> Void)
     {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "database")
         
         func finish(_ error: Error?)
         {
@@ -189,26 +191,27 @@ public extension DatabaseManager
             
             guard !self.isStarted else { return finish(nil) }
             
+            os_log(.info, log: log, "DatabaseManager.start - beginning startup")
+            
             // In simulator, when previews are generated, it initializes the db, in doing so this removal may be required
             #if DEBUG && targetEnvironment(simulator)
-            // Wrap in #if DEBUG to *ensure* we never accidentally delete production databases.
             if ProcessInfo.processInfo.isPreview
             {
                 do
                 {
-                    print("!!! Purging database for preview...")
+                    os_log(.info, log: log, "Purging database for preview...")
                     try FileManager.default.removeItem(at: PersistentContainer.defaultDirectoryURL())
                 }
                 catch
                 {
-                    print("Failed to remove database directory for preview.", error)
+                    os_log(.error, log: log, "Failed to remove database directory for preview: %{public}@", String(describing: error))
                 }
             }
             #endif
             
             if self.persistentContainer.isMigrationRequired
             {
-                // Quit any other running AltStore processes to prevent concurrent database access during and after migration.
+                os_log(.info, log: log, "Migration required — posting Darwin notification")
                 self.ignoreWillMigrateDatabaseNotification = true
                 CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), .willMigrateDatabase, nil, nil, true)
             }
@@ -216,16 +219,32 @@ public extension DatabaseManager
             self.migrateDatabaseToAppGroupIfNeeded { (result) in
                 switch result
                 {
-                case .failure(let error): finish(error)
+                case .failure(let error):
+                    os_log(.error, log: log, "App group migration failed: %{public}@", String(describing: error))
+                    finish(error)
                 case .success:
+                    os_log(.info, log: log, "App group migration done — loading persistent stores...")
+                    os_log(.info, log: log, "Store URL: %{public}@", PersistentContainer.defaultDirectoryURL().appendingPathComponent("AltStore.sqlite").path)
+                    os_log(.info, log: log, "Migration options: shouldMigrate=%@ shouldInfer=%@",
+                           String(describing: self.persistentContainer.persistentStoreDescriptions.first?.shouldMigrateStoreAutomatically),
+                           String(describing: self.persistentContainer.persistentStoreDescriptions.first?.shouldInferMappingModelAutomatically))
                     self.persistentContainer.loadPersistentStores { (description, error) in
+                        if let error = error {
+                            os_log(.error, log: log, "loadPersistentStores FAILED: %{public}@ (code: %d)", String(describing: error), (error as NSError).code)
+                        } else {
+                            os_log(.info, log: log, "loadPersistentStores succeeded — store URL: %{public}@", description.url?.path ?? "nil")
+                        }
                         guard error == nil else { return finish(error!) }
                         
                         self.prepareDatabase() { (result) in
                             switch result
                             {
-                            case .failure(let error): finish(error)
-                            case .success: finish(nil)
+                            case .failure(let error):
+                                os_log(.error, log: log, "prepareDatabase FAILED: %{public}@", String(describing: error))
+                                finish(error)
+                            case .success:
+                                os_log(.info, log: log, "prepareDatabase succeeded")
+                                finish(nil)
                             }
                         }
                     }
@@ -371,18 +390,26 @@ private extension DatabaseManager
 {
     func prepareDatabase(completionHandler: @escaping (Result<Void, Error>) -> Void)
     {
-        guard !Bundle.isAppExtension() else { return completionHandler(.success(())) }
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "database")
+        os_log(.info, log: log, "prepareDatabase - ENTRY")
+        guard !Bundle.isAppExtension() else {
+            os_log(.info, log: log, "prepareDatabase - app extension, skipping")
+            return completionHandler(.success(()))
+        }
         
+        os_log(.info, log: log, "prepareDatabase - creating ALTApplication...")
         let context = self.persistentContainer.newBackgroundContext()
         context.performAndWait {
             guard let localApp = ALTApplication(fileURL: Bundle.main.bundleURL)
             else {
+                os_log(.error, log: log, "prepareDatabase - ALTApplication failed (nil)")
                 struct PrepareError: LocalizedError {
                     var errorDescription: String? { NSLocalizedString("Failed to initialize ALTApplication", comment: "") }
                 }
                 completionHandler(.failure(PrepareError()))
                 return
             }
+            os_log(.info, log: log, "prepareDatabase - ALTApplication created: %{public}@", localApp.bundleIdentifier)
             
             let altStoreSource: Source
             
@@ -556,7 +583,9 @@ private extension DatabaseManager
             
             do
             {
+                os_log(.info, log: log, "prepareDatabase - saving context...")
                 try context.save()
+                os_log(.info, log: log, "prepareDatabase - context saved")
                 
                 Task(priority: .high) {
                     await self.updateFeaturedSortIDs()
@@ -565,8 +594,10 @@ private extension DatabaseManager
             }
             catch
             {
+                os_log(.error, log: log, "prepareDatabase - context save FAILED: %{public}@", String(describing: error))
                 completionHandler(.failure(error))
             }
+            os_log(.info, log: log, "prepareDatabase - EXIT")
         }
     }
     

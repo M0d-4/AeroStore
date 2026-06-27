@@ -4,6 +4,7 @@
 //
 
 import AVFoundation
+import OSLog
 
 final class BackgroundAudioManager {
     static let shared = BackgroundAudioManager()
@@ -31,6 +32,8 @@ final class BackgroundAudioManager {
     }
 
     func start() {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "audio")
+        os_log(.info, log: log, "BackgroundAudioManager.start")
         persistentEnabled = true
         refreshRunningState()
     }
@@ -51,6 +54,7 @@ final class BackgroundAudioManager {
     }
 
     private func refreshRunningState() {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "audio")
         let shouldRun = persistentEnabled || (activityCount > 0 && UserDefaults.standard.bool(forKey: "keepAliveAudio"))
         guard shouldRun != isRunning else {
             if shouldRun {
@@ -61,9 +65,11 @@ final class BackgroundAudioManager {
 
         isRunning = shouldRun
         if shouldRun {
+            os_log(.info, log: log, "refreshRunningState: starting engine")
             startEngine()
             startHealthCheck()
         } else {
+            os_log(.info, log: log, "refreshRunningState: stopping engine")
             healthCheckTimer?.invalidate()
             healthCheckTimer = nil
             player.stop()
@@ -73,7 +79,9 @@ final class BackgroundAudioManager {
     }
 
     private func startEngine() {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "audio")
         do {
+            os_log(.info, log: log, "startEngine: setting up audio session...")
             engine.stop()
             player.stop()
             engine = AVAudioEngine()
@@ -82,6 +90,7 @@ final class BackgroundAudioManager {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, options: .mixWithOthers)
             try session.setActive(true)
+            os_log(.info, log: log, "startEngine: audio session active")
 
             engine.attach(player)
             let format = engine.mainMixerNode.outputFormat(forBus: 0)
@@ -90,7 +99,9 @@ final class BackgroundAudioManager {
             scheduleSilence()
             try engine.start()
             player.play()
+            os_log(.info, log: log, "startEngine: engine running")
         } catch {
+            os_log(.error, log: log, "startEngine FAILED: %{public}@", error.localizedDescription)
             LogManager.shared.addErrorLog("BackgroundAudioManager: \(error.localizedDescription)")
         }
     }

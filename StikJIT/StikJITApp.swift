@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import Network
+import OSLog
 #if !targetEnvironment(simulator)
 import idevice
 #endif
@@ -133,15 +134,27 @@ private var mountCheckSentinelURL: URL  { CrashReportStore.mountSentinelURL }
 
 enum FluxStikJITHostBootstrap {
     static func prepareIntegrations() {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "integrations")
+        os_log(.info, log: log, "prepareIntegrations - ENTRY")
         registerAdvancedOptionsDefault()
+        os_log(.info, log: log, "Advanced options defaults registered (keepAliveAudio=%{public}@, keepAliveLocation=%{public}@)",
+               String(describing: UserDefaults.standard.object(forKey: "keepAliveAudio") ?? "nil"),
+               String(describing: UserDefaults.standard.object(forKey: "keepAliveLocation") ?? "nil"))
         if UserDefaults.standard.bool(forKey: "keepAliveAudio") {
+            os_log(.info, log: log, "Starting BackgroundAudioManager...")
             BackgroundAudioManager.shared.start()
+            os_log(.info, log: log, "BackgroundAudioManager started")
         }
+        os_log(.info, log: log, "Swizzling UIDocumentPickerViewController...")
         let fixSelector = NSSelectorFromString("fix_initForOpeningContentTypes:asCopy:")
         if let fixMethod = class_getInstanceMethod(UIDocumentPickerViewController.self, fixSelector),
            let origMethod = class_getInstanceMethod(UIDocumentPickerViewController.self, #selector(UIDocumentPickerViewController.init(forOpeningContentTypes:asCopy:))) {
             method_exchangeImplementations(origMethod, fixMethod)
+            os_log(.info, log: log, "UIDocumentPicker swizzled")
+        } else {
+            os_log(.info, log: log, "UIDocumentPicker swizzle skipped (fix method not found)")
         }
+        os_log(.info, log: log, "prepareIntegrations - EXIT")
     }
 
     static func ensureDeveloperDiskImagesPresent() {

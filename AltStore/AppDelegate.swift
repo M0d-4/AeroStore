@@ -13,6 +13,7 @@ import Intents
 import AltStoreCore
 import AltSign
 import Roxas
+import OSLog
 
 import Nuke
 
@@ -49,6 +50,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
+        os_log(.info, log: log, "application:didFinishLaunchingWithOptions - ENTRY")
+
         // ── Crash detection ────────────────────────────────────────────────────
         // Detect previous crash via sentinel file.  We ALWAYS show diagnostics
         // when a crash report exists — never auto-clear.  The user dismisses it.
@@ -59,151 +63,118 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             let count = (try? Int(String(contentsOf: loopSentinelURL, encoding: .utf8))) ?? 0
             let next = count + 1
             if next >= 20 {
-                // Only clear the loop counter file so it doesn't grow forever,
-                // but keep the crash report so diagnostics still show.
-                print("⚠️ Crash loop count reached \(next) — resetting counter but keeping crash report.")
                 try? "1".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
             } else {
                 try? "\(next)".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
             }
-            print("⚠️ Previous crash report persists (loop #\(next)) — diagnostics will show.")
+            os_log(.info, log: log, "Previous crash report persists (loop #%d) — diagnostics will show", next)
         } else {
             try? fm.removeItem(at: loopSentinelURL)
         }
         if let report = CrashReportStore.detectPreviousCrash() {
             CrashReportStore.save(report)
-            print("⚠️ Previous launch crashed — component: \(report.crashedComponent)")
+            os_log(.info, log: log, "Previous launch crashed — component: %{public}@", report.crashedComponent)
         }
         CrashReportStore.writeLaunchSentinel()
+        os_log(.info, log: log, "Crash sentinel written")
         // ────────────────────────────────────────────────────────────────────────
 
         // Set up exception handler to log crashes
         NSSetUncaughtExceptionHandler { exception in
-            print("🔴 UNCAUGHT EXCEPTION: \(exception)")
-            print("Call stack: \(exception.callStackSymbols)")
+            os_log(.fault, log: log, "UNCAUGHT EXCEPTION: %{public}@", exception)
+            os_log(.fault, log: log, "Call stack: %{public}@", exception.callStackSymbols.joined(separator: "\n"))
         }
 
         // navigation bar buttons spacing is too much (so hack it to use minimal spacing)
-        // this is swift-5 specific behavior and might change
-        // https://stackoverflow.com/a/64988363/11971304
-        //
-        // Warning: this affects all screens through out the app, and basically overrides storyboard
         let stackViewAppearance = UIStackView.appearance(whenContainedInInstancesOf: [UINavigationBar.self])
-        stackViewAppearance.spacing = -8        // adjust as needed
-        
-        consoleLog.startCapturing()
-        print("===================================================")
-        print("|               App is Starting up                |")
-        print("===================================================")
-        print("| Console Logger started capturing output streams |")
-        print("===================================================")
-        print("\n ")
+        stackViewAppearance.spacing = -8
 
-        // Override point for customization after application launch.
-//        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.MigrationDebug")
-//        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.SQLDebug")
+        consoleLog.startCapturing()
+        os_log(.info, log: log, "App is Starting up — ConsoleLog capturing")
 
         // Register default settings before doing anything else.
         UserDefaults.registerDefaults()
         UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.light.rawValue])
-        print("✅ UserDefaults registered successfully")
+        os_log(.info, log: log, "UserDefaults registered")
         
         // Prepare integrations (safe — no Rust FFI here, only defaults + audio + swizzle)
-        print("⏳ Preparing FluxStikJIT integrations...")
+        os_log(.info, log: log, "Preparing FluxStikJIT integrations...")
         FluxStikJITHostBootstrap.prepareIntegrations()
-        print("✅ FluxStikJIT integrations prepared")
+        os_log(.info, log: log, "FluxStikJIT integrations prepared")
         
         // Recreate Database if requested
-        // NOTE: Userdefaults are local to the aerostore.app sandbox and are not shared
         if UserDefaults.standard.recreateDatabaseOnNextStart{
-            print("⏳ Recreating database as requested...")
-            // reset the state
+            os_log(.info, log: log, "Recreating database as requested...")
             UserDefaults.standard.recreateDatabaseOnNextStart = false
-            
-            // re-create database
             DatabaseManager.recreateDatabase()
-            print("✅ Database recreated")
+            os_log(.info, log: log, "Database recreated")
         }
         
-        // Start DatabaseManager without blocking the main thread (LaunchViewController finishes UI when ready).
-        print("⏳ Starting DatabaseManager (async)...")
+        // Start DatabaseManager without blocking the main thread.
+        os_log(.info, log: log, "Starting DatabaseManager (async)...")
         DatabaseManager.shared.start { error in
             if let error {
-                print("❌ Failed to start DatabaseManager (AppDelegate observer). Error: \(error)")
+                os_log(.error, log: log, "Failed to start DatabaseManager (AppDelegate observer). Error: %{public}@", String(describing: error))
             } else {
-                print("✅ DatabaseManager started successfully")
+                os_log(.info, log: log, "DatabaseManager started successfully (AppDelegate observer)")
             }
         }
         
-        print("⏳ Setting tint color and image cache...")
+        os_log(.info, log: log, "Setting tint color and image cache...")
         self.setTintColor()
         self.prepareImageCache()
-        print("✅ Tint color and image cache configured")
+        os_log(.info, log: log, "Tint color and image cache configured")
 
         DispatchQueue.main.async {
-            print("⏳ Applying appearance preferences...")
             FluxAppearancePreference.applyToAllWindows()
-            print("✅ Appearance preferences applied")
         }
 
-        // TODO: @mahee96: find if we need to start em_proxy as in altstore?
         if UserDefaults.standard.enableEMPforWireguard {
-            print("⏳ Starting EM Proxy...")
+            os_log(.info, log: log, "Starting EM Proxy...")
             startEMProxy(bind_addr: AppConstants.Proxy.serverURL)
-            print("✅ EM Proxy started")
         }
 
-        print("⏳ Registering SecureValueTransformer...")
         SecureValueTransformer.register()
-        print("✅ SecureValueTransformer registered")
+        os_log(.info, log: log, "SecureValueTransformer registered")
         
-        print("⏳ Checking first launch...")
         if UserDefaults.standard.firstLaunch == nil
         {
-            print("⏳ First launch detected, resetting keychain...")
+            os_log(.info, log: log, "First launch detected, resetting keychain...")
             Keychain.shared.reset()
             UserDefaults.standard.firstLaunch = Date()
-            print("✅ Keychain reset for first launch")
+            os_log(.info, log: log, "Keychain reset for first launch")
         } else {
-            print("✅ Not first launch, skipping keychain reset")
+            os_log(.info, log: log, "Not first launch")
         }
         
-        print("⏳ Setting preferred server ID...")
         UserDefaults.standard.preferredServerID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.serverID) as? String
-        print("✅ Preferred server ID set")
+        os_log(.info, log: log, "Preferred server ID set")
         
         #if DEBUG && targetEnvironment(simulator)
-        print("⏳ Enabling debug mode for simulator...")
         UserDefaults.standard.isDebugModeEnabled = true
-        print("✅ Debug mode enabled")
+        os_log(.info, log: log, "Debug mode enabled")
         #endif
         
-        print("⏳ Preparing for background fetch...")
         self.prepareForBackgroundFetch()
-        print("✅ Background fetch prepared")
-
-        print("===================================================")
-        print("|            App Launch Complete                  |")
-        print("===================================================\n")
+        os_log(.info, log: log, "Background fetch prepared")
 
         // All synchronous setup completed without crashing — clear the sentinel.
         CrashReportStore.clearLaunchSentinel()
+        os_log(.info, log: log, "application:didFinishLaunchingWithOptions - EXIT (returning true)")
         return true
     }
     
     func applicationDidBecomeActive(_ application: UIApplication)
     {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "startup")
+        os_log(.info, log: log, "applicationDidBecomeActive")
         // ── Crash guard: if a crash report is pending, do NOT start the JIT tunnel.
-        // The diagnostics screen will be shown first, and the user must dismiss it.
-        // Starting the tunnel now would risk another abort() before they see the UI.
         if CrashReportStore.load() != nil {
-            print("⚠️ Crash report pending — deferring JIT tunnel start until diagnostics dismissed.")
+            os_log(.info, log: log, "Crash report pending — deferring JIT tunnel start")
         } else {
             FluxStikJITHostBootstrap.onAppDidBecomeActive()
         }
-        // ────────────────────────────────────────────────────────────────────────
 
-        // Flush any .ipa import that arrived before the app was active (cold launch).
         guard let url = self.pendingImportIPAURL else { return }
         self.pendingImportIPAURL = nil
         NotificationCenter.default.post(name: AppDelegate.importAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.importAppDeepLinkURLKey: url])

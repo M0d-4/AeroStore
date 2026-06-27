@@ -5,6 +5,7 @@
 
 import UIKit
 import AltStoreCore
+import OSLog
 
 /// Single place that installs the main tab interface on the key window.
 @MainActor
@@ -15,22 +16,28 @@ enum AppLaunchCoordinator {
 
     @MainActor
     static func installMainInterface(animated: Bool = true) {
-        guard !didInstallMainInterface else { return }
-        guard let window = resolveKeyWindow() else {
-            print("⚠️ AppLaunchCoordinator: no key window yet")
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
+        guard !didInstallMainInterface else {
+            os_log(.info, log: log, "installMainInterface: already installed, skipping")
             return
         }
+        guard let window = resolveKeyWindow() else {
+            os_log(.error, log: log, "installMainInterface: no key window yet")
+            return
+        }
+        os_log(.info, log: log, "installMainInterface: animated=%@, window=%@", String(describing: animated), String(describing: window))
         installMainInterface(in: window, animated: animated)
     }
 
     @MainActor
     static func installMainInterface(in window: UIWindow, animated: Bool) {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
         guard !didInstallMainInterface else { return }
 
         do {
-            print("⏳ AppLaunchCoordinator: Creating TabBarController...")
+            os_log(.info, log: log, "Creating TabBarController...")
             let tabBar = TabBarController.makeMainInterface()
-            print("✅ AppLaunchCoordinator: TabBarController created")
+            os_log(.info, log: log, "TabBarController created")
 
             tabBar.loadViewIfNeeded()
             tabBar.view.setNeedsLayout()
@@ -53,17 +60,16 @@ enum AppLaunchCoordinator {
             }
 
             didInstallMainInterface = true
-            print("✅ AppLaunchCoordinator: main interface installed (\(tabBar.viewControllers?.count ?? 0) tabs)")
+            os_log(.info, log: log, "Main interface installed (%d tabs)", tabBar.viewControllers?.count ?? 0)
         } catch {
-            print("❌ AppLaunchCoordinator: Failed to install main interface: \(error)")
-            // Create fallback simple view controller
+            os_log(.error, log: log, "Failed to install main interface: %{public}@", String(describing: error))
             let fallbackVC = UIViewController()
             fallbackVC.view.backgroundColor = .systemBackground
             fallbackVC.title = "AeroStore"
             window.rootViewController = fallbackVC
             window.makeKeyAndVisible()
             didInstallMainInterface = true
-            print("⚠️ AppLaunchCoordinator: Using fallback interface")
+            os_log(.info, log: log, "Using fallback interface")
         }
     }
 
@@ -82,11 +88,12 @@ enum AppLaunchCoordinator {
     /// Safety net if storyboard custom classes failed to load and launch never finished.
     @MainActor
     static func installMainInterfaceIfNeeded(reason: String) {
+        let log = OSLog(subsystem: "com.aero.aerostore", category: "launch-ui")
         guard !didInstallMainInterface else { return }
         guard let window = resolveKeyWindow() else { return }
         let root = window.rootViewController
         if root is TabBarController { return }
-        print("⚠️ AppLaunchCoordinator fallback (\(reason)): root=\(String(describing: type(of: root)))")
+        os_log(.info, log: log, "installMainInterfaceIfNeeded (%{public}@): root=%@", reason, String(describing: type(of: root)))
         installMainInterface(in: window, animated: false)
     }
 }
