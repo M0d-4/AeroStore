@@ -5,6 +5,7 @@
 
 import UIKit
 import SwiftUI
+import UserNotifications
 import Roxas
 import WidgetKit
 import AltSign
@@ -69,10 +70,13 @@ final class LaunchViewController: UIViewController {
         let diagnosticsView = CrashDiagnosticsView(report: report) { [weak self] in
             guard let self else { return }
             CrashReportStore.clear()
-            // Dismiss the diagnostics host and proceed with normal launch.
+            // Dismiss the diagnostics host and proceed with a SAFE launch
+            // that will NOT re-start the minimuxer or JIT tunnel (which
+            // is likely what crashed in the first place).  The user must
+            // manually re-pair their device or re-enable JIT from Settings.
             self.dismiss(animated: true) {
                 Task { @MainActor in
-                    await self.runLaunchSequence()
+                    await self.runLaunchSequence(skipPostLaunchWork: true)
                 }
             }
         }
@@ -82,15 +86,15 @@ final class LaunchViewController: UIViewController {
         present(host, animated: false)
     }
 
-    private func runLaunchSequence() async {
+    private func runLaunchSequence(skipPostLaunchWork: Bool = false) async {
         if retries >= maxRetries {
-            await finishLaunching()
+            await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
         retries += 1
 
         if DatabaseManager.shared.isStarted {
-            await finishLaunching()
+            await finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
             return
         }
 
@@ -108,14 +112,14 @@ final class LaunchViewController: UIViewController {
                             print("⚠️ CoreData model incompatibility (134020) — recreating database and retrying launch.")
                             DatabaseManager.recreateDatabase()
                             continuation.resume()
-                            await self.runLaunchSequence()
+                            await self.runLaunchSequence(skipPostLaunchWork: skipPostLaunchWork)
                         } else {
-                            await self.finishLaunching()
-                            await self.handleLaunchError(error, retryCallback: self.runLaunchSequence)
+                            await self.finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
+                            await self.handleLaunchError(error, retryCallback: { await self.runLaunchSequence(skipPostLaunchWork: skipPostLaunchWork) })
                             continuation.resume()
                         }
                     } else {
-                        await self.finishLaunching()
+                        await self.finishLaunching(skipPostLaunchWork: skipPostLaunchWork)
                         continuation.resume()
                     }
                 }
@@ -124,7 +128,7 @@ final class LaunchViewController: UIViewController {
     }
 
     @MainActor
-    private func finishLaunching() async {
+    private func finishLaunching(skipPostLaunchWork: Bool = false) async {
         guard !didFinishLaunching else { return }
         didFinishLaunching = true
 
@@ -143,7 +147,12 @@ final class LaunchViewController: UIViewController {
 
         splashView?.removeFromSuperview()
         runDeferredLaunchWork(on: tabBar)
-        schedulePostLaunchWork(on: tabBar)
+        
+        if !skipPostLaunchWork {
+            schedulePostLaunchWork(on: tabBar)
+        } else {
+            print("⚠️ LaunchViewController: skipping post-launch work (crash recovery mode)")
+        }
     }
 
     @MainActor
@@ -222,6 +231,12 @@ extension LaunchViewController {
 
     func runDeferredLaunchWork(on tabBarController: TabBarController) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            // Request notification permission now that the UI is fully set up.
+            // We deliberately defer this from didFinishLaunchingWithOptions so the
+            // system permission dialog does not overlap with (and appear to hide)
+            // the SplashView on first launch.
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
+
             AppManager.shared.update()
             AppManager.shared.updateAllSources { result in
                 guard case .failure(let error) = result else { return }

@@ -41,6 +41,12 @@ enum CrashReportStore {
     /// writing the new launch sentinel.  Checks every sentinel file, aggregates a
     /// human-readable crash reason, clears ALL sentinels, and returns a report if
     /// any sentinel was found.
+    ///
+    /// Only the **launch** sentinel indicates a crash *during* didFinishLaunching.
+    /// Tunnel / mount / minimuxer sentinels indicate crashes that happened *after*
+    /// the main interface was already installed (post-launch work).  We still
+    /// report them so the user sees the diagnostics screen, but the app is not
+    /// blocked from starting up normally.
     @discardableResult
     static func detectPreviousCrash() -> CrashReport? {
         let fm = FileManager.default
@@ -65,6 +71,13 @@ enum CrashReportStore {
         try? fm.removeItem(at: minimuxerSentinelURL)
 
         guard !components.isEmpty else { return nil }
+
+        // If the launch sentinel is the ONLY sentinel found, this means
+        // didFinishLaunchingWithOptions itself crashed — return a report
+        // so the diagnostics view shows.  If post-launch sentinels are
+        // present without the launch sentinel (meaning didFinishLaunching
+        // completed but something after crashed), still report it but
+        // the fix is to NOT auto-retry the crashing post-launch work.
 
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         let device = UIDevice.current

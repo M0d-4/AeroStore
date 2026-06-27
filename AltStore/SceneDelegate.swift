@@ -64,14 +64,34 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
         NotificationCenter.default.post(name: AppDelegate.importAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.importAppDeepLinkURLKey: url])
     }
 
+    private static var didScheduleSafetyNet = false
+
     private func scheduleLaunchSafetyNet()
     {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        // Only schedule ONE safety net per process lifetime to avoid races
+        // with the LaunchViewController's own launch sequence.
+        guard !Self.didScheduleSafetyNet else { return }
+        Self.didScheduleSafetyNet = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             Task { @MainActor in
-                guard DatabaseManager.shared.isStarted || AppLaunchCoordinator.isMainInterfaceInstalled else {
-                    DatabaseManager.shared.start { _ in
+                // If the LaunchViewController already installed the main
+                // interface, there is nothing to do.
+                guard !AppLaunchCoordinator.isMainInterfaceInstalled else { return }
+
+                // If DB is not started yet, wait for it.
+                guard DatabaseManager.shared.isStarted else {
+                    print("⚠️ SafetyNet: DB not started yet, waiting 3 more seconds...")
+                    // Wait a bit more — LaunchViewController is probably still
+                    // in its own start sequence.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                         Task { @MainActor in
-                            AppLaunchCoordinator.installMainInterfaceIfNeeded(reason: "scene safety net after DB")
+                            guard !AppLaunchCoordinator.isMainInterfaceInstalled else { return }
+                            DatabaseManager.shared.start { _ in
+                                Task { @MainActor in
+                                    AppLaunchCoordinator.installMainInterfaceIfNeeded(reason: "scene safety net (extended)")
+                                }
+                            }
                         }
                     }
                     return
