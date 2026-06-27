@@ -14,7 +14,6 @@ import AltStoreCore
 import AltSign
 import Roxas
 
-
 import Nuke
 
 extension UIApplication: LegacyBackgroundFetching {}
@@ -43,23 +42,31 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private let viewAppIntentHandler = ViewAppIntentHandler()
     
     public let consoleLog = ConsoleLog()
-    
+
+    // Holds an imported .ipa URL when the app isn't active yet (cold launch),
+    // so the import notification can be posted once the app becomes active.
+    private var pendingImportIPAURL: URL?
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
         // ── Crash detection ────────────────────────────────────────────────────
-        // Detect previous crash via sentinel file, but break the loop after 3
-        // consecutive crash-report cycles so the app can attempt a normal launch.
+        // Detect previous crash via sentinel file.  We ALWAYS show diagnostics
+        // when a crash report exists — never auto-clear.  The user dismisses it.
         let loopSentinelURL = CrashReportStore.launchSentinelURL.deletingLastPathComponent().appendingPathComponent(".aerostore_crash_loop")
         let fm = FileManager.default
-        if CrashReportStore.load() != nil {
+        let previousReport = CrashReportStore.load()
+        if previousReport != nil {
             let count = (try? Int(String(contentsOf: loopSentinelURL, encoding: .utf8))) ?? 0
-            if count >= 3 {
-                print("⚠️ Crash loop detected (\(count) crashes) — clearing sentinel and trying normal launch.")
-                CrashReportStore.clear()
-                try? fm.removeItem(at: loopSentinelURL)
+            let next = count + 1
+            if next >= 20 {
+                // Only clear the loop counter file so it doesn't grow forever,
+                // but keep the crash report so diagnostics still show.
+                print("⚠️ Crash loop count reached \(next) — resetting counter but keeping crash report.")
+                try? "1".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
             } else {
-                try? "\(count + 1)".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
+                try? "\(next)".write(to: loopSentinelURL, atomically: true, encoding: .utf8)
             }
+            print("⚠️ Previous crash report persists (loop #\(next)) — diagnostics will show.")
         } else {
             try? fm.removeItem(at: loopSentinelURL)
         }
@@ -76,88 +83,80 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             print("Call stack: \(exception.callStackSymbols)")
         }
 
-        do {
-            // navigation bar buttons spacing is too much (so hack it to use minimal spacing)
-            // this is swift-5 specific behavior and might change
-            // https://stackoverflow.com/a/64988363/11971304
-            //
-            // Warning: this affects all screens through out the app, and basically overrides storyboard
-            let stackViewAppearance = UIStackView.appearance(whenContainedInInstancesOf: [UINavigationBar.self])
-            stackViewAppearance.spacing = -8        // adjust as needed
+        // navigation bar buttons spacing is too much (so hack it to use minimal spacing)
+        // this is swift-5 specific behavior and might change
+        // https://stackoverflow.com/a/64988363/11971304
+        //
+        // Warning: this affects all screens through out the app, and basically overrides storyboard
+        let stackViewAppearance = UIStackView.appearance(whenContainedInInstancesOf: [UINavigationBar.self])
+        stackViewAppearance.spacing = -8        // adjust as needed
+        
+        consoleLog.startCapturing()
+        print("===================================================")
+        print("|               App is Starting up                |")
+        print("===================================================")
+        print("| Console Logger started capturing output streams |")
+        print("===================================================")
+        print("\n ")
 
-            consoleLog.startCapturing()
-            print("===================================================")
-            print("|               App is Starting up                |")
-            print("===================================================")
-            print("| Console Logger started capturing output streams |")
-            print("===================================================")
-            print("\n ")
+        // Override point for customization after application launch.
+//        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.MigrationDebug")
+//        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.SQLDebug")
 
-            // Override point for customization after application launch.
-    //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.MigrationDebug")
-    //        UserDefaults.standard.setValue(true, forKey: "com.apple.CoreData.SQLDebug")
-
-            // Register default settings before doing anything else.
-            UserDefaults.registerDefaults()
-            UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.light.rawValue])
-            print("✅ UserDefaults registered successfully")
-
-            // Prepare integrations with error handling
-            print("⏳ Preparing FluxStikJIT integrations...")
-            FluxStikJITHostBootstrap.prepareIntegrations()
-            print("✅ FluxStikJIT integrations prepared")
-
-            // Recreate Database if requested
-            // NOTE: Userdefaults are local to the aerostore.app sandbox and are not shared
-            if UserDefaults.standard.recreateDatabaseOnNextStart{
-                print("⏳ Recreating database as requested...")
-                // reset the state
-                UserDefaults.standard.recreateDatabaseOnNextStart = false
-
-                // re-create database
-                DatabaseManager.recreateDatabase()
-                print("✅ Database recreated")
+        // Register default settings before doing anything else.
+        UserDefaults.registerDefaults()
+        UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.light.rawValue])
+        print("✅ UserDefaults registered successfully")
+        
+        // Prepare integrations (safe — no Rust FFI here, only defaults + audio + swizzle)
+        print("⏳ Preparing FluxStikJIT integrations...")
+        FluxStikJITHostBootstrap.prepareIntegrations()
+        print("✅ FluxStikJIT integrations prepared")
+        
+        // Recreate Database if requested
+        // NOTE: Userdefaults are local to the aerostore.app sandbox and are not shared
+        if UserDefaults.standard.recreateDatabaseOnNextStart{
+            print("⏳ Recreating database as requested...")
+            // reset the state
+            UserDefaults.standard.recreateDatabaseOnNextStart = false
+            
+            // re-create database
+            DatabaseManager.recreateDatabase()
+            print("✅ Database recreated")
+        }
+        
+        // Start DatabaseManager without blocking the main thread (LaunchViewController finishes UI when ready).
+        print("⏳ Starting DatabaseManager (async)...")
+        DatabaseManager.shared.start { error in
+            if let error {
+                print("❌ Failed to start DatabaseManager (AppDelegate observer). Error: \(error)")
+            } else {
+                print("✅ DatabaseManager started successfully")
             }
+        }
+        
+        print("⏳ Setting tint color and image cache...")
+        self.setTintColor()
+        self.prepareImageCache()
+        print("✅ Tint color and image cache configured")
 
-            // Start DatabaseManager without blocking the main thread (LaunchViewController finishes UI when ready).
-            print("⏳ Starting DatabaseManager (async)...")
-            DatabaseManager.shared.start { error in
-                if let error {
-                    // CoreData model incompatibility (134020) is handled silently by
-                    // LaunchViewController.runLaunchSequence, which recreates the database
-                    // and retries before installing the main UI. Any other start errors
-                    // are surfaced to the user via handleLaunchError there as well.
-                    print("❌ Failed to start DatabaseManager (AppDelegate observer). Error: \(error)")
-                } else {
-                    print("✅ DatabaseManager started successfully")
-                }
-            }
+        DispatchQueue.main.async {
+            print("⏳ Applying appearance preferences...")
+            FluxAppearancePreference.applyToAllWindows()
+            print("✅ Appearance preferences applied")
+        }
 
-            print("⏳ Setting tint color and image cache...")
-            self.setTintColor()
-            self.prepareImageCache()
-            print("✅ Tint color and image cache configured")
-
-            DispatchQueue.main.async {
-                print("⏳ Applying appearance preferences...")
-                FluxAppearancePreference.applyToAllWindows()
-                print("✅ Appearance preferences applied")
-            }
-
-            // TODO: @mahee96: find if we need to start em_proxy as in altstore?
-            if UserDefaults.standard.enableEMPforWireguard {
-                print("⏳ Starting EM Proxy...")
-                startEMProxy(bind_addr: AppConstants.Proxy.serverURL)
-                print("✅ EM Proxy started")
-            }
-        } catch {
-            print("❌ Failed to start EM Proxy: \(error)")
+        // TODO: @mahee96: find if we need to start em_proxy as in altstore?
+        if UserDefaults.standard.enableEMPforWireguard {
+            print("⏳ Starting EM Proxy...")
+            startEMProxy(bind_addr: AppConstants.Proxy.serverURL)
+            print("✅ EM Proxy started")
         }
 
         print("⏳ Registering SecureValueTransformer...")
-            SecureValueTransformer.register()
-            print("✅ SecureValueTransformer registered")
-
+        SecureValueTransformer.register()
+        print("✅ SecureValueTransformer registered")
+        
         print("⏳ Checking first launch...")
         if UserDefaults.standard.firstLaunch == nil
         {
@@ -168,17 +167,17 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         } else {
             print("✅ Not first launch, skipping keychain reset")
         }
-
+        
         print("⏳ Setting preferred server ID...")
         UserDefaults.standard.preferredServerID = Bundle.main.object(forInfoDictionaryKey: Bundle.Info.serverID) as? String
         print("✅ Preferred server ID set")
-
+        
         #if DEBUG && targetEnvironment(simulator)
         print("⏳ Enabling debug mode for simulator...")
         UserDefaults.standard.isDebugModeEnabled = true
         print("✅ Debug mode enabled")
         #endif
-
+        
         print("⏳ Preparing for background fetch...")
         self.prepareForBackgroundFetch()
         print("✅ Background fetch prepared")
@@ -191,13 +190,25 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         CrashReportStore.clearLaunchSentinel()
         return true
     }
+    
+    func applicationDidBecomeActive(_ application: UIApplication)
+    {
+        // ── Crash guard: if a crash report is pending, do NOT start the JIT tunnel.
+        // The diagnostics screen will be shown first, and the user must dismiss it.
+        // Starting the tunnel now would risk another abort() before they see the UI.
+        if CrashReportStore.load() != nil {
+            print("⚠️ Crash report pending — deferring JIT tunnel start until diagnostics dismissed.")
+        } else {
+            FluxStikJITHostBootstrap.onAppDidBecomeActive()
+        }
+        // ────────────────────────────────────────────────────────────────────────
 
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        print("⏳ App did become active...")
-        FluxStikJITHostBootstrap.onAppDidBecomeActive()
-        print("✅ App became active")
+        // Flush any .ipa import that arrived before the app was active (cold launch).
+        guard let url = self.pendingImportIPAURL else { return }
+        self.pendingImportIPAURL = nil
+        NotificationCenter.default.post(name: AppDelegate.importAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.importAppDeepLinkURLKey: url])
     }
-
+    
     func applicationDidEnterBackground(_ application: UIApplication)
     {
         // Make sure to update SceneDelegate.sceneDidEnterBackground() as well.
@@ -205,9 +216,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         if UserDefaults.standard.enableEMPforWireguard {
             stopEMProxy()
         }
-
         guard let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else { return }
-
+        
         let midnightOneMonthAgo = Calendar.current.startOfDay(for: oneMonthAgo)
         DatabaseManager.shared.purgeLoggedErrors(before: midnightOneMonthAgo) { result in
             switch result
@@ -216,6 +226,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             case .failure(let error): print("[ALTLog] Failed to purge logged errors before \(midnightOneMonthAgo).", error)
             }
         }
+             
     }
 
     func applicationWillEnterForeground(_ application: UIApplication)
@@ -310,11 +321,38 @@ private extension AppDelegate
         if url.isFileURL
         {
             guard url.pathExtension.lowercased() == "ipa" else { return false }
-            
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: AppDelegate.importAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.importAppDeepLinkURLKey: url])
+
+            // Copy the shared .ipa out of its security-scoped location into a
+            // temporary directory we own, so it stays readable while signing.
+            let didStartAccessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if didStartAccessing { url.stopAccessingSecurityScopedResource() }
             }
-            
+
+            let temporaryDirectory = FileManager.default.uniqueTemporaryURL()
+            do {
+                try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("[ALTLog] Failed to create temp directory for imported IPA: \(error)")
+                return false
+            }
+
+            let ipaURL = temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+
+            do {
+                try FileManager.default.copyItem(at: url, to: ipaURL)
+            } catch {
+                print("[ALTLog] Failed to copy imported IPA: \(error)")
+                return false
+            }
+
+            if UIApplication.shared.applicationState == .active {
+                NotificationCenter.default.post(name: AppDelegate.importAppDeepLinkNotification, object: nil, userInfo: [AppDelegate.importAppDeepLinkURLKey: ipaURL])
+            } else {
+                // Defer until the app is active (cold launch) — see applicationDidBecomeActive.
+                self.pendingImportIPAURL = ipaURL
+            }
+
             return true
         }
         else
@@ -400,6 +438,9 @@ extension AppDelegate
     {
         // "Fetch" every hour, but then refresh only those that need to be refreshed (so we don't drain the battery).
         (UIApplication.shared as LegacyBackgroundFetching).setMinimumBackgroundFetchInterval(1 * 60 * 60)
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { (success, error) in
+        }
         
         #if DEBUG && targetEnvironment(simulator)
         UIApplication.shared.registerForRemoteNotifications()

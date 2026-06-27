@@ -27,6 +27,10 @@ enum CrashReportStore {
         URL.documentsDir.appendingPathComponent(".aerostore_mount_checking", isDirectory: false)
     }
 
+    static var minimuxerSentinelURL: URL {
+        URL.documentsDir.appendingPathComponent(".aerostore_minimuxer_starting", isDirectory: false)
+    }
+
     private static var reportURL: URL {
         URL.documentsDir.appendingPathComponent(".crash_report.json", isDirectory: false)
     }
@@ -51,10 +55,14 @@ enum CrashReportStore {
         if fm.fileExists(atPath: mountSentinelURL.path) {
             components.append("Device mount check (Rust isMounted / isPairing)")
         }
+        if fm.fileExists(atPath: minimuxerSentinelURL.path) {
+            components.append("Minimuxer start (Rust minimuxerStartWithLogger)")
+        }
 
         try? fm.removeItem(at: launchSentinelURL)
         try? fm.removeItem(at: tunnelSentinelURL)
         try? fm.removeItem(at: mountSentinelURL)
+        try? fm.removeItem(at: minimuxerSentinelURL)
 
         guard !components.isEmpty else { return nil }
 

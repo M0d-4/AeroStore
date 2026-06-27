@@ -368,6 +368,43 @@ final class PairingFileManager {
 
     func startMinimuxerIfPossible(_ pairingString: String, presenter: UIViewController?) {
         #if !targetEnvironment(simulator)
+        // ── Crash guard ──────────────────────────────────────────────────────────
+        // If a crash report is pending, skip the Rust FFI call entirely.
+        // The Rust minimuxer library can call abort() on bad input or sandbox
+        // violations, which bypasses all Swift error handlers.  We prevent that
+        // by refusing to enter Rust while diagnostics are pending.
+        if CrashReportStore.load() != nil {
+            print("⚠️ Crash report pending — skipping minimuxer start.")
+            return
+        }
+
+        // Pre-flight: validate the pairing file looks like valid XML/plist.
+        // A malformed file passed to the Rust bridge is a common abort() trigger.
+        guard !pairingString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let data = pairingString.data(using: .utf8),
+              data.count > 20  // pairing files are at least a few hundred bytes
+        else {
+            print("⚠️ Pairing file is empty or too short — skipping minimuxer start.")
+            try? FileManager.default.removeItem(at: FileManager.default.documentsDirectory.appendingPathComponent(pairingFileName))
+            guard let presenter else { return }
+            let alert = UIAlertController(
+                title: NSLocalizedString("Invalid Pairing File", comment: ""),
+                message: NSLocalizedString("The pairing file appears to be empty or corrupted. Please import it again.", comment: ""),
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+            presenter.present(alert, animated: true)
+            return
+        }
+
+        // Write a sentinel before the Rust call.  If minimuxerStartWithLogger
+        // triggers abort() inside the Rust bridge, this file persists to the
+        // next launch so CrashReportStore can detect it.
+        let minimuxerSentinel = CrashReportStore.minimuxerSentinelURL
+        try? "1".write(to: minimuxerSentinel, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: minimuxerSentinel) }
+        // ──────────────────────────────────────────────────────────────────────────
+
         do {
             retargetUsbmuxdAddr()
             let documentsDirectory = FileManager.default.documentsDirectory.absoluteString
