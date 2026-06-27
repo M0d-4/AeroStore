@@ -67,17 +67,6 @@ Upstream SideStore remains a community fork of [AltStore](https://github.com/ril
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) if you want to build or hack on the project (clone + submodules required for development only).
 
-## v1.1.0 — Launch crash fix
-
-Yeah, this took a long time...
-
-- so ive been working for about a few days trying to fix app crash on launch, but i solved it but i didnt
-- huge credits to M0d-4 who forked my repo and fixed it. I implemented the changes and it worked.
-- You can view his repo here: https://github.com/M0d-4/AeroStore
-- Progress will go by 100% faster now, and again thanks M0d-4.
-
-<img width="585" alt="AeroStore screenshot" src="https://github.com/user-attachments/assets/5c8cec4e-faf3-430e-927a-ac7e345d7065" />
-
 ## Licensing
 
 AGPLv3 — see [LICENSE](LICENSE).
