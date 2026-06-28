@@ -126,6 +126,18 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ipa-unsigned
+          name: AeroStore-unsigned
           path: build/App.ipa
+          compression-level: 0
           retention-days: 30
+
+      - name: Upload to Release (tagged pushes only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          gh release upload "${GITHUB_REF_NAME}" \
+            "${ROOT}/build/App.ipa" \
+            --clobber
