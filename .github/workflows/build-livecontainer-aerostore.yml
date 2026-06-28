@@ -66,7 +66,7 @@ jobs:
           xcodebuild archive \
             -project "${ROOT}/AltStore.xcodeproj" \
             -scheme SideStore \
-            -configuration Release \
+            -configuration Debug \
             -archivePath "${ROOT}/build/AeroStore.xcarchive" \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
@@ -75,6 +75,7 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
+            SWIFT_OPTIMIZATION_LEVEL="-Onone" \
             2>&1 | tee "$LOG"
           exit "${PIPESTATUS[0]}"
 
