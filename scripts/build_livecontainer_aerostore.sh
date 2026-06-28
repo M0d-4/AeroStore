@@ -62,20 +62,8 @@ fi
 /usr/libexec/PlistBuddy -c "Set :CFBundlePackageType FMWK" "${FW}/Info.plist" 2>/dev/null || \
   /usr/libexec/PlistBuddy -c "Add :CFBundlePackageType string FMWK" "${FW}/Info.plist"
 
-echo "=== Step 3: Embed AeroStoreApp.framework into LiveContainer ==="
+echo "=== Step 3: Build LiveContainer ==="
 LC_DIR="${ROOT}/LiveContainer"
-mkdir -p "${LC_DIR}/Frameworks"
-
-# Remove old if present
-rm -rf "${LC_DIR}/Frameworks/AeroStoreApp.framework"
-cp -R "$FW" "${LC_DIR}/Frameworks/AeroStoreApp.framework"
-
-# Ensure SideStore.framework is present (needed for XPC refresh protocol)
-if [ ! -d "${LC_DIR}/Frameworks/SideStore.framework" ] && [ -d "${LC_DIR}/SideStore" ]; then
-  echo "Warning: SideStore.framework not found. Build LiveContainer with SideStore first, or create a stub."
-fi
-
-echo "=== Step 4: Build LiveContainer ==="
 DD_LC="${ROOT}/build/derived-livecontainer"
 SP_LC="${ROOT}/build/source-packages"
 LOG_LC="${ROOT}/build/livecontainer-build.log"
@@ -94,10 +82,22 @@ xcodebuild archive \
   CODE_SIGNING_REQUIRED=NO \
   | tee "$LOG_LC"
 
-echo "=== Step 5: Package combined IPA ==="
+echo "=== Step 4: Inject AeroStoreApp.framework into LiveContainer archive ==="
 LC_APP="$(find "${ROOT}/build/LiveContainer.xcarchive/Products/Applications" -maxdepth 1 -name "*.app" -print -quit)"
 test -n "$LC_APP" && test -d "$LC_APP"
+mkdir -p "${LC_APP}/Frameworks"
+cp -R "${ROOT}/build/AeroStoreApp.framework" "${LC_APP}/Frameworks/AeroStoreApp.framework"
+echo "=== Frameworks in app ==="
+ls -la "${LC_APP}/Frameworks/"
+echo "=== App size ==="
+du -sh "$LC_APP"
 
+# Also ensure SideStore.framework is present if available
+if [ -f "${ROOT}/build/AeroStoreApp.framework/AeroStoreApp" ]; then
+  file "${ROOT}/build/AeroStoreApp.framework/AeroStoreApp"
+fi
+
+echo "=== Step 5: Package combined IPA ==="
 rm -rf "${ROOT}/build/Payload" "${ROOT}/build/LiveContainer+AeroStore.ipa"
 mkdir -p "${ROOT}/build/Payload"
 cp -R "$LC_APP" "${ROOT}/build/Payload/"

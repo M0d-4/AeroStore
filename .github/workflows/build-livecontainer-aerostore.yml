@@ -115,18 +115,11 @@ jobs:
 
           ls -la "$FW"
 
-      - name: Build LiveContainer with AeroStore embedded
+      - name: Build LiveContainer
         run: |
           set -euo pipefail
           ROOT="${GITHUB_WORKSPACE:?}"
           LC_DIR="${ROOT}/LiveContainer"
-
-          mkdir -p "${LC_DIR}/Frameworks"
-          cp -R "${ROOT}/build/AeroStoreApp.framework" "${LC_DIR}/Frameworks/"
-
-          if [ -d "${LC_DIR}/Frameworks/SideStore.framework" ]; then
-            echo "SideStore.framework already present"
-          fi
 
           DD="${ROOT}/build/lc-DerivedData"
           SP="${ROOT}/build/lc-SourcePackages"
@@ -146,6 +139,19 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             2>&1 | tee "$LOG"
           exit "${PIPESTATUS[0]}"
+
+      - name: Inject AeroStoreApp.framework into LiveContainer archive
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          APP="$(find "${ROOT}/build/LiveContainer.xcarchive/Products/Applications" -maxdepth 1 -name "*.app" -print -quit)"
+          test -n "$APP" && test -d "$APP"
+          mkdir -p "${APP}/Frameworks"
+          cp -R "${ROOT}/build/AeroStoreApp.framework" "${APP}/Frameworks/"
+          echo "=== Contents of ${APP}/Frameworks/ ==="
+          ls -la "${APP}/Frameworks/"
+          echo "=== Combined app size ==="
+          du -sh "$APP"
 
       - name: Package combined LiveContainer+AeroStore IPA
         run: |
