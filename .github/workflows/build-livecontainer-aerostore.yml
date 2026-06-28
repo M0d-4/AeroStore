@@ -1,0 +1,190 @@
+name: Build AeroStore + LiveContainer+AeroStore (unsigned)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+concurrency:
+  group: lc-aero-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          lfs: true
+
+      - name: Sync submodules and ensure native Dependencies checkouts
+        run: bash scripts/ci/ensure_fluxstore_dependencies.sh
+
+      - name: SwiftPM — GitHub token
+        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - uses: maxim-lobanov/setup-xcode@v1.6.0
+        with:
+          xcode-version: "26.4"
+
+      - name: Patch AltSign SPM manifest
+        run: python3 scripts/ci/patch_altsign_package_swift.py
+
+      - name: Resolve packages (AeroStore)
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          DD="${ROOT}/build/ci-DerivedData"
+          SP="${ROOT}/build/ci-SourcePackages"
+          rm -rf "$DD" "$SP"
+          mkdir -p "$DD" "$SP" "${ROOT}/build"
+          xcodebuild -resolvePackageDependencies \
+            -project "${ROOT}/AltStore.xcodeproj" \
+            -scheme SideStore \
+            -derivedDataPath "$DD" \
+            -clonedSourcePackagesDirPath "$SP"
+
+      - name: Fetch em_proxy prebuilt binaries
+        run: bash scripts/ci/fetch_em_proxy_prebuilt.sh
+
+      - name: Validate Pre-Build
+        run: python3 scripts/ci/workflow.py validate-pre-build
+
+      - name: Build AeroStore archive
+        run: |
+          set -euo pipefail
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          ROOT="${GITHUB_WORKSPACE:?}"
+          DD="${ROOT}/build/ci-DerivedData"
+          SP="${ROOT}/build/ci-SourcePackages"
+          LOG="${ROOT}/build/xcode-archive-aerostore.log"
+          xcodebuild archive \
+            -project "${ROOT}/AltStore.xcodeproj" \
+            -scheme SideStore \
+            -configuration Release \
+            -archivePath "${ROOT}/build/AeroStore.xcarchive" \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DD" \
+            -clonedSourcePackagesDirPath "$SP" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$LOG"
+          exit "${PIPESTATUS[0]}"
+
+      - name: Package AeroStore IPA
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          APP="$(find "${ROOT}/build/AeroStore.xcarchive/Products/Applications" -maxdepth 1 -name "*.app" -print -quit)"
+          test -n "$APP" && test -d "$APP"
+          rm -rf "${ROOT}/build/Payload" "${ROOT}/build/AeroStore.ipa"
+          mkdir -p "${ROOT}/build/Payload"
+          cp -R "$APP" "${ROOT}/build/Payload/"
+          (cd "${ROOT}/build" && zip -qr AeroStore.ipa Payload)
+          rm -rf "${ROOT}/build/Payload"
+          ls -lh "${ROOT}/build/AeroStore.ipa"
+
+      - name: Prepare AeroStore as embedded framework
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          APP="$(find "${ROOT}/build/AeroStore.xcarchive/Products/Applications" -maxdepth 1 -name "*.app" -print -quit)"
+          test -n "$APP" && test -d "$APP"
+
+          FW="${ROOT}/build/AeroStoreApp.framework"
+          rm -rf "$FW"
+          mkdir -p "$FW"
+
+          cp -R "$APP/" "$FW/"
+
+          EXEC=$(defaults read "${FW}/Info" CFBundleExecutable 2>/dev/null || echo "AeroStore")
+          if [ -f "${FW}/${EXEC}" ]; then
+            mv "${FW}/${EXEC}" "${FW}/AeroStoreApp"
+          fi
+
+          plutil -replace CFBundleExecutable -string "AeroStoreApp" "${FW}/Info.plist" 2>/dev/null || true
+          plutil -replace CFBundleName -string "AeroStoreApp" "${FW}/Info.plist" 2>/dev/null || true
+          plutil -replace CFBundlePackageType -string "FMWK" "${FW}/Info.plist" 2>/dev/null || true
+
+          ls -la "$FW"
+
+      - name: Build LiveContainer with AeroStore embedded
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          LC_DIR="${ROOT}/LiveContainer"
+
+          mkdir -p "${LC_DIR}/Frameworks"
+          cp -R "${ROOT}/build/AeroStoreApp.framework" "${LC_DIR}/Frameworks/"
+
+          if [ -d "${LC_DIR}/Frameworks/SideStore.framework" ]; then
+            echo "SideStore.framework already present"
+          fi
+
+          DD="${ROOT}/build/lc-DerivedData"
+          SP="${ROOT}/build/lc-SourcePackages"
+          LOG="${ROOT}/build/xcode-archive-livecontainer.log"
+
+          xcodebuild archive \
+            -project "${LC_DIR}/LiveContainer.xcodeproj" \
+            -scheme LiveContainer \
+            -configuration Release \
+            -archivePath "${ROOT}/build/LiveContainer.xcarchive" \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DD" \
+            -clonedSourcePackagesDirPath "$SP" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$LOG"
+          exit "${PIPESTATUS[0]}"
+
+      - name: Package combined LiveContainer+AeroStore IPA
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          APP="$(find "${ROOT}/build/LiveContainer.xcarchive/Products/Applications" -maxdepth 1 -name "*.app" -print -quit)"
+          test -n "$APP" && test -d "$APP"
+          rm -rf "${ROOT}/build/Payload" "${ROOT}/build/LiveContainer+AeroStore.ipa"
+          mkdir -p "${ROOT}/build/Payload"
+          cp -R "$APP" "${ROOT}/build/Payload/"
+          (cd "${ROOT}/build" && zip -qr LiveContainer+AeroStore.ipa Payload)
+          rm -rf "${ROOT}/build/Payload"
+          ls -lh "${ROOT}/build/LiveContainer+AeroStore.ipa"
+
+      - name: Upload AeroStore IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AeroStore-unsigned
+          path: build/AeroStore.ipa
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload LiveContainer+AeroStore IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiveContainer+AeroStore-unsigned
+          path: build/LiveContainer+AeroStore.ipa
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload to Release (tagged pushes only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ROOT="${GITHUB_WORKSPACE:?}"
+          TAG="${GITHUB_REF_NAME}"
+          gh release upload "$TAG" \
+            "${ROOT}/build/AeroStore.ipa" \
+            "${ROOT}/build/LiveContainer+AeroStore.ipa" \
+            --clobber
