@@ -259,6 +259,40 @@ private extension SceneDelegate
                     NotificationCenter.default.post(name: AppDelegate.exportCertificateNotification, object: nil, userInfo: [AppDelegate.exportCertificateCallbackTemplateKey: callbackTemplate])
                 }
 
+            case "sidejit-enable":
+                let queryItems = components.queryItems?.reduce(into: [String: String]()) { $0[$1.name.lowercased()] = $1.value } ?? [:]
+                guard let bundleID = queryItems["bid"]?.removingPercentEncoding else { return }
+
+                DispatchQueue.main.async {
+                    DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
+                        do {
+                            let predicate = NSPredicate(format: "%K == %@", #keyPath(InstalledApp.bundleIdentifier), bundleID)
+                            guard let installedApp = InstalledApp.first(satisfying: predicate, in: context) else { throw URLError(.appResourceMissing) }
+
+                            AppManager.shared.enableJIT(for: installedApp) { result in
+                                switch result {
+                                case .success:
+                                    // Relaunch LiveContainer
+                                    let relaunchURL = URL(string: "livecontainer://livecontainer-relaunch")!
+                                    UIApplication.shared.open(relaunchURL, options: [:], completionHandler: nil)
+
+                                case .failure(let error):
+                                    // Log error or show a toast
+                                    print("Failed to enable JIT for \(bundleID): \(error.localizedDescription)")
+                                    // Relaunch LiveContainer even on error to unblock it
+                                    let relaunchURL = URL(string: "livecontainer://livecontainer-relaunch")!
+                                    UIApplication.shared.open(relaunchURL, options: [:], completionHandler: nil)
+                                }
+                            }
+                        } catch {
+                            print("Error handling sidejit-enable URL: \(error.localizedDescription)")
+                            // Relaunch LiveContainer even on error to unblock it
+                            let relaunchURL = URL(string: "livecontainer://livecontainer-relaunch")!
+                            UIApplication.shared.open(relaunchURL, options: [:], completionHandler: nil)
+                        }
+                    }
+                }
+
             default: break
             }
         }
