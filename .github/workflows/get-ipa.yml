@@ -131,13 +131,19 @@ jobs:
           compression-level: 0
           retention-days: 30
 
-      - name: Upload to Release (tagged pushes only)
+      - name: Create Release and upload (tagged pushes only)
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           ROOT="${GITHUB_WORKSPACE:?}"
-          gh release upload "${GITHUB_REF_NAME}" \
+          TAG="${GITHUB_REF_NAME}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --verify-tag \
+            --latest 2>/dev/null || true
+          gh release upload "$TAG" \
             "${ROOT}/build/App.ipa" \
             --clobber
