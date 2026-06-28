@@ -1353,7 +1353,7 @@ extension SettingsViewController
 
 extension SettingsViewController
 {
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    @objc override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
         let section = Section.allCases[indexPath.section]
         switch section
