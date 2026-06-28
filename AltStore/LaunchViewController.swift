@@ -381,7 +381,10 @@ final class PairingFileManager {
             ).show(in: vc)
         })
         alert.addAction(UIAlertAction(title: NSLocalizedString("Choose File…", comment: ""), style: .default) { _ in
-            var types = UTType.types(tag: "plist", tagClass: .filenameExtension, conformingTo: nil)
+            var types: [UTType] = [.xml, .propertyList]
+            if let plistType = UTType(tag: "plist", tagClass: .filenameExtension, conformingTo: nil) {
+                types.append(plistType)
+            }
             types.append(contentsOf: UTType.types(tag: "mobiledevicepairing", tagClass: .filenameExtension, conformingTo: .data))
             types.append(.xml)
             let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)

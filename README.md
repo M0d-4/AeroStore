@@ -1,72 +1,61 @@
 <p align="center">
-  <img src="icon.png" width="128" height="128" alt="AeroStore app icon" />
+  <img src="AltStore/Resources/Icons.xcassets/AeroStoreMark.imageset/AeroStoreMark.png" width="128" height="128" alt="AeroStore" />
 </p>
 
 # AeroStore
 
-> AeroStore is a **fork of [SideStore](https://github.com/SideStore/SideStore)**—an *untethered, community-driven* alternative app store for non-jailbroken iOS devices—with refreshed branding and on-device JIT via StikJIT.
->
-> Full release date: July 1st 2026
+A community-driven alternative app store for iOS. Sideload, manage, and refresh apps on your device — no jailbreak required.
 
-**Repository:** [github.com/FluxStore-App/FluxStore](https://github.com/FluxStore-App/FluxStore) (GitHub org/repo name is unchanged; the installed app is **AeroStore**.)
+## Quick Start
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/FluxStore-App/FluxStore/get-ipa.yml?branch=main&label=Get%20IPA&logo=github)](https://github.com/FluxStore-App/FluxStore/actions/workflows/get-ipa.yml)
+### Download the latest IPA
 
-In the app, **Settings → Advanced → Bundle ID presets** (with **Customize installed app bundle identifier** enabled) lets you save per-app bundle ID overrides used when sideloading.
+Grab the latest signed or unsigned release from the **[Releases](https://github.com/Leviidev/AeroStore/releases)** tab.
 
-Like SideStore, AeroStore resigns apps with your personal development certificate and uses [em_proxy](https://github.com/jkcoxson/em_proxy) so iOS can install them. Background refresh helps keep the usual 7-day development provisioning window from expiring unexpectedly.
+Or trigger an unsigned build yourself via **Actions → Get IPA (unsigned)** → **Run workflow**.
 
-## How to install (no git clone)
+### Sideloading
 
-You do **not** need to clone this repository to use AeroStore on a device.
+Install the IPA using any sideloading tool:
 
-### Option A — GitHub Actions (unsigned IPA)
+- **AltServer** (macOS/Windows) — AltStore's companion tool
+- **SideStore** — wirelessly refresh without a computer
+- **LiveContainer** — run multiple apps from one install
+- **TrollStore** — permanent signing (if你的 device supports it)
+- **iLoader** / **Feather** / **Sideloadly** — standard sideloading tools
 
-1. Open [**Actions → Get IPA (unsigned)**](https://github.com/FluxStore-App/FluxStore/actions/workflows/get-ipa.yml).
-2. Click **Run workflow** on the `main` branch and wait for the job to finish.
-3. Download the **`ipa-unsigned`** artifact (`App.ipa`).
-4. Install the IPA with your usual sideloading flow (AltStore, SideStore, LiveContainer, TrollStore, etc.) and trust the developer certificate in **Settings → General → VPN & Device Management**.
+After installing, go to **Settings → General → VPN & Device Management** and trust your developer certificate.
 
-### Option B — GitHub Releases
+### Pairing File
 
-When a release is published, download **`AeroStore.ipa`** (or the latest `.ipa` asset) from [Releases](https://github.com/FluxStore-App/FluxStore/releases) and install it the same way as above.
+On first launch, AeroStore needs a **pairing file** to communicate with your device for installing and refreshing apps.
 
-### Optional — add the built-in source
+**Getting a pairing file:**
 
-After install, you can add the official catalog URL in **Browse → Add catalog**:
+- **AltServer** — Connect your device to a computer running AltServer; the pairing file is generated automatically
+- **MobileDevicePairing** — Use tools like `idevicepair` to generate one
+- **iLoader** — Can fetch and import a pairing file directly on-device
+- **SideStore** — If you already have SideStore set up, it can export its pairing file
 
-`https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AeroStore.source.json`
+You can also tap **Browse without pairing** to explore available sources — add the pairing file later in **Settings** when you're ready to install or refresh.
 
-### Pairing file
+## Features
 
-On first launch, AeroStore may ask for a **pairing file** so it can refresh and install apps. You can **Browse without pairing** to explore sources only; add the file later under **Settings** when you are ready to install or refresh.
+- Browse and install apps from community sources
+- Refresh apps wirelessly to keep them signed
+- On-device JIT via StikJIT
+- Background app refresh
+- Custom bundle ID overrides
+- Multi-persona account management
 
-## How AeroStore differs from SideStore
+## Sources
 
-| Area | SideStore (upstream) | AeroStore (this fork) |
-|------|----------------------|------------------------|
-| **Identity** | SideStore product name and assets | **AeroStore** (`com.aero.aerostore` bundle IDs — see `Build.xcconfig`) |
-| **JIT / debugging** | Often discussed alongside **SideJITStreamer**-style enablers | **StikJIT** under `StikJIT/` for on-device JIT |
-| **UI** | Upstream tabs and chrome | Browse / My Apps / Settings with a modern card layout |
+Add catalogs in **Browse → Add catalog** to discover apps. The default source is included after install.
 
-Upstream SideStore remains a community fork of [AltStore](https://github.com/rileytestut/AltStore). AeroStore tracks that lineage under the AGPLv3 license.
+## Building from Source
 
-## Requirements (developers only)
+Developers: see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-- **Xcode** 26.x
-- **iOS** 14+ (check the active deployment target in Xcode)
-- **Rustup** only if you build Rust components locally — see [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-## Project overview
-
-- **Main app** — Xcode scheme **SideStore**, product **AeroStore.app**
-- **EM Proxy**, **Minimuxer**, **StikJIT**, **Roxas** — same roles as in SideStore; see [CONTRIBUTING.md](./CONTRIBUTING.md) for building from source.
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) if you want to build or hack on the project (clone + submodules required for development only).
-
-## Licensing
+## License
 
 AGPLv3 — see [LICENSE](LICENSE).
