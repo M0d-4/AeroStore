@@ -12,8 +12,6 @@ A community-driven alternative app store for iOS. Sideload, manage, and refresh 
 
 Grab the latest signed or unsigned release from the **[Releases](https://github.com/Leviidev/AeroStore/releases)** tab.
 
-Or trigger an unsigned build yourself via **Actions → Get IPA (unsigned)** → **Run workflow**.
-
 ### Sideloading
 
 Install the IPA using any sideloading tool:
