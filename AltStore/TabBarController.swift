@@ -210,9 +210,9 @@ final class TabBarController: UITabBarController
     private func configureTabBarAppearance()
     {
         let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.shadowColor = .clear
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundColor = .systemBackground
+        appearance.shadowColor = .separator
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.fluxSecondaryText
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
             .foregroundColor: UIColor.fluxSecondaryText,
@@ -221,30 +221,27 @@ final class TabBarController: UITabBarController
         appearance.stackedLayoutAppearance.selected.iconColor = .altPrimary
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
             .foregroundColor: UIColor.altPrimary,
-            .font: UIFont.systemFont(ofSize: 11, weight: .bold)
+            .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
         ]
 
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
         tabBar.tintColor = .altPrimary
         tabBar.unselectedItemTintColor = .fluxSecondaryText
+        tabBar.isTranslucent = false
+
+        if #available(iOS 26.0, *)
+        {
+            floatingTabBarBackgroundView.isHidden = true
+            return
+        }
+
         tabBar.backgroundImage = UIImage()
         tabBar.shadowImage = UIImage()
         tabBar.isTranslucent = true
 
         floatingTabBarBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         floatingTabBarBackgroundView.isUserInteractionEnabled = false
-        floatingTabBarBackgroundView.layer.cornerRadius = 30
-        floatingTabBarBackgroundView.layer.cornerCurve = .continuous
-        floatingTabBarBackgroundView.clipsToBounds = true
-        floatingTabBarBackgroundView.layer.borderWidth = 1
-        floatingTabBarBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.2).cgColor
-
-        tabBar.layer.shadowColor = UIColor.black.cgColor
-        tabBar.layer.shadowOffset = CGSize(width: 0, height: 6)
-        tabBar.layer.shadowRadius = 20
-        tabBar.layer.shadowOpacity = 0.12
-
         tabBar.insertSubview(floatingTabBarBackgroundView, at: 0)
         updateFloatingTabBarConstraintsIfNeeded()
     }
@@ -260,13 +257,13 @@ final class TabBarController: UITabBarController
         guard floatingTabBarBackgroundView.superview === tabBar else { return }
         NSLayoutConstraint.deactivate(floatingTabBarBackgroundConstraints)
         floatingTabBarBackgroundConstraints = [
-            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor, constant: 28),
-            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor, constant: -28),
-            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: tabBar.topAnchor, constant: -4),
-            floatingTabBarBackgroundView.heightAnchor.constraint(equalToConstant: 60),
+            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor),
+            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor),
+            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: tabBar.topAnchor),
+            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: tabBar.bottomAnchor),
         ]
         NSLayoutConstraint.activate(floatingTabBarBackgroundConstraints)
-        floatingTabBarBackgroundView.contentView.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.92)
+        floatingTabBarBackgroundView.contentView.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.94)
     }
 
     override func viewDidAppear(_ animated: Bool)
