@@ -65,4 +65,4 @@
 [submodule "LiveContainer"]
 	path = LiveContainer
 	url = https://github.com/Leviidev/LiveContainer.git
-	branch = aerostore-integration
+	branch = main
