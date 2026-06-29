@@ -249,7 +249,7 @@ private extension FeaturedViewController
             
             let spacing = 10.0
             let interSectionSpacing = 16.0
-            let titleSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .estimated(30))
+            let titleSize = NSCollectionLayoutSize(widthDimension: .estimated(200), heightDimension: .estimated(44))
             
             switch section
             {
@@ -746,10 +746,14 @@ extension FeaturedViewController
             default: break
             }
             
+            // Bold, large section titles matching StikStore's aesthetic
+            content.textProperties.font = .systemFont(ofSize: 22, weight: .bold)
+            content.textProperties.color = .label
+            content.textProperties.transform = .none  // disable default uppercase transform
             content.directionalLayoutMargins.leading = .zero
             content.directionalLayoutMargins.trailing = .zero
             content.directionalLayoutMargins.top = 4
-            content.directionalLayoutMargins.bottom = 4
+            content.directionalLayoutMargins.bottom = 8
             
             headerView.contentConfiguration = content
             return headerView

@@ -268,6 +268,17 @@ final class SettingsViewController: UITableViewController
         #endif
     }
 
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
+    {
+        super.traitCollectionDidChange(previousTraitCollection)
+        // Re-apply semantic colors to visible cells when light/dark mode changes,
+        // since our fix is applied at dequeue time and storyboard colors are static.
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection)
+        {
+            tableView.reloadData()
+        }
+    }
+
     private func configureFluxAppearance()
     {
         self.tableView.backgroundColor = .altBackground
