@@ -267,7 +267,7 @@ private extension SceneDelegate
                     DatabaseManager.shared.persistentContainer.performBackgroundTask { context in
                         do {
                             let predicate = NSPredicate(format: "%K == %@", #keyPath(InstalledApp.bundleIdentifier), bundleID)
-                            guard let installedApp = InstalledApp.first(satisfying: predicate, in: context) else { throw URLError(.appResourceMissing) }
+                            guard let installedApp = InstalledApp.first(satisfying: predicate, in: context) else { throw URLError(.fileDoesNotExist) }
 
                             AppManager.shared.enableJIT(for: installedApp) { result in
                                 switch result {
