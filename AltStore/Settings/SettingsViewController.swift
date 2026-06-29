@@ -1172,9 +1172,11 @@ extension SettingsViewController
 
         // Enforce readable colors regardless of storyboard defaults.
         cell.backgroundColor = .clear
-        cell.textLabel?.textColor = .label
-        cell.detailTextLabel?.textColor = .fluxSecondaryText
         cell.tintColor = .altPrimary
+        // Fix hardcoded white text colors from storyboard — they're invisible in light mode.
+        // Walk all label subviews and apply semantic colors.
+        cell.applySemanticLabelColors()
+
         
         if #available(iOS 14, *) {}
         else if let cell = cell as? InsetGroupTableViewCell,
@@ -1901,5 +1903,33 @@ extension SettingsViewController: INUIAddVoiceShortcutViewControllerDelegate
         }
         
         controller.dismiss(animated: true, completion: nil)
+    }
+}
+
+// MARK: - UIView helpers
+
+private extension UIView
+{
+    /// Recursively walks subviews and replaces hardcoded white/near-white label text colors
+    /// (baked into the storyboard) with semantic `.label` / `.secondaryLabel` so cells
+    /// render correctly in both light and dark mode.
+    func applySemanticLabelColors()
+    {
+        for subview in subviews
+        {
+            if let label = subview as? UILabel
+            {
+                // Detect labels that were set to white (or near-white alpha variants) in storyboard
+                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                label.textColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+                let isWhitish = (r > 0.85 && g > 0.85 && b > 0.85)
+                if isWhitish
+                {
+                    // Use dimmer color for labels that had reduced alpha (detail/secondary labels)
+                    label.textColor = (a < 0.95) ? .secondaryLabel : .label
+                }
+            }
+            subview.applySemanticLabelColors()
+        }
     }
 }

@@ -151,7 +151,10 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         let jitButton = UIBarButtonItem(image: UIImage(systemName: "bolt.fill"), style: .plain, target: self, action: #selector(MyAppsViewController.presentFluxJIT(_:)))
         jitButton.accessibilityLabel = "JIT"
         self.sideloadBarButtonItem.accessibilityLabel = NSLocalizedString("Sideload App", comment: "")
-        self.navigationItem.rightBarButtonItems = [jitButton, self.sideloadBarButtonItem]
+        // Use a fixed space between buttons so iOS 26 doesn't merge them into a single pill group
+        let spacer = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+        spacer.width = 8
+        self.navigationItem.rightBarButtonItems = [jitButton, spacer, self.sideloadBarButtonItem]
 
         self.refreshMyAppsStatusNavigationItem()
     }

@@ -248,7 +248,7 @@ private extension FeaturedViewController
             let section = Section(rawValue: sectionIndex)
             
             let spacing = 10.0
-            let interSectionSpacing = 30.0
+            let interSectionSpacing = 16.0
             let titleSize = NSCollectionLayoutSize(widthDimension: .estimated(100), heightDimension: .estimated(30))
             
             switch section
@@ -736,12 +736,7 @@ extension FeaturedViewController
             
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: kind, for: indexPath) as! UICollectionViewListCell
             
-            var content: UIListContentConfiguration = if #available(iOS 15, *) {
-                .prominentInsetGroupedHeader()
-            }
-            else {
-                .groupedHeader()
-            }
+            var content: UIListContentConfiguration = .groupedHeader()
             
             switch section
             {
@@ -753,6 +748,8 @@ extension FeaturedViewController
             
             content.directionalLayoutMargins.leading = .zero
             content.directionalLayoutMargins.trailing = .zero
+            content.directionalLayoutMargins.top = 4
+            content.directionalLayoutMargins.bottom = 4
             
             headerView.contentConfiguration = content
             return headerView
