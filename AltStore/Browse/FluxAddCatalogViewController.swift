@@ -9,6 +9,22 @@ import Nuke
 /// Flux-branded add-catalog flow (replaces presenting SideStore’s legacy Add Source UI from Browse).
 final class FluxAddCatalogViewController: UIViewController {
 
+    private struct CommunityCatalog {
+        let name: String
+        let tagline: String
+        let url: String
+        let iconName: String
+    }
+
+    private let communityCatalogs: [CommunityCatalog] = [
+        CommunityCatalog(name: "SideStore Community", tagline: "Community-maintained apps for SideStore & AeroStore.", url: "https://community-apps.sidestore.io/sidecommunity.json", iconName: "person.2.fill"),
+        CommunityCatalog(name: "UTM", tagline: "Run virtual machines on your iOS device.", url: "https://alt.getutm.app", iconName: "desktopcomputer"),
+        CommunityCatalog(name: "Provenance", tagline: "Multi-system retro console emulator.", url: "https://provenance-emu.com/apps.json", iconName: "gamecontroller.fill"),
+        CommunityCatalog(name: "LiveContainer", tagline: "Run iOS applications inside JIT containers.", url: "https://github.com/LiveContainer/LiveContainer/releases/download/1.0/apps.json", iconName: "square.stack.3d.up.fill"),
+        CommunityCatalog(name: "Flycast", tagline: "Dreamcast, Naomi & Atomiswave emulator.", url: "https://github.com/chachillie/Flycast-iOS/raw/refs/heads/main/flycast-ios.json", iconName: "opticaldisc"),
+        CommunityCatalog(name: "StikDebug", tagline: "JIT and advanced debugging utilities.", url: "https://stikdebug.xyz/index.json", iconName: "ladybug.fill")
+    ]
+
     var prefilledURL: URL?
 
     private let scrollView = UIScrollView()
@@ -158,6 +174,37 @@ final class FluxAddCatalogViewController: UIViewController {
         stack.addArrangedSubview(previewContainer)
         stack.addArrangedSubview(addButton)
 
+        let communityHeaderWrap = UIStackView()
+        communityHeaderWrap.axis = .vertical
+        communityHeaderWrap.spacing = 4
+        communityHeaderWrap.layoutMargins = UIEdgeInsets(top: 16, left: 0, bottom: 4, right: 0)
+        communityHeaderWrap.isLayoutMarginsRelativeArrangement = true
+
+        let communitySectionHeader = UILabel()
+        communitySectionHeader.text = NSLocalizedString("Discover Community Catalogs", comment: "")
+        communitySectionHeader.font = .systemFont(ofSize: 20, weight: .bold)
+        communitySectionHeader.textColor = .label
+        
+        let communityIntro = UILabel()
+        communityIntro.text = NSLocalizedString("Tap any catalog below to quickly load and install community apps.", comment: "")
+        communityIntro.font = .preferredFont(forTextStyle: .subheadline)
+        communityIntro.textColor = UIColor.fluxSecondaryText
+        communityIntro.numberOfLines = 0
+
+        communityHeaderWrap.addArrangedSubview(communitySectionHeader)
+        communityHeaderWrap.addArrangedSubview(communityIntro)
+
+        let communityStack = UIStackView()
+        communityStack.axis = .vertical
+        communityStack.spacing = 12
+        communityStack.addArrangedSubview(communityHeaderWrap)
+        
+        for catalog in communityCatalogs {
+            communityStack.addArrangedSubview(makeCommunityCatalogCard(catalog))
+        }
+
+        stack.addArrangedSubview(communityStack)
+
         view.addSubview(scrollView)
         scrollView.addSubview(stack)
 
@@ -179,6 +226,88 @@ final class FluxAddCatalogViewController: UIViewController {
         if let prefilledURL {
             urlField.text = prefilledURL.absoluteString
         }
+    }
+
+    private func makeCommunityCatalogCard(_ item: CommunityCatalog) -> UIView {
+        let card = UIStackView()
+        card.axis = .horizontal
+        card.spacing = 14
+        card.alignment = .center
+        card.layoutMargins = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        card.isLayoutMarginsRelativeArrangement = true
+        card.backgroundColor = UIColor.fluxCardBackground
+        card.layer.cornerRadius = 16
+        card.layer.cornerCurve = .continuous
+        card.layer.borderWidth = 1
+        card.layer.borderColor = UIColor.fluxCardBorder.cgColor
+
+        let iconWrap = UIView()
+        iconWrap.translatesAutoresizingMaskIntoConstraints = false
+        iconWrap.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.12)
+        iconWrap.layer.cornerRadius = 12
+        iconWrap.layer.cornerCurve = .continuous
+        NSLayoutConstraint.activate([
+            iconWrap.widthAnchor.constraint(equalToConstant: 44),
+            iconWrap.heightAnchor.constraint(equalToConstant: 44)
+        ])
+
+        let iconView = UIImageView(image: UIImage(systemName: item.iconName))
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.tintColor = .altPrimary
+        iconView.contentMode = .scaleAspectFit
+        iconWrap.addSubview(iconView)
+        NSLayoutConstraint.activate([
+            iconView.centerXAnchor.constraint(equalTo: iconWrap.centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: iconWrap.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 24),
+            iconView.heightAnchor.constraint(equalToConstant: 24)
+        ])
+
+        let textStack = UIStackView()
+        textStack.axis = .vertical
+        textStack.spacing = 3
+
+        let nameLabel = UILabel()
+        nameLabel.text = item.name
+        nameLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        nameLabel.textColor = .label
+
+        let subLabel = UILabel()
+        subLabel.text = item.tagline
+        subLabel.font = .systemFont(ofSize: 13, weight: .regular)
+        subLabel.textColor = UIColor.fluxSecondaryText
+        subLabel.numberOfLines = 2
+
+        textStack.addArrangedSubview(nameLabel)
+        textStack.addArrangedSubview(subLabel)
+
+        let actionButton = UIButton(type: .system)
+        actionButton.translatesAutoresizingMaskIntoConstraints = false
+        actionButton.setTitle(NSLocalizedString("Select", comment: ""), for: .normal)
+        actionButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        actionButton.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.15)
+        actionButton.setTitleColor(.altPrimary, for: .normal)
+        actionButton.layer.cornerRadius = 14
+        actionButton.layer.cornerCurve = .continuous
+        actionButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
+        
+        let action = UIAction { [weak self] _ in
+            guard let self else { return }
+            self.urlField.text = item.url
+            self.previewTapped()
+            let offset = CGPoint(x: 0, y: -self.scrollView.adjustedContentInset.top)
+            self.scrollView.setContentOffset(offset, animated: true)
+        }
+        actionButton.addAction(action, for: .touchUpInside)
+
+        card.addArrangedSubview(iconWrap)
+        card.addArrangedSubview(textStack)
+        card.addArrangedSubview(actionButton)
+        
+        actionButton.setContentHuggingPriority(.required, for: .horizontal)
+        actionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        return card
     }
 
     override func viewDidAppear(_ animated: Bool) {
