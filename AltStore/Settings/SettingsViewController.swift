@@ -1833,11 +1833,7 @@ extension SettingsViewController
             
             
         // case .account, .patreon, .display, .instructions, .macDirtyCow: break
-        case .display:
-            // Appearance lives in the section footer; Change App Icon relies on the storyboard cell segue.
-            super.tableView(tableView, didSelectRowAt: indexPath)
-            return
-        case .account, .patreon, .instructions, .betaTesting: break
+        case .display, .account, .patreon, .instructions, .betaTesting: break
         }
         
         
