@@ -406,13 +406,11 @@ extension AppManager
     }
 
     /// Persists a previewed source without a confirmation alert (Flux add-catalog sheet).
-    func addWithoutConfirmation(@AsyncManaged _ source: Source) async throws {
-        let (_, sourceURL) = await $source.perform { ($0.name, $0.sourceURL) }
-
+    func addWithoutConfirmation(sourceURL: URL) async throws {
         let context = DatabaseManager.shared.persistentContainer.newBackgroundContext()
         let persistedSource = try await fetchSource(sourceURL: sourceURL, managedObjectContext: context)
         let sourceExists = try await persistedSource.isAdded
-        guard !sourceExists else { throw SourceError.duplicate(source, existingSource: nil) }
+        guard !sourceExists else { throw SourceError.duplicate(persistedSource, existingSource: nil) }
 
         try await context.performAsync {
             try context.save()
@@ -439,6 +437,11 @@ extension AppManager
             }
             NotificationCenter.default.post(name: AppManager.didAddSourceNotification, object: resolved)
         }
+    }
+
+    func addWithoutConfirmation(@AsyncManaged _ source: Source) async throws {
+        let sourceURL = await $source.perform { $0.sourceURL }
+        try await addWithoutConfirmation(sourceURL: sourceURL)
     }
     
     func remove(@AsyncManaged _ source: Source, presentingViewController: UIViewController) async throws

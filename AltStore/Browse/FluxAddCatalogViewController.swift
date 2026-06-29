@@ -246,21 +246,22 @@ final class FluxAddCatalogViewController: UIViewController {
         iconWrap.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.12)
         iconWrap.layer.cornerRadius = 12
         iconWrap.layer.cornerCurve = .continuous
-        NSLayoutConstraint.activate([
-            iconWrap.widthAnchor.constraint(equalToConstant: 44),
-            iconWrap.heightAnchor.constraint(equalToConstant: 44)
-        ])
 
-        let iconView = UIImageView(image: UIImage(systemName: item.iconName))
+        let iconView = UIImageView()
         iconView.translatesAutoresizingMaskIntoConstraints = false
-        iconView.tintColor = .altPrimary
+        iconView.layer.cornerRadius = 12
+        iconView.layer.cornerCurve = .continuous
+        iconView.clipsToBounds = true
         iconView.contentMode = .scaleAspectFit
-        iconWrap.addSubview(iconView)
+        iconView.tintColor = .altPrimary
+        iconView.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.12)
+        if let img = UIImage(systemName: item.iconName) {
+            iconView.image = img
+        }
+
         NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: iconWrap.centerXAnchor),
-            iconView.centerYAnchor.constraint(equalTo: iconWrap.centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 24),
-            iconView.heightAnchor.constraint(equalToConstant: 24)
+            iconView.widthAnchor.constraint(equalToConstant: 48),
+            iconView.heightAnchor.constraint(equalToConstant: 48),
         ])
 
         let textStack = UIStackView()
@@ -269,74 +270,78 @@ final class FluxAddCatalogViewController: UIViewController {
 
         let nameLabel = UILabel()
         nameLabel.text = item.name
-        nameLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        nameLabel.font = .systemFont(ofSize: 16, weight: .bold)
         nameLabel.textColor = .label
 
-        let subLabel = UILabel()
-        subLabel.text = item.tagline
-        subLabel.font = .systemFont(ofSize: 13, weight: .regular)
-        subLabel.textColor = UIColor.fluxSecondaryText
-        subLabel.numberOfLines = 2
+        let tagLabel = UILabel()
+        tagLabel.text = item.tagline
+        tagLabel.font = .systemFont(ofSize: 13, weight: .regular)
+        tagLabel.textColor = UIColor.fluxSecondaryText
+        tagLabel.numberOfLines = 2
 
         textStack.addArrangedSubview(nameLabel)
-        textStack.addArrangedSubview(subLabel)
+        textStack.addArrangedSubview(tagLabel)
 
         let actionButton = UIButton(type: .system)
-        actionButton.translatesAutoresizingMaskIntoConstraints = false
         actionButton.setTitle(NSLocalizedString("Select", comment: ""), for: .normal)
-        actionButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        actionButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         actionButton.backgroundColor = UIColor.altPrimary.withAlphaComponent(0.15)
         actionButton.setTitleColor(.altPrimary, for: .normal)
-        actionButton.layer.cornerRadius = 14
-        actionButton.layer.cornerCurve = .continuous
-        actionButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
-        
+        actionButton.layer.cornerRadius = 10
+        actionButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+
         let action = UIAction { [weak self] _ in
             guard let self else { return }
-            self.urlField.text = item.url
+            self.urlField.text = item.url.absoluteString
             self.previewTapped()
-            let offset = CGPoint(x: 0, y: -self.scrollView.adjustedContentInset.top)
-            self.scrollView.setContentOffset(offset, animated: true)
+            self.scrollView.setContentOffset(.zero, animated: true)
         }
         actionButton.addAction(action, for: .touchUpInside)
 
-        card.addArrangedSubview(iconWrap)
+        card.addArrangedSubview(iconView)
         card.addArrangedSubview(textStack)
         card.addArrangedSubview(actionButton)
-        
-        actionButton.setContentHuggingPriority(.required, for: .horizontal)
-        actionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         return card
     }
 
+    private func prefillIfPossible() {
+        if let u = prefilledURL {
+            urlField.text = u.absoluteString
+            urlFieldChanged()
+        } else if let s = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  let u = URL(string: s),
+                  let scheme = u.scheme?.lowercased(),
+                  ["http", "https"].contains(scheme) {
+            urlField.placeholder = s
+        }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard !didAutoPreview, prefilledURL != nil else { return }
-        didAutoPreview = true
-        DispatchQueue.main.async { [weak self] in self?.previewTapped() }
+        if prefilledURL != nil, !didAutoPreview {
+            didAutoPreview = true
+            previewTapped()
+        }
     }
 
     @objc private func pasteTapped() {
-        if let s = UIPasteboard.general.string {
+        if let s = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) {
             urlField.text = s
+            urlFieldChanged()
         }
     }
 
+    @objc private func urlFieldChanged() {
+        fetchedSource = nil
+        previewedURL = nil
+        previewContainer.isHidden = true
+        addButton.isHidden = true
+    }
+
     @objc private func previewTapped() {
-        view.endEditing(true)
-
-        guard let raw = urlField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
-            presentSimpleAlert(title: NSLocalizedString("URL needed", comment: ""), message: NSLocalizedString("Enter a catalog URL to continue.", comment: ""))
-            return
-        }
-
-        var urlToTry = URL(string: raw)
-        if urlToTry?.scheme == nil {
-            urlToTry = URL(string: "https://" + raw)
-        }
-
-        guard let url = urlToTry else {
+        guard let text = urlField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let url = URL(string: text) else {
             presentSimpleAlert(title: NSLocalizedString("Invalid URL", comment: ""), message: NSLocalizedString("aerostore couldn’t parse that address.", comment: ""))
             return
         }
@@ -344,6 +349,7 @@ final class FluxAddCatalogViewController: UIViewController {
         previewButton.isEnabled = false
         activity.startAnimating()
         fetchedSource = nil
+        previewedURL = nil
         previewContainer.isHidden = true
         addButton.isHidden = true
         previewIcon.image = nil
@@ -351,8 +357,7 @@ final class FluxAddCatalogViewController: UIViewController {
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                let source = try await AppManager.shared.fetchSource(sourceURL: url)
-                // `fetchSource` uses a background MOC by default; Core Data attributes must be read on that queue.
+                let source = try await AppManager.shared.fetchSource(sourceURL: url, managedObjectContext: self.catalogContext)
                 guard let moc = source.managedObjectContext else {
                     await MainActor.run {
                         self.activity.stopAnimating()
@@ -373,6 +378,7 @@ final class FluxAddCatalogViewController: UIViewController {
                 }
                 await MainActor.run {
                     self.fetchedSource = source
+                    self.previewedURL = url
                     self.previewTitle.text = preview.name
                     self.previewSubtitle.text = preview.subtitleLine
                     self.previewContainer.isHidden = false
@@ -401,16 +407,22 @@ final class FluxAddCatalogViewController: UIViewController {
     }
 
     @objc private func addTapped() {
-        guard let source = fetchedSource else { return }
+        guard let url = previewedURL ?? fetchedSource?.sourceURL else { return }
+
+        addButton.isEnabled = false
+        activity.startAnimating()
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                try await AppManager.shared.addWithoutConfirmation(source)
-
+                try await AppManager.shared.addWithoutConfirmation(sourceURL: url)
                 self.dismiss(animated: true)
             } catch is CancellationError {
+                self.addButton.isEnabled = true
+                self.activity.stopAnimating()
             } catch {
+                self.addButton.isEnabled = true
+                self.activity.stopAnimating()
                 self.presentSimpleAlert(title: NSLocalizedString("Unable to add catalog", comment: ""), message: error.localizedDescription)
             }
         }
