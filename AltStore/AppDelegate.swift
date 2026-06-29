@@ -96,7 +96,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Register default settings before doing anything else.
         UserDefaults.registerDefaults()
-        UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.light.rawValue])
+        UserDefaults.standard.register(defaults: [FluxAppearancePreference.storageKey: FluxAppearancePreference.dark.rawValue])
+        // Force dark as the initial theme on first-ever launch (register only fills in missing keys,
+        // but existing installs may already have "light" stored from an older build).
+        let didSetInitialThemeKey = "aerostore.didSetInitialTheme"
+        if !UserDefaults.standard.bool(forKey: didSetInitialThemeKey) {
+            FluxAppearancePreference.dark.saveAndApply()
+            UserDefaults.standard.set(true, forKey: didSetInitialThemeKey)
+        }
         os_log(.default, log: log, "UserDefaults registered")
         
         // Prepare integrations (safe — no Rust FFI here, only defaults + audio + swizzle)

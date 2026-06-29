@@ -1212,6 +1212,12 @@ extension SettingsViewController
         if section == .advancedSettings, indexPath.row == AdvancedSettingsRow.allCases.count {
             return UITableView.automaticDimension
         }
+        if section == .appRefresh {
+            let row = AppRefreshRow.allCases[indexPath.row]
+            if row == .updateNotifications || row == .certRevocationAlert {
+                return UITableView.automaticDimension
+            }
+        }
         return super.tableView(tableView, heightForRowAt: indexPath)
     }
 
@@ -1219,6 +1225,12 @@ extension SettingsViewController
         let section = Section.allCases[indexPath.section]
         if section == .advancedSettings, indexPath.row == AdvancedSettingsRow.allCases.count {
             return 0
+        }
+        if section == .appRefresh {
+            let row = AppRefreshRow.allCases[indexPath.row]
+            if row == .updateNotifications || row == .certRevocationAlert {
+                return 0
+            }
         }
         return super.tableView(tableView, indentationLevelForRowAt: indexPath)
     }
@@ -1353,7 +1365,7 @@ extension SettingsViewController
 
 extension SettingsViewController
 {
-    @objc override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
         let section = Section.allCases[indexPath.section]
         switch section
