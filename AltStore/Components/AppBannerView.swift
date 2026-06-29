@@ -283,7 +283,7 @@ extension AppBannerView
                 {
                     // Free app
                     
-                    let buttonTitle = NSLocalizedString("Free", comment: "")
+                    let buttonTitle = NSLocalizedString("GET", comment: "")
                     self.button.setTitle(buttonTitle.uppercased(), for: .normal)
                     self.button.accessibilityLabel = String(format: NSLocalizedString("Download %@", comment: ""), app.name)
                     self.button.accessibilityValue = buttonTitle

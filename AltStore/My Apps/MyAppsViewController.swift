@@ -233,16 +233,18 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         row.addArrangedSubview(label)
 
         let pill = UIView()
-        pill.backgroundColor = color.withAlphaComponent(0.12)
-        pill.layer.cornerRadius = 12
+        pill.backgroundColor = color.withAlphaComponent(0.14)
+        pill.layer.cornerRadius = 13
         pill.layer.cornerCurve = .continuous
+        pill.layer.borderWidth = 1
+        pill.layer.borderColor = color.withAlphaComponent(0.28).cgColor
         pill.translatesAutoresizingMaskIntoConstraints = false
         pill.addSubview(row)
         NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 9),
-            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -9),
-            row.topAnchor.constraint(equalTo: pill.topAnchor, constant: 5),
-            row.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -5),
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 10),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -10),
+            row.topAnchor.constraint(equalTo: pill.topAnchor, constant: 6),
+            row.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -6),
         ])
         return pill
     }

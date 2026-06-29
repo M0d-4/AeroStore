@@ -10,8 +10,8 @@ extension TabBarController
 {
     enum Tab: Int, CaseIterable
     {
-        case browse
         case myApps
+        case browse
         case settings
     }
 }
@@ -93,8 +93,8 @@ final class TabBarController: UITabBarController
                 let fallbackSettingsNav = UINavigationController(rootViewController: settingsVC)
                 fallbackSettingsNav.tabBarItem.title = NSLocalizedString("Settings", comment: "")
                 fallbackSettingsNav.tabBarItem.image = UIImage(systemName: "gearshape.fill")
-                viewControllers = [browseNavigationController, myAppsNavigationController, fallbackSettingsNav]
-                selectedIndex = Tab.browse.rawValue
+                viewControllers = [myAppsNavigationController, browseNavigationController, fallbackSettingsNav]
+                selectedIndex = Tab.myApps.rawValue
                 return
             }
 
@@ -103,11 +103,11 @@ final class TabBarController: UITabBarController
             settingsNavigationController.tabBarItem.image = UIImage(systemName: "gearshape.fill")
 
             viewControllers = [
-                browseNavigationController,
                 myAppsNavigationController,
+                browseNavigationController,
                 settingsNavigationController,
             ]
-            selectedIndex = Tab.browse.rawValue
+            selectedIndex = Tab.myApps.rawValue
             print("✅ TabBarController: Primary tabs configured successfully")
         } catch {
             print("❌ TabBarController: Failed to configure primary tabs: \(error)")
@@ -119,7 +119,7 @@ final class TabBarController: UITabBarController
         do {
             if let nav = main.instantiateViewController(withIdentifier: "browseNavigationController") as? UINavigationController {
                 nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
-                nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
+                nav.tabBarItem.image = UIImage(systemName: "bag.fill")
                 nav.navigationBar.prefersLargeTitles = true
                 if let featured = nav.viewControllers.first as? FeaturedViewController {
                     configureFeaturedBrowseActions(featured)
@@ -137,7 +137,7 @@ final class TabBarController: UITabBarController
             configureFeaturedBrowseActions(featured)
             let nav = UINavigationController(rootViewController: featured)
             nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
-            nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
+            nav.tabBarItem.image = UIImage(systemName: "bag.fill")
             nav.navigationBar.prefersLargeTitles = true
             return nav
         } catch {
@@ -148,7 +148,7 @@ final class TabBarController: UITabBarController
             fallbackVC.view.backgroundColor = .systemBackground
             let nav = UINavigationController(rootViewController: fallbackVC)
             nav.tabBarItem.title = NSLocalizedString("Browse", comment: "")
-            nav.tabBarItem.image = UIImage(systemName: "square.grid.3x3.fill")
+            nav.tabBarItem.image = UIImage(systemName: "bag.fill")
             return nav
         }
     }
@@ -158,7 +158,7 @@ final class TabBarController: UITabBarController
         do {
             if let nav = main.instantiateViewController(withIdentifier: "myAppsNavigationController") as? UINavigationController {
                 nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-                nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+                nav.tabBarItem.image = UIImage(systemName: "square.stack.fill")
                 nav.navigationBar.prefersLargeTitles = true
                 return nav
             }
@@ -166,7 +166,7 @@ final class TabBarController: UITabBarController
             if let myApps = main.instantiateViewController(withIdentifier: "myAppsViewController") as? MyAppsViewController {
                 let nav = UINavigationController(rootViewController: myApps)
                 nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-                nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+                nav.tabBarItem.image = UIImage(systemName: "square.stack.fill")
                 nav.navigationBar.prefersLargeTitles = true
                 return nav
             }
@@ -175,7 +175,7 @@ final class TabBarController: UITabBarController
             let placeholder = UIViewController()
             placeholder.view.backgroundColor = .systemBackground
             placeholder.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-            placeholder.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+            placeholder.tabBarItem.image = UIImage(systemName: "square.stack.fill")
             return UINavigationController(rootViewController: placeholder)
         } catch {
             print("❌ TabBarController: Failed to instantiate My Apps navigation controller: \(error)")
@@ -185,7 +185,7 @@ final class TabBarController: UITabBarController
             fallbackVC.view.backgroundColor = .systemBackground
             let nav = UINavigationController(rootViewController: fallbackVC)
             nav.tabBarItem.title = NSLocalizedString("My Apps", comment: "")
-            nav.tabBarItem.image = UIImage(systemName: "square.grid.2x2")
+            nav.tabBarItem.image = UIImage(systemName: "square.stack.fill")
             return nav
         }
     }
@@ -210,9 +210,9 @@ final class TabBarController: UITabBarController
     private func configureTabBarAppearance()
     {
         let appearance = UITabBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.backgroundColor = .systemBackground
-        appearance.shadowColor = .separator
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.shadowColor = .clear
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.fluxSecondaryText
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
             .foregroundColor: UIColor.fluxSecondaryText,
@@ -221,27 +221,30 @@ final class TabBarController: UITabBarController
         appearance.stackedLayoutAppearance.selected.iconColor = .altPrimary
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
             .foregroundColor: UIColor.altPrimary,
-            .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
+            .font: UIFont.systemFont(ofSize: 11, weight: .bold)
         ]
 
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
         tabBar.tintColor = .altPrimary
         tabBar.unselectedItemTintColor = .fluxSecondaryText
-        tabBar.isTranslucent = false
-
-        if #available(iOS 26.0, *)
-        {
-            floatingTabBarBackgroundView.isHidden = true
-            return
-        }
-
         tabBar.backgroundImage = UIImage()
         tabBar.shadowImage = UIImage()
         tabBar.isTranslucent = true
 
         floatingTabBarBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         floatingTabBarBackgroundView.isUserInteractionEnabled = false
+        floatingTabBarBackgroundView.layer.cornerRadius = 30
+        floatingTabBarBackgroundView.layer.cornerCurve = .continuous
+        floatingTabBarBackgroundView.clipsToBounds = true
+        floatingTabBarBackgroundView.layer.borderWidth = 1
+        floatingTabBarBackgroundView.layer.borderColor = UIColor.separator.withAlphaComponent(0.2).cgColor
+
+        tabBar.layer.shadowColor = UIColor.black.cgColor
+        tabBar.layer.shadowOffset = CGSize(width: 0, height: 6)
+        tabBar.layer.shadowRadius = 20
+        tabBar.layer.shadowOpacity = 0.12
+
         tabBar.insertSubview(floatingTabBarBackgroundView, at: 0)
         updateFloatingTabBarConstraintsIfNeeded()
     }
@@ -257,13 +260,13 @@ final class TabBarController: UITabBarController
         guard floatingTabBarBackgroundView.superview === tabBar else { return }
         NSLayoutConstraint.deactivate(floatingTabBarBackgroundConstraints)
         floatingTabBarBackgroundConstraints = [
-            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor),
-            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor),
-            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: tabBar.topAnchor),
-            floatingTabBarBackgroundView.bottomAnchor.constraint(equalTo: tabBar.bottomAnchor),
+            floatingTabBarBackgroundView.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor, constant: 28),
+            floatingTabBarBackgroundView.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor, constant: -28),
+            floatingTabBarBackgroundView.topAnchor.constraint(equalTo: tabBar.topAnchor, constant: -4),
+            floatingTabBarBackgroundView.heightAnchor.constraint(equalToConstant: 60),
         ]
         NSLayoutConstraint.activate(floatingTabBarBackgroundConstraints)
-        floatingTabBarBackgroundView.contentView.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.94)
+        floatingTabBarBackgroundView.contentView.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.92)
     }
 
     override func viewDidAppear(_ animated: Bool)

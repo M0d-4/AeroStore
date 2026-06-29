@@ -197,13 +197,18 @@ private extension PillButton
     {
         if self.progress == nil
         {
-            self.setTitleColor(.white, for: .normal)
-            self.backgroundColor = self.tintColor
+            self.setTitleColor(self.tintColor, for: .normal)
+            self.setTitleColor(self.tintColor.withAlphaComponent(0.8), for: .disabled)
+            self.backgroundColor = self.tintColor.withAlphaComponent(0.14)
+            self.layer.borderWidth = 1
+            self.layer.borderColor = self.tintColor.withAlphaComponent(0.28).cgColor
         }
         else
         {
             self.setTitleColor(self.tintColor, for: .normal)
-            self.backgroundColor = self.tintColor.withAlphaComponent(0.15)
+            self.backgroundColor = self.tintColor.withAlphaComponent(0.22)
+            self.layer.borderWidth = 1
+            self.layer.borderColor = self.tintColor.withAlphaComponent(0.4).cgColor
         }
         
         self.progressView.progressTintColor = self.progressTintColor ?? self.tintColor
