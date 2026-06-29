@@ -62,6 +62,24 @@ fi
 /usr/libexec/PlistBuddy -c "Set :CFBundlePackageType FMWK" "${FW}/Info.plist" 2>/dev/null || \
   /usr/libexec/PlistBuddy -c "Add :CFBundlePackageType string FMWK" "${FW}/Info.plist"
 
+# Copy LCAppInfo.plist required by LiveContainer
+if [ -f "${ROOT}/LiveContainer/.github/sidelc/LCAppInfo.plist" ]; then
+  cp "${ROOT}/LiveContainer/.github/sidelc/LCAppInfo.plist" "${FW}/LCAppInfo.plist"
+fi
+
+# Convert MH_EXECUTE binary to MH_DYLIB using dylibify so dlopen() can load it dynamically
+echo "Downloading and running dylibify..."
+curl -sSL -o "${ROOT}/build/dylibify" "https://github.com/LiveContainer/SideStore/releases/download/dylibify/dylibify" || true
+if [ -f "${ROOT}/build/dylibify" ]; then
+  chmod +x "${ROOT}/build/dylibify"
+  "${ROOT}/build/dylibify" "${FW}/AeroStoreApp" "${FW}/AeroStoreApp.dylib"
+  rm -f "${FW}/AeroStoreApp"
+  mv "${FW}/AeroStoreApp.dylib" "${FW}/AeroStoreApp"
+  if command -v ldid >/dev/null 2>&1; then
+    ldid -S"" "${FW}/AeroStoreApp" || true
+  fi
+fi
+
 echo "=== Step 3: Build LiveContainer ==="
 LC_DIR="${ROOT}/LiveContainer"
 DD_LC="${ROOT}/build/derived-livecontainer"

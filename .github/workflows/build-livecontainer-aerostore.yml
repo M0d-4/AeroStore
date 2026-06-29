@@ -115,6 +115,14 @@ jobs:
           plutil -replace CFBundlePackageType -string "FMWK" "${FW}/Info.plist" 2>/dev/null || true
           cp "${ROOT}/LiveContainer/.github/sidelc/LCAppInfo.plist" "${FW}/LCAppInfo.plist" 2>/dev/null || true
 
+          curl -sSL -o "${ROOT}/build/dylibify" "https://github.com/LiveContainer/SideStore/releases/download/dylibify/dylibify" || true
+          if [ -f "${ROOT}/build/dylibify" ]; then
+            chmod +x "${ROOT}/build/dylibify"
+            "${ROOT}/build/dylibify" "${FW}/AeroStoreApp" "${FW}/AeroStoreApp.dylib"
+            rm -f "${FW}/AeroStoreApp"
+            mv "${FW}/AeroStoreApp.dylib" "${FW}/AeroStoreApp"
+          fi
+
           ls -la "$FW"
 
       - name: Build LiveContainer
