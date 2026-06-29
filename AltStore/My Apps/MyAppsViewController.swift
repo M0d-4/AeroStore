@@ -1569,7 +1569,7 @@ private extension MyAppsViewController
         
         let actionTitle = String(format: NSLocalizedString("Back Up %@", comment: ""), installedApp.name)
         alertController.addAction(UIAlertAction(title: actionTitle, style: .default, handler: { (action) in
-            AppManager.shared.backup(installedApp, presentingViewController: self) { (result) in
+            AppManager.shared.backup(installedApp, presentingViewController: (self.presentedViewController ?? self)) { (result) in
                 do
                 {
                     let app = try result.get()
@@ -1582,23 +1582,25 @@ private extension MyAppsViewController
                     print("Failed to back up app:", error)
                     
                     DispatchQueue.main.async {
-                        ToastView(error: error, opensLog: true).show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: (self.presentedViewController ?? self))
 
                         self.collectionView.reloadSections([Section.activeApps.rawValue, Section.inactiveApps.rawValue])
+                        NotificationCenter.default.post(name: NSNotification.Name("FluxAppDataDidChange"), object: nil)
                     }
                 }
             }
             
             DispatchQueue.main.async {
                 self.collectionView.reloadSections([Section.activeApps.rawValue, Section.inactiveApps.rawValue])
+                NotificationCenter.default.post(name: NSNotification.Name("FluxAppDataDidChange"), object: nil)
             }
         }))
         
-        self.present(alertController, animated: true, completion: nil)
+        (self.presentedViewController ?? self).present(alertController, animated: true, completion: nil)
     }
     
     func importBackup(for installedApp: InstalledApp){
-        ImportExport.importBackup(presentingViewController: self, for: installedApp) { result in
+        ImportExport.importBackup(presentingViewController: (self.presentedViewController ?? self), for: installedApp) { result in
             var toast: ToastView
             switch(result){
             case .failure(let error):
@@ -1609,7 +1611,8 @@ private extension MyAppsViewController
                                   detailText: "Use 'Restore Backup' option to restore data from this imported backup")
             }
             DispatchQueue.main.async {
-                toast.show(in: self)
+                toast.show(in: (self.presentedViewController ?? self))
+                NotificationCenter.default.post(name: NSNotification.Name("FluxAppDataDidChange"), object: nil)
             }
         }
     }
@@ -1649,7 +1652,7 @@ private extension MyAppsViewController
         let alertController = UIAlertController(title: NSLocalizedString("Are you sure you want to restore this backup?", comment: ""), message: message, preferredStyle: .actionSheet)
         alertController.addAction(.cancel)
         alertController.addAction(UIAlertAction(title: NSLocalizedString("Restore Backup", comment: ""), style: .destructive, handler: { (action) in
-            AppManager.shared.restore(installedApp, presentingViewController: self) { (result) in
+            AppManager.shared.restore(installedApp, presentingViewController: (self.presentedViewController ?? self)) { (result) in
                 do
                 {
                     let app = try result.get()
@@ -1662,8 +1665,11 @@ private extension MyAppsViewController
                     print("Failed to restore app:", error)
                     
                     DispatchQueue.main.async {
-                        ToastView(error: error, opensLog: true).show(in: self)
+                        ToastView(error: error, opensLog: true).show(in: (self.presentedViewController ?? self))
                     }
+                }
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: NSNotification.Name("FluxAppDataDidChange"), object: nil)
                 }
             }
             
@@ -1672,7 +1678,7 @@ private extension MyAppsViewController
             }
         }))
         
-        self.present(alertController, animated: true, completion: nil)
+        (self.presentedViewController ?? self).present(alertController, animated: true, completion: nil)
     }
     
     func exportBackup(for installedApp: InstalledApp)
@@ -1684,7 +1690,7 @@ private extension MyAppsViewController
         // Don't set delegate to avoid conflicting with import callbacks.
         // documentPicker.delegate = self
         
-        self.present(documentPicker, animated: true, completion: nil)
+        (self.presentedViewController ?? self).present(documentPicker, animated: true, completion: nil)
     }
     
     func chooseIcon(for installedApp: InstalledApp)
@@ -2093,8 +2099,22 @@ extension MyAppsViewController
             guard let cell = collectionView.cellForItem(at: indexPath) else { break }
             self.performSegue(withIdentifier: "showUpdate", sender: cell)
             
+        case .activeApps, .inactiveApps:
+            guard let installedApp = self.dataSource.item(at: indexPath) as? InstalledApp else { break }
+            self.presentAppDataManager(for: installedApp)
+            
         default: break
         }
+    }
+    
+    func presentAppDataManager(for installedApp: InstalledApp) {
+        let dataManagerVC = FluxAppDataManagerViewController(installedApp: installedApp, myAppsViewController: self)
+        let navVC = UINavigationController(rootViewController: dataManagerVC)
+        if #available(iOS 15.0, *), let sheet = navVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        self.present(navVC, animated: true)
     }
 }
 
@@ -2128,6 +2148,11 @@ extension MyAppsViewController
         
         let jitAction = UIAction(title: NSLocalizedString("Enable JIT", comment: ""), image: UIImage(systemName: "bolt")) { (action) in
             self.enableJIT(for: installedApp)
+        }
+        
+        let manageDataAction = UIAction(title: NSLocalizedString("Manage Save States & Data...", comment: ""), image: UIImage(systemName: "archivebox.fill")) { [weak self] (action) in
+            guard let self = self else { return }
+            self.presentAppDataManager(for: installedApp)
         }
         
         let backupAction = UIAction(title: NSLocalizedString("Back Up", comment: ""), image: UIImage(systemName: "doc.on.doc")) { (action) in
@@ -2208,60 +2233,13 @@ extension MyAppsViewController
             actions.append(changeIconMenu)
             #endif
             
-            if installedApp.isActive
-            {
-                actions.append(backupAction)
-            }
-            else if let _ = UTTypeCopyDeclaration(installedApp.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?, !UserDefaults.standard.isLegacyDeactivationSupported
-            {
-                // Allow backing up inactive apps if they are still installed,
-                // but on an iOS version that no longer supports legacy deactivation.
-                // This handles edge case where you can't install more apps until you
-                // delete some, but can't activate inactive apps again to back them up first.
-                actions.append(backupAction)
-            }
-                    
-            if let backupDirectoryURL = FileManager.default.backupDirectoryURL(for: installedApp)
-            {
-                var backupExists = false
-                var outError: NSError? = nil
-                
-                self.coordinator.coordinate(readingItemAt: backupDirectoryURL, options: [.withoutChanges], error: &outError) { (backupDirectoryURL) in
-
-                    #if DEBUG && targetEnvironment(simulator)
-                    backupExists = true
-                    #else
-                    backupExists = FileManager.default.fileExists(atPath: backupDirectoryURL.path)
-                    #endif
-                }
-                
-                if backupExists
-                {
-                    actions.append(exportBackupAction)
-                    
-                    if installedApp.isActive
-                    {
-                        actions.append(restoreBackupAction)
-                    }
-                }
-                else if let error = outError
-                {
-                    print("Unable to check if backup exists:", error)
-                }
-            }
+            let saveStatesMenu = self.makeSaveStatesMenu(for: installedApp, manageDataAction: manageDataAction, backupAction: backupAction, exportBackupAction: exportBackupAction, importBackupAction: importBackupAction, restoreBackupAction: restoreBackupAction, restorePreviousBackupAction: restorePreviousBackupAction)
+            actions.append(saveStatesMenu)
             
             if installedApp.isActive
             {
                 actions.append(deactivateAction)
-                // import backup into shared backups dir is allowed
-                actions.append(importBackupAction)
             }
-            
-            // have an option to restore the n-1 backup
-            if FileManager.default.fileExists(atPath: getPreviousBackupURL(installedApp).path){
-                actions.append(restorePreviousBackupAction)
-            }
-            
             
             #if DEBUG && targetEnvironment(simulator)
             if installedApp.bundleIdentifier != StoreApp.altstoreAppID
@@ -2293,11 +2271,7 @@ extension MyAppsViewController
             activateAction,
             jitAction,
             changeIconMenu,
-            backupAction,
-            exportBackupAction,
-            importBackupAction,
-            restoreBackupAction,
-            restorePreviousBackupAction,
+            saveStatesMenu,
             deactivateAction,
             removeAction,
         ]
@@ -2317,8 +2291,7 @@ extension MyAppsViewController
                 openMenu,
                 deactivateAction,
                 removeAction,
-                backupAction,
-                exportBackupAction
+                saveStatesMenu
             ]
             
             for action in actions where !allowedActions.contains(action)
@@ -2949,3 +2922,37 @@ extension MyAppsViewController: UIImagePickerControllerDelegate, UINavigationCon
         self._imagePickerInstalledApp = nil
     }
 }
+
+extension MyAppsViewController {
+    func makeSaveStatesMenu(for installedApp: InstalledApp, manageDataAction: UIAction, backupAction: UIAction, exportBackupAction: UIAction, importBackupAction: UIAction, restoreBackupAction: UIAction, restorePreviousBackupAction: UIAction) -> UIMenu {
+        var saveStateChildren: [UIMenuElement] = [manageDataAction]
+        if installedApp.isActive || (!UserDefaults.standard.isLegacyDeactivationSupported && (UTTypeCopyDeclaration(installedApp.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?) != nil) {
+            saveStateChildren.append(backupAction)
+        }
+        if let backupDirectoryURL = FileManager.default.backupDirectoryURL(for: installedApp) {
+            var backupExists = false
+            var outError: NSError? = nil
+            self.coordinator.coordinate(readingItemAt: backupDirectoryURL, options: [.withoutChanges], error: &outError) { (backupDirectoryURL) in
+                #if DEBUG && targetEnvironment(simulator)
+                backupExists = true
+                #else
+                backupExists = FileManager.default.fileExists(atPath: backupDirectoryURL.path)
+                #endif
+            }
+            if backupExists {
+                saveStateChildren.append(exportBackupAction)
+                if installedApp.isActive {
+                    saveStateChildren.append(restoreBackupAction)
+                }
+            }
+        }
+        if installedApp.isActive {
+            saveStateChildren.append(importBackupAction)
+        }
+        if FileManager.default.fileExists(atPath: getPreviousBackupURL(installedApp).path) {
+            saveStateChildren.append(restorePreviousBackupAction)
+        }
+        return UIMenu(title: NSLocalizedString("Save States & Data", comment: ""), image: UIImage(systemName: "externaldrive.fill"), children: saveStateChildren)
+    }
+}
+
