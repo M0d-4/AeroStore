@@ -38,5 +38,6 @@ final class SettingsHeaderFooterView: UITableViewHeaderFooterView
         self.secondaryLabel.font = .systemFont(ofSize: 13, weight: .regular)
         self.secondaryLabel.textColor = .fluxSecondaryText
         self.button.tintColor = .altPrimary
+        self.button.setTitleColor(.altPrimary, for: .normal)
     }
 }
