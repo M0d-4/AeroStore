@@ -113,6 +113,7 @@ jobs:
           plutil -replace CFBundleExecutable -string "AeroStoreApp" "${FW}/Info.plist" 2>/dev/null || true
           plutil -replace CFBundleName -string "AeroStoreApp" "${FW}/Info.plist" 2>/dev/null || true
           plutil -replace CFBundlePackageType -string "FMWK" "${FW}/Info.plist" 2>/dev/null || true
+          cp "${ROOT}/LiveContainer/.github/sidelc/LCAppInfo.plist" "${FW}/LCAppInfo.plist" 2>/dev/null || true
 
           ls -la "$FW"
 
