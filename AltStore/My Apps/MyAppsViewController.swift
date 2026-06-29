@@ -160,7 +160,7 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
     {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = 6
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -214,10 +214,10 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         let row = UIStackView()
         row.axis = .horizontal
         row.alignment = .center
-        row.spacing = 5
+        row.spacing = 4
         row.translatesAutoresizingMaskIntoConstraints = false
 
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
         if let image = UIImage(systemName: symbolName, withConfiguration: symbolConfig)
         {
             let icon = UIImageView(image: image)
@@ -228,23 +228,23 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
 
         let label = UILabel()
         label.text = text
-        label.font = .systemFont(ofSize: 12, weight: .semibold)
+        label.font = .systemFont(ofSize: 11, weight: .semibold)
         label.textColor = color
         row.addArrangedSubview(label)
 
         let pill = UIView()
-        pill.backgroundColor = color.withAlphaComponent(0.14)
-        pill.layer.cornerRadius = 13
+        pill.backgroundColor = color.withAlphaComponent(0.12)
+        pill.layer.cornerRadius = 10
         pill.layer.cornerCurve = .continuous
-        pill.layer.borderWidth = 1
-        pill.layer.borderColor = color.withAlphaComponent(0.28).cgColor
+        pill.layer.borderWidth = 0.5
+        pill.layer.borderColor = color.withAlphaComponent(0.3).cgColor
         pill.translatesAutoresizingMaskIntoConstraints = false
         pill.addSubview(row)
         NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 10),
-            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -10),
-            row.topAnchor.constraint(equalTo: pill.topAnchor, constant: 6),
-            row.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -6),
+            row.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 8),
+            row.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -8),
+            row.topAnchor.constraint(equalTo: pill.topAnchor, constant: 4),
+            row.bottomAnchor.constraint(equalTo: pill.bottomAnchor, constant: -4),
         ])
         return pill
     }
