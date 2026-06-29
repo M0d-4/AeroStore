@@ -137,6 +137,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         DispatchQueue.main.async {
             FluxAppearancePreference.applyToAllWindows()
         }
+        NotificationCenter.default.addObserver(self, selector: #selector(fluxAccentColorDidChange), name: .fluxAccentColorDidChange, object: nil)
 
         if UserDefaults.standard.enableEMPforWireguard {
             os_log(.default, log: log, "Starting EM Proxy...")
@@ -267,6 +268,17 @@ private extension AppDelegate
     {
         self.window?.tintColor = .altPrimary
         self.window?.backgroundColor = .systemBackground
+    }
+
+    @objc func fluxAccentColorDidChange()
+    {
+        let color = UIColor.altPrimary
+        self.window?.tintColor = color
+        for case let windowScene as UIWindowScene in UIApplication.shared.connectedScenes {
+            for window in windowScene.windows {
+                window.tintColor = color
+            }
+        }
     }
     
     func prepareImageCache()

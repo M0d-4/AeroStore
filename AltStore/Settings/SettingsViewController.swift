@@ -167,6 +167,7 @@ final class SettingsViewController: UITableViewController
         NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.openErrorLog(_:)), name: ToastView.openErrorLogNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.openExportCertificateConfirm(_:)), name: AppDelegate.exportCertificateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.fluxAppearancePreferenceDidChange), name: .fluxAppearanceDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(SettingsViewController.fluxAccentColorPreferenceDidChange), name: .fluxAccentColorDidChange, object: nil)
     }
     
     
@@ -502,6 +503,42 @@ private extension SettingsViewController
         self.tableView.reloadSections(IndexSet(integer: Section.display.rawValue), with: .automatic)
     }
 
+    @objc private func fluxAccentColorPreferenceDidChange()
+    {
+        guard self.isViewLoaded else { return }
+        self.configureFluxAppearance()
+        if let tabBar = self.tabBarController?.tabBar {
+            tabBar.tintColor = .altPrimary
+            if #available(iOS 15, *), let appearance = tabBar.standardAppearance.copy() as? UITabBarAppearance {
+                appearance.stackedLayoutAppearance.normal.badgeBackgroundColor = .altPrimary
+                tabBar.standardAppearance = appearance
+                tabBar.scrollEdgeAppearance = appearance
+            }
+        }
+        self.tableView.reloadSections(IndexSet(integer: Section.display.rawValue), with: .automatic)
+    }
+
+    @objc private func presentFluxThemeMenu(_ sender: UIControl?)
+    {
+        let sheet = UIAlertController(title: NSLocalizedString("Theme & Appearance", comment: ""), message: NSLocalizedString("Personalize your AeroStore experience", comment: ""), preferredStyle: .actionSheet)
+        
+        sheet.addAction(UIAlertAction(title: String(format: NSLocalizedString("Appearance: %@", comment: ""), FluxAppearancePreference.current.localizedTitle), style: .default) { _ in
+            self.presentFluxAppearancePicker(sender)
+        })
+        
+        sheet.addAction(UIAlertAction(title: String(format: NSLocalizedString("Accent Color: %@", comment: ""), FluxAccentColorPreference.current.localizedTitle), style: .default) { _ in
+            self.presentFluxAccentColorPicker(sender)
+        })
+        
+        sheet.addAction(.cancel)
+        if let popover = sheet.popoverPresentationController, let sender
+        {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+        }
+        self.present(sheet, animated: true)
+    }
+
     @objc private func presentFluxAppearancePicker(_ sender: UIControl?)
     {
         let sheet = UIAlertController(title: NSLocalizedString("Appearance", comment: ""), message: nil, preferredStyle: .actionSheet)
@@ -511,6 +548,25 @@ private extension SettingsViewController
             sheet.addAction(UIAlertAction(title: mark + mode.localizedTitle, style: .default) { _ in
                 mode.saveAndApply()
                 self.tableView.reloadSections(IndexSet(integer: Section.display.rawValue), with: .automatic)
+            })
+        }
+        sheet.addAction(.cancel)
+        if let popover = sheet.popoverPresentationController, let sender
+        {
+            popover.sourceView = sender
+            popover.sourceRect = sender.bounds
+        }
+        self.present(sheet, animated: true)
+    }
+
+    @objc private func presentFluxAccentColorPicker(_ sender: UIControl?)
+    {
+        let sheet = UIAlertController(title: NSLocalizedString("Accent Color", comment: ""), message: nil, preferredStyle: .actionSheet)
+        for colorPref in FluxAccentColorPreference.allCases
+        {
+            let mark = (colorPref == FluxAccentColorPreference.current) ? "✓ " : ""
+            sheet.addAction(UIAlertAction(title: mark + colorPref.localizedTitle, style: .default) { _ in
+                colorPref.saveAndApply()
             })
         }
         sheet.addAction(.cancel)
@@ -620,13 +676,15 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Choose light, dark, or system appearance, and pick an alternate app icon.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Choose your appearance, pick an accent color, and change the app icon.", comment: "")
                 settingsHeaderFooterView.button.setTitle(
-                    String(format: NSLocalizedString("Appearance: %@", comment: ""),
-                           FluxAppearancePreference.current.localizedTitle),
+                    String(format: NSLocalizedString("Theme: %@ • %@", comment: ""),
+                           FluxAppearancePreference.current.localizedTitle,
+                           FluxAccentColorPreference.current.localizedTitle),
                     for: .normal)
                 settingsHeaderFooterView.button.isHidden = false
-                settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.presentFluxAppearancePicker(_:)), for: .primaryActionTriggered)
+                settingsHeaderFooterView.button.removeTarget(nil, action: nil, for: .allEvents)
+                settingsHeaderFooterView.button.addTarget(self, action: #selector(SettingsViewController.presentFluxThemeMenu(_:)), for: .primaryActionTriggered)
             }
             
             
