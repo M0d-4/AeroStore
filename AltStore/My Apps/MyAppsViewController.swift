@@ -89,6 +89,8 @@ class MyAppsViewController: UICollectionViewController, PeekPopPreviewing
         NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.didFetchSource(_:)), name: AppManager.didFetchSourceNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.importApp(_:)), name: AppDelegate.importAppDeepLinkNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.minimuxerOrForegroundChanged), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.handleRefreshAllDeepLink(_:)), name: AppDelegate.refreshAllAppsDeepLinkNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MyAppsViewController.handleEnableJITDeepLink(_:)), name: AppDelegate.enableJITDeepLinkNotification, object: nil)
     }
     
     override func viewDidLoad()
@@ -1801,6 +1803,34 @@ private extension MyAppsViewController
             {
                 print("Unable to remove imported .ipa.", error)
             }
+        }
+    }
+    
+    @objc func handleRefreshAllDeepLink(_ notification: Notification)
+    {
+        self.loadViewIfNeeded()
+        self.refreshAllApps(UIBarButtonItem())
+    }
+    
+    @objc func handleEnableJITDeepLink(_ notification: Notification)
+    {
+        self.loadViewIfNeeded()
+        
+        let targetBundleID = notification.userInfo?["bundleID"] as? String
+        guard let activeApps = self.activeAppsDataSource.fetchedResultsController.fetchedObjects else { return }
+        
+        let appToEnable: InstalledApp?
+        if let bundleID = targetBundleID {
+            appToEnable = activeApps.first(where: { $0.bundleIdentifier == bundleID })
+        } else {
+            appToEnable = activeApps.first(where: { $0.bundleIdentifier != Bundle.Info.appbundleIdentifier && $0.bundleIdentifier != "com.rileytestut.AltStore" })
+        }
+        
+        if let app = appToEnable {
+            self.enableJIT(for: app)
+        } else {
+            let toastView = ToastView(text: "No active sideloaded apps found for JIT", detailText: nil)
+            toastView.show(in: self)
         }
     }
     

@@ -95,6 +95,25 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.aero.aerostore.shortcut.refreshAll</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Refresh All Apps</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeUpdate</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.aero.aerostore.shortcut.enableJIT</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Enable JIT</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypePlay</string>
+		</dict>
+	</array>
 	<key>INIntentsSupported</key>
 	<array>
 		<string>RefreshAllIntent</string>

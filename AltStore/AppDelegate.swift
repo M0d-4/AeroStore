@@ -27,6 +27,8 @@ extension AppDelegate
     
     static let appBackupDidFinish = Notification.Name(Bundle.Info.appbundleIdentifier + ".AppBackupDidFinish")
     static let exportCertificateNotification = Notification.Name(Bundle.Info.appbundleIdentifier + ".ExportCertificateNotification")
+    static let refreshAllAppsDeepLinkNotification = Notification.Name(Bundle.Info.appbundleIdentifier + ".RefreshAllAppsDeepLinkNotification")
+    static let enableJITDeepLinkNotification = Notification.Name(Bundle.Info.appbundleIdentifier + ".EnableJITDeepLinkNotification")
     
     static let importAppDeepLinkURLKey = "fileURL"
     static let appBackupResultKey = "result"
