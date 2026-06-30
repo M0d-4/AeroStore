@@ -2203,6 +2203,8 @@ extension MyAppsViewController
         
         let changeIconMenu = UIMenu(title: NSLocalizedString("Change Icon", comment: ""), image: UIImage(systemName: "photo"), children: changeIconActions)
         
+        let saveStatesMenu = self.makeSaveStatesMenu(for: installedApp, manageDataAction: manageDataAction, backupAction: backupAction, exportBackupAction: exportBackupAction, importBackupAction: importBackupAction, restoreBackupAction: restoreBackupAction, restorePreviousBackupAction: restorePreviousBackupAction)
+        
         if installedApp.bundleIdentifier == StoreApp.altstoreAppID
         {
             #if BETA
@@ -2233,7 +2235,6 @@ extension MyAppsViewController
             actions.append(changeIconMenu)
             #endif
             
-            let saveStatesMenu = self.makeSaveStatesMenu(for: installedApp, manageDataAction: manageDataAction, backupAction: backupAction, exportBackupAction: exportBackupAction, importBackupAction: importBackupAction, restoreBackupAction: restoreBackupAction, restorePreviousBackupAction: restorePreviousBackupAction)
             actions.append(saveStatesMenu)
             
             if installedApp.isActive
