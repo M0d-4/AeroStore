@@ -600,17 +600,14 @@ private extension AuthenticationOperation
                 a.machineName?.starts(with: "AeroStore") == true || a.machineName?.starts(with: "FluxStore") == true || a.machineName?.starts(with: "SideStore") == true || a.machineName?.starts(with: "AltStore") == true
             }
             
-            if ourCertificates.isEmpty {
-                return requestCertificate()
-            }
+            let targetCertificates = ourCertificates.isEmpty ? certificates : ourCertificates
             
             // We don't have private keys for any of the certificates,
             // so we need to revoke one and create a new one.
             var certsText = ""
-            for certificate in ourCertificates {
-                if let name = certificate.machineName {
-                    certsText.append("\(name)\n")
-                }
+            for certificate in targetCertificates {
+                let name = certificate.machineName ?? certificate.name ?? "iOS Development Certificate"
+                certsText.append("\(name)\n")
             }
             
             DispatchQueue.main.async {
@@ -620,7 +617,7 @@ private extension AuthenticationOperation
                     requestCertificate()
                 }
                 let yesAction = UIAlertAction(title: NSLocalizedString("Yes", comment: ""), style: .default) { (action) in
-                    for certificate in ourCertificates {
+                    for certificate in targetCertificates {
                         ALTAppleAPI.shared.revoke(certificate, for: team, session: session) { (success, error) in
                             if let error = error, !success
                             {
