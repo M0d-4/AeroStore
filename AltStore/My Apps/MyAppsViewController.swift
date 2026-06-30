@@ -1617,28 +1617,29 @@ extension MyAppsViewController
         }
     }
     
-    func getPreviousBackupURL(_ installedApp: InstalledApp) -> URL
+    func getPreviousBackupURL(_ installedApp: InstalledApp) -> URL?
     {
-        let backupURL = FileManager.default.backupDirectoryURL(for: installedApp)!
+        guard let backupURL = FileManager.default.backupDirectoryURL(for: installedApp) else { return nil }
         let backupBakURL = ImportExport.getPreviousBackupURL(backupURL)
         return backupBakURL
     }
     
     func restorePreviousBackup(for installedApp: InstalledApp){
-        let backupURL = FileManager.default.backupDirectoryURL(for: installedApp)!
+        guard let backupURL = FileManager.default.backupDirectoryURL(for: installedApp) else { return }
         let backupBakURL = ImportExport.getPreviousBackupURL(backupURL)
         
         // backupBakURL is expected to exist at this point, this needs to be ensured by caller logic
         // or invoke this action only when backupBakURL exists
+        guard FileManager.default.fileExists(atPath: backupBakURL.path) else { return }
         
         // delete the current backup
         if(FileManager.default.fileExists(atPath: backupURL.path)){
-            try! FileManager.default.removeItem(at: backupURL)
+            try? FileManager.default.removeItem(at: backupURL)
         }
         
         // restore the previously saved backup as current backup
         // (don't delete the N-1 backup yet so copy instead of move)
-        try! FileManager.default.copyItem(at: backupBakURL, to: backupURL)
+        try? FileManager.default.copyItem(at: backupBakURL, to: backupURL)
         
         //perform restore of data from the backup
         restore(installedApp)
@@ -2927,19 +2928,16 @@ extension MyAppsViewController: UIImagePickerControllerDelegate, UINavigationCon
 extension MyAppsViewController {
     func makeSaveStatesMenu(for installedApp: InstalledApp, manageDataAction: UIAction, backupAction: UIAction, exportBackupAction: UIAction, importBackupAction: UIAction, restoreBackupAction: UIAction, restorePreviousBackupAction: UIAction) -> UIMenu {
         var saveStateChildren: [UIMenuElement] = [manageDataAction]
-        if installedApp.isActive || (!UserDefaults.standard.isLegacyDeactivationSupported && (UTTypeCopyDeclaration(installedApp.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?) != nil) {
+        if installedApp.isActive {
+            saveStateChildren.append(backupAction)
+        } else if !UserDefaults.standard.isLegacyDeactivationSupported, let _ = UTTypeCopyDeclaration(installedApp.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary? {
             saveStateChildren.append(backupAction)
         }
         if let backupDirectoryURL = FileManager.default.backupDirectoryURL(for: installedApp) {
-            var backupExists = false
-            var outError: NSError? = nil
-            self.coordinator.coordinate(readingItemAt: backupDirectoryURL, options: [.withoutChanges], error: &outError) { (backupDirectoryURL) in
-                #if DEBUG && targetEnvironment(simulator)
-                backupExists = true
-                #else
-                backupExists = FileManager.default.fileExists(atPath: backupDirectoryURL.path)
-                #endif
-            }
+            var backupExists = FileManager.default.fileExists(atPath: backupDirectoryURL.path)
+            #if DEBUG && targetEnvironment(simulator)
+            backupExists = true
+            #endif
             if backupExists {
                 saveStateChildren.append(exportBackupAction)
                 if installedApp.isActive {
@@ -2950,7 +2948,7 @@ extension MyAppsViewController {
         if installedApp.isActive {
             saveStateChildren.append(importBackupAction)
         }
-        if FileManager.default.fileExists(atPath: getPreviousBackupURL(installedApp).path) {
+        if let prevURL = getPreviousBackupURL(installedApp), FileManager.default.fileExists(atPath: prevURL.path) {
             saveStateChildren.append(restorePreviousBackupAction)
         }
         return UIMenu(title: NSLocalizedString("Save States & Data", comment: ""), image: UIImage(systemName: "externaldrive.fill"), children: saveStateChildren)
