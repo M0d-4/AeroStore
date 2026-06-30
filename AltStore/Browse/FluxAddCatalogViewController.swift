@@ -5,6 +5,7 @@
 import UIKit
 import AltStoreCore
 import Nuke
+import CoreData
 
 /// Flux-branded add-catalog flow (replaces presenting SideStore’s legacy Add Source UI from Browse).
 final class FluxAddCatalogViewController: UIViewController {
@@ -45,6 +46,8 @@ final class FluxAddCatalogViewController: UIViewController {
     private let activity = UIActivityIndicatorView(style: .medium)
 
     private var fetchedSource: Source?
+    private var previewedURL: URL?
+    private let catalogContext = DatabaseManager.shared.persistentContainer.newBackgroundContext()
     private var didAutoPreview = false
 
     override func viewDidLoad() {
@@ -292,7 +295,7 @@ final class FluxAddCatalogViewController: UIViewController {
 
         let action = UIAction { [weak self] _ in
             guard let self else { return }
-            self.urlField.text = item.url.absoluteString
+            self.urlField.text = item.url
             self.previewTapped()
             self.scrollView.setContentOffset(.zero, animated: true)
         }
