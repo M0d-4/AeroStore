@@ -463,19 +463,35 @@ final class FluxAppDataManagerViewController: UIViewController {
     
     private func createStyledButton(title: String, icon: String, isPrimary: Bool) -> UIButton {
         let btn = UIButton(type: .system)
-        var config = UIButton.Configuration.filled()
-        config.title = title
-        config.image = UIImage(systemName: icon)
-        config.imagePadding = 8
-        config.cornerStyle = .medium
-        if isPrimary {
-            config.baseBackgroundColor = .altPrimary
-            config.baseForegroundColor = .white
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.title = title
+            config.image = UIImage(systemName: icon)
+            config.imagePadding = 8
+            config.cornerStyle = .medium
+            if isPrimary {
+                config.baseBackgroundColor = .altPrimary
+                config.baseForegroundColor = .white
+            } else {
+                config.baseBackgroundColor = UIColor.secondarySystemFill
+                config.baseForegroundColor = .altPrimary
+            }
+            btn.configuration = config
         } else {
-            config.baseBackgroundColor = UIColor.secondarySystemFill
-            config.baseForegroundColor = .altPrimary
+            btn.setTitle(title, for: .normal)
+            btn.setImage(UIImage(systemName: icon), for: .normal)
+            btn.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: -8)
+            btn.layer.cornerRadius = 8
+            if isPrimary {
+                btn.backgroundColor = .altPrimary
+                btn.setTitleColor(.white, for: .normal)
+                btn.tintColor = .white
+            } else {
+                btn.backgroundColor = UIColor.secondarySystemFill
+                btn.setTitleColor(.altPrimary, for: .normal)
+                btn.tintColor = .altPrimary
+            }
         }
-        btn.configuration = config
         btn.heightAnchor.constraint(equalToConstant: 46).isActive = true
         return btn
     }

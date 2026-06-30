@@ -1340,7 +1340,7 @@ private extension MyAppsViewController
     }
 }
 
-private extension MyAppsViewController
+extension MyAppsViewController
 {
     func open(_ installedApp: InstalledApp)
     {
@@ -1617,7 +1617,7 @@ private extension MyAppsViewController
         }
     }
     
-    private func getPreviousBackupURL(_ installedApp: InstalledApp) -> URL
+    func getPreviousBackupURL(_ installedApp: InstalledApp) -> URL
     {
         let backupURL = FileManager.default.backupDirectoryURL(for: installedApp)!
         let backupBakURL = ImportExport.getPreviousBackupURL(backupURL)
