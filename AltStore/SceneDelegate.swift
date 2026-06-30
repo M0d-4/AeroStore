@@ -153,6 +153,22 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate
         guard let context = URLContexts.first else { return }
         self.open(context)
     }
+
+    func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
+        if shortcutItem.type == "com.aero.aerostore.shortcut.refreshAll" {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: AppDelegate.refreshAllAppsDeepLinkNotification, object: nil, userInfo: nil)
+            }
+            completionHandler(true)
+        } else if shortcutItem.type == "com.aero.aerostore.shortcut.enableJIT" {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: AppDelegate.enableJITDeepLinkNotification, object: nil, userInfo: nil)
+            }
+            completionHandler(true)
+        } else {
+            completionHandler(false)
+        }
+    }
 }
 
 private extension SceneDelegate
@@ -311,22 +327,6 @@ private extension SceneDelegate
 
             default: break
             }
-        }
-    }
-
-    func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
-        if shortcutItem.type == "com.aero.aerostore.shortcut.refreshAll" {
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: AppDelegate.refreshAllAppsDeepLinkNotification, object: nil, userInfo: nil)
-            }
-            completionHandler(true)
-        } else if shortcutItem.type == "com.aero.aerostore.shortcut.enableJIT" {
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: AppDelegate.enableJITDeepLinkNotification, object: nil, userInfo: nil)
-            }
-            completionHandler(true)
-        } else {
-            completionHandler(false)
         }
     }
 }
