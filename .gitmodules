@@ -48,7 +48,7 @@
 #sidestore dependencies
 [submodule "Dependencies/minimuxer"]
     path = Dependencies/minimuxer
-    url = https://github.com/SideStore/minimuxer
+    url = https://github.com/Leviidev/minimuxer.git
     branch = master
 [submodule "Dependencies/em_proxy"]
         path = Dependencies/em_proxy
@@ -60,7 +60,7 @@
     branch = main
 [submodule "Dependencies/AltSign"]
     path = Dependencies/AltSign
-    url = https://github.com/SideStore/AltSign
+    url = https://github.com/Leviidev/AltSign.git
     branch = master
 [submodule "LiveContainer"]
 	path = LiveContainer

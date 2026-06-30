@@ -11,7 +11,7 @@ import UIKit
 class FluxThemesViewController: UIViewController {
     
     private let themes = [
-        Theme(name: "Flux Blue", primaryColor: "#007AFF", secondaryColor: "#5856D6", isDefault: true),
+        Theme(name: "Aero Blue", primaryColor: "#007AFF", secondaryColor: "#5856D6", isDefault: true),
         Theme(name: "Sunset Orange", primaryColor: "#FF9500", secondaryColor: "#FF6B00", isDefault: false),
         Theme(name: "Forest Green", primaryColor: "#34C759", secondaryColor: "#30A860", isDefault: false),
         Theme(name: "Royal Purple", primaryColor: "#AF52DE", secondaryColor: "#8E44FF", isDefault: false),
@@ -86,7 +86,7 @@ class FluxThemesViewController: UIViewController {
     }
     
     private func loadCurrentTheme() {
-        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Flux Blue"
+        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Aero Blue"
         currentThemeLabel.text = NSLocalizedString("Current Theme: \(savedThemeName)", comment: "")
     }
     
@@ -185,7 +185,7 @@ extension FluxThemesViewController {
     }
     
     private func updateCurrentThemeLabel() {
-        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Flux Blue"
+        let savedThemeName = UserDefaults.standard.string(forKey: "aerostore.selectedTheme") ?? "Aero Blue"
         currentThemeLabel.text = NSLocalizedString("Current Theme: \(savedThemeName)", comment: "")
     }
 }

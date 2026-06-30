@@ -117,7 +117,7 @@
     },
     {
       "identifier": "com.aero.aerostore.source",
-      "sourceURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AeroStore.source.json",
+      "sourceURL": "https://raw.githubusercontent.com/Leviidev/AeroStore/main/AeroStore.source.json",
       "displayName": "AeroStore",
       "tagline": "Official AeroStore source."
     }

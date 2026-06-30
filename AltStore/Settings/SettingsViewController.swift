@@ -1083,7 +1083,7 @@ private extension SettingsViewController
     
     @IBAction func followAltStoreGitHub()
     {
-        let safariURL = URL(string: "https://github.com/FluxStore-App/FluxStore")!
+        let safariURL = URL(string: "https://github.com/Leviidev/AeroStore")!
         UIApplication.shared.open(safariURL, options: [:])
     }
 }
@@ -1495,7 +1495,7 @@ extension SettingsViewController
                 
                 // Option 1: GitHub
                 alertController.addAction(UIAlertAction(title: "GitHub", style: .default) { _ in
-                    if let githubURL = URL(string: "https://github.com/FluxStore-App/FluxStore/issues") {
+                    if let githubURL = URL(string: "https://github.com/Leviidev/AeroStore/issues") {
                         let safariViewController = SFSafariViewController(url: githubURL)
                         safariViewController.preferredControlTintColor = .altPrimary
                         self.present(safariViewController, animated: true, completion: nil)

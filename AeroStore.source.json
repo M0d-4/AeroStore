@@ -1,12 +1,12 @@
 {
   "name": "AeroStore",
   "identifier": "com.aero.aerostore.source",
-  "website": "https://github.com/FluxStore-App/FluxStore",
+  "website": "https://github.com/Leviidev/AeroStore",
   "subtitle": "Official AeroStore source.",
   "description": "AeroStore is a community-driven sideloading app for non-jailbroken iOS devices.\n\nIt resigns apps with your personal development certificate and supports on-device JIT workflows.",
   "tintColor": "#0784FC",
-  "iconURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
-  "headerURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
+  "iconURL": "https://raw.githubusercontent.com/Leviidev/AeroStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
+  "headerURL": "https://raw.githubusercontent.com/Leviidev/AeroStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
   "apps": [
     {
       "beta": false,
@@ -17,9 +17,9 @@
       "version": "1.0.7",
       "versionDate": "2026-05-13T00:00:00Z",
       "versionDescription": "AeroStore v1.0.7",
-      "downloadURL": "https://github.com/FluxStore-App/FluxStore/releases/latest/download/AeroStore.ipa",
+      "downloadURL": "https://github.com/Leviidev/AeroStore/releases/latest/download/AeroStore.ipa",
       "localizedDescription": "AeroStore is a community-driven sideloading app for non-jailbroken iOS devices.",
-      "iconURL": "https://raw.githubusercontent.com/FluxStore-App/FluxStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
+      "iconURL": "https://raw.githubusercontent.com/Leviidev/AeroStore/main/AltStore/Resources/Icons.xcassets/AppIcon.appiconset/1024.png",
       "tintColor": "#0784FC",
       "category": "utilities",
       "size": 73400320,
@@ -29,7 +29,7 @@
           "version": "1.0.7",
           "date": "2026-05-13T00:00:00Z",
           "localizedDescription": "AeroStore v1.0.7",
-          "downloadURL": "https://github.com/FluxStore-App/FluxStore/releases/latest/download/AeroStore.ipa",
+          "downloadURL": "https://github.com/Leviidev/AeroStore/releases/latest/download/AeroStore.ipa",
           "size": 73400320
         }
       ],

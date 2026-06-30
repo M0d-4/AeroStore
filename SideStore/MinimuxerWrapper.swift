@@ -23,7 +23,7 @@ func bindTunnelConfig() {
                 setDeviceIP: { value in Task { @MainActor in config.deviceIP = value } },
                 setFakeIP: { value in Task { @MainActor in config.fakeIP = value } },
                 setSubnetMask: { value in Task { @MainActor in config.subnetMask = value } },
-                getOverrideFakeIP: { config.overrideFakeIP },
+                getOverrideFakeIP: { UserDefaults.standard.string(forKey: "TunnelOverrideFakeIP") ?? "10.7.0.1" },
                 setOverrideEffective: { value in Task { @MainActor in config.overrideEffective = value } }
             )
         )
@@ -61,13 +61,14 @@ func minimuxerStartWithLogger(_ pairingFile: String, _ logPath: String, _ loggin
     #else
     // refresh config if any
     bindTunnelConfig()
-    // observe network route changes (and update device endpoint from vpn(utun))
-    NetworkObserver.shared.start()
     
     print("[SideStore] minimuxerStartWithLogger(pairingFile, logPath, dest, loggingEnabled) invoked")
     try Minimuxer.startWithLogger(pairingFile: pairingFile,
                                   logPath: logPath,
                                   isConsoleLoggingEnabled: loggingEnabled)
+    
+    // observe network route changes (and update device endpoint from vpn(utun))
+    NetworkObserver.shared.start()
     #endif
 }
 

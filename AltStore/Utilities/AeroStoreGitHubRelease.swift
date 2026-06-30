@@ -10,7 +10,7 @@ import SemanticVersion
 /// Checks GitHub Releases for a build newer than the running app (`CFBundleShortVersionString`).
 enum AeroStoreGitHubRelease
 {
-    private static let latestReleaseAPIURL = URL(string: "https://api.github.com/repos/FluxStore-App/FluxStore/releases/latest")!
+    private static let latestReleaseAPIURL = URL(string: "https://api.github.com/repos/Leviidev/AeroStore/releases/latest")!
 
     struct UpdateInfo: Equatable
     {

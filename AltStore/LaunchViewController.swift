@@ -381,16 +381,35 @@ final class PairingFileManager {
             ).show(in: vc)
         })
         alert.addAction(UIAlertAction(title: NSLocalizedString("Choose File…", comment: ""), style: .default) { _ in
-            var types: [UTType] = [.xml, .propertyList]
-            if let plistType = UTType(tag: "plist", tagClass: .filenameExtension, conformingTo: nil) {
-                types.append(plistType)
+            // Build the set of types the picker should accept.
+            // 1. Explicitly include the custom mobiledevicepairing UTType (declared in Info.plist).
+            // 2. Also include standard property-list types so iOS Files shows .plist files.
+            // 3. Use .data as a broad fallback so nothing is accidentally hidden.
+            var types: [UTType] = []
+
+            // Custom mobiledevicepairing type (registered in UTImportedTypeDeclarations)
+            if let pairingType = UTType("org.sidestore.mobiledevicepairing") {
+                types.append(pairingType)
             }
-            types.append(contentsOf: UTType.types(tag: "mobiledevicepairing", tagClass: .filenameExtension, conformingTo: .data))
+            // mobiledevicepairing by filename extension
+            types.append(contentsOf: UTType.types(tag: "mobiledevicepairing", tagClass: .filenameExtension, conformingTo: nil))
+            // Standard plist / property-list types
+            types.append(.propertyList)
+            if let plistExt = UTType(filenameExtension: "plist") {
+                types.append(plistExt)
+            }
+            // XML (many pairing files are XML plists)
             types.append(.xml)
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+
+            // Remove duplicates while preserving order
+            var seen = Set<String>()
+            let uniqueTypes = types.filter { seen.insert($0.identifier).inserted }
+
+            let picker = UIDocumentPickerViewController(forOpeningContentTypes: uniqueTypes)
             picker.delegate = PairingFileImportCoordinator.shared
             PairingFileImportCoordinator.shared.presentingViewController = vc
             picker.shouldShowFileExtensions = true
+            picker.allowsMultipleSelection = false
             vc.present(picker, animated: true)
             UserDefaults.standard.isPairingReset = false
         })
