@@ -177,7 +177,10 @@ final class InstallAppOperation: ResultOperation<InstalledApp>
             }
             
             var installing = true
-            if installedApp.storeApp?.bundleIdentifier.range(of: Bundle.Info.appbundleIdentifier) != nil {
+            let isSelfInstall = (installedApp.bundleIdentifier == Bundle.Info.appbundleIdentifier) ||
+                                (installedApp.bundleIdentifier == StoreApp.altstoreAppID) ||
+                                (installedApp.storeApp?.bundleIdentifier == Bundle.Info.appbundleIdentifier)
+            if isSelfInstall {
                 do {
                     // we need to flush changes to the disk now in case the changes are lost when iOS kills current process
                     try installedApp.managedObjectContext?.save()
